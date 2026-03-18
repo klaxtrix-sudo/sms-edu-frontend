@@ -8,11 +8,10 @@ export default function AdminLayout({
   const adminNavItems = [
     { label: "Overview", href: "/dashboard/admin", icon: "LayoutDashboard" },
     { label: "School Setup", href: "/dashboard/admin/settings/school", icon: "School" },
-    { label: "Classes", href: "/dashboard/admin/classes", icon: "Users" },
-    { label: "Subjects", href: "/dashboard/admin/subjects", icon: "BookOpen" },
-    { label: "Teachers", href: "/dashboard/admin/users/teachers", icon: "UserCog" },
+    { label: "Teachers", href: "/dashboard/admin/users/teachers", icon: "Users" },
     { label: "Students", href: "/dashboard/admin/users/students", icon: "GraduationCap" },
-    { label: "Fees & Payments", href: "/dashboard/admin/fees", icon: "CreditCard" },
+    { label: "Classes & Subjects", href: "/dashboard/admin/academics", icon: "BookOpen" },
+    { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
     { label: "Settings", href: "/dashboard/admin/settings", icon: "Settings" },
   ] as const;
 

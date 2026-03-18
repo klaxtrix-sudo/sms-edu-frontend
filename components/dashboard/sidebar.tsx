@@ -67,7 +67,7 @@ export function Sidebar({ items, role }: SidebarProps) {
 
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {items.map((item) => {
-          const Icon = iconMap[item.icon];
+          const Icon = iconMap[item.icon as keyof typeof iconMap];
           const isActive = pathname === item.href;
 
           return (
