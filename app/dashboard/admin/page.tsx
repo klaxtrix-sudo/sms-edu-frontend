@@ -8,11 +8,21 @@ export default async function AdminDashboard() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.user_metadata?.role !== 'admin') redirect('/login');
 
+  const schoolId = user.user_metadata?.school_id;
+
+  // Fetch real counts
+  const [teachersCount, studentsCount, classesCount, subjectsCount] = await Promise.all([
+    (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'teacher'),
+    (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'student'),
+    (supabase as any).from('classes').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
+    (supabase as any).from('subjects').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
+  ]);
+
   const stats = [
-    { label: "Total Teachers", value: "0", icon: Users, color: "text-blue-500" },
-    { label: "Total Students", value: "0", icon: GraduationCap, color: "text-emerald-500" },
-    { label: "Total Classes", value: "0", icon: School, color: "text-amber-500" },
-    { label: "Total Subjects", value: "0", icon: BookOpen, color: "text-purple-500" },
+    { label: "Total Teachers", value: String(teachersCount.count ?? 0), icon: Users, color: "text-blue-500" },
+    { label: "Total Students", value: String(studentsCount.count ?? 0), icon: GraduationCap, color: "text-emerald-500" },
+    { label: "Total Classes", value: String(classesCount.count ?? 0), icon: School, color: "text-amber-500" },
+    { label: "Total Subjects", value: String(subjectsCount.count ?? 0), icon: BookOpen, color: "text-purple-500" },
   ];
 
   return (

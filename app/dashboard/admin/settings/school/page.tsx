@@ -65,15 +65,15 @@ export default function SchoolSettingsPage() {
           .from("profiles")
           .select("school_id")
           .eq("id", user.id)
-          .single();
+          .single() as any;
 
         if (profile?.school_id) {
-          setSchoolId(profile.school_id);
+          setSchoolId(profile.school_id as string);
           const { data: school } = await supabase
             .from("schools")
             .select("*")
-            .eq("id", profile.school_id)
-            .single();
+            .eq("id", profile.school_id as string)
+            .single() as any;
 
           if (school) {
             form.reset({
@@ -104,7 +104,7 @@ export default function SchoolSettingsPage() {
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("schools")
         .update({
           name: values.name,
