@@ -13,6 +13,7 @@ import {
   CreditCard, 
   Settings, 
   LogOut,
+  CheckSquare,
   ChevronRight
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -27,15 +28,16 @@ const iconMap = {
   GraduationCap,
   CreditCard,
   Settings,
+  CheckSquare,
 };
 
-interface SidebarItem {
+export interface SidebarItem {
   label: string;
   href: string;
   icon: keyof typeof iconMap;
 }
 
-interface SidebarProps {
+export interface SidebarProps {
   items: readonly SidebarItem[];
   role: string;
 }

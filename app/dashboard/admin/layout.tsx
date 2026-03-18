@@ -1,16 +1,18 @@
-import { Sidebar } from "@/components/dashboard/sidebar";
+import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const adminNavItems = [
+  const adminNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/admin", icon: "LayoutDashboard" },
     { label: "School Setup", href: "/dashboard/admin/settings/school", icon: "School" },
     { label: "Teachers", href: "/dashboard/admin/users/teachers", icon: "Users" },
     { label: "Students", href: "/dashboard/admin/users/students", icon: "GraduationCap" },
+    { label: "Staff", href: "/dashboard/admin/users/staff", icon: "UserCog" }, // Added new item with UserCog icon
     { label: "Classes & Subjects", href: "/dashboard/admin/academics", icon: "BookOpen" },
+    { label: "Academic Results", href: "/dashboard/admin/academics/results", icon: "CheckSquare" },
     { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
     { label: "Settings", href: "/dashboard/admin/settings", icon: "Settings" },
   ] as const;

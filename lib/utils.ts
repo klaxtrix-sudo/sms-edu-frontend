@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** Nigerian grading scale A1 – F9 */
-export function getGrade(score: number): { grade: string; remark: string } {
+export function calculateGrade(score: number): { grade: string; remark: string } {
   if (score >= 75) return { grade: 'A1', remark: 'Excellent' };
   if (score >= 70) return { grade: 'B2', remark: 'Very Good' };
   if (score >= 65) return { grade: 'B3', remark: 'Good' };

@@ -158,3 +158,22 @@ export async function createSubject(data: any) {
     return { error: error.message || "Failed to create subject" };
   }
 }
+
+export async function saveResults(resultsData: any[]) {
+  const adminSupabase = createAdminClient();
+
+  try {
+    const { error } = await (adminSupabase as any)
+      .from('results')
+      .upsert(resultsData, { 
+        onConflict: 'student_id,subject_id,academic_year,term' 
+      });
+
+    if (error) throw error;
+
+    revalidatePath("/dashboard/admin/academics/results");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to save results" };
+  }
+}
