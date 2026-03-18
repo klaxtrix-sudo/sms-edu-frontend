@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { NotificationDrawer } from "./notification-drawer";
 
 const iconMap = {
   LayoutDashboard,
@@ -58,11 +59,14 @@ export function Sidebar({ items, role }: SidebarProps) {
   return (
     <aside className="sticky top-0 h-screen w-64 border-r bg-card flex flex-col">
       <div className="p-6 border-b">
-        <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
-          <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
-            S
+        <div className="flex items-center justify-between font-bold text-xl tracking-tight text-primary">
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
+              S
+            </div>
+            SMS-Edu
           </div>
-          SMS-Edu
+          <NotificationDrawer />
         </div>
         <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest font-semibold">
           {role} Portal
