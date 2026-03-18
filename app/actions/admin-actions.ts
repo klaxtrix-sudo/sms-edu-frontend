@@ -114,3 +114,47 @@ export async function createStudent(data: any) {
     return { error: error.message || "An unexpected error occurred" };
   }
 }
+
+export async function createClass(data: any) {
+  const adminSupabase = createAdminClient();
+  const { name, teacherId, schoolId } = data;
+
+  try {
+    const { error } = await (adminSupabase as any)
+      .from('classes')
+      .insert({
+        name,
+        teacher_id: teacherId || null,
+        school_id: schoolId
+      });
+
+    if (error) throw error;
+
+    revalidatePath("/dashboard/admin/academics");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to create class" };
+  }
+}
+
+export async function createSubject(data: any) {
+  const adminSupabase = createAdminClient();
+  const { name, code, schoolId } = data;
+
+  try {
+    const { error } = await (adminSupabase as any)
+      .from('subjects')
+      .insert({
+        name,
+        code: code.toUpperCase(),
+        school_id: schoolId
+      });
+
+    if (error) throw error;
+
+    revalidatePath("/dashboard/admin/academics");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to create subject" };
+  }
+}
