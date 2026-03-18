@@ -12,6 +12,7 @@ export default function AdminLayout({
     { label: "Students", href: "/dashboard/admin/users/students", icon: "GraduationCap" },
     { label: "Staff", href: "/dashboard/admin/users/staff", icon: "UserCog" }, // Added new item with UserCog icon
     { label: "Classes & Subjects", href: "/dashboard/admin/academics", icon: "BookOpen" },
+    { label: "MCQ Exams", href: "/dashboard/admin/exams", icon: "ClipboardList" },
     { label: "Academic Results", href: "/dashboard/admin/academics/results", icon: "CheckSquare" },
     { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
     { label: "Settings", href: "/dashboard/admin/settings", icon: "Settings" },

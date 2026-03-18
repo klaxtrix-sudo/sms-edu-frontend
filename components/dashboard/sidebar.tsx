@@ -14,6 +14,7 @@ import {
   Settings, 
   LogOut,
   CheckSquare,
+  ClipboardList,
   ChevronRight
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -29,6 +30,7 @@ const iconMap = {
   CreditCard,
   Settings,
   CheckSquare,
+  ClipboardList,
 };
 
 export interface SidebarItem {

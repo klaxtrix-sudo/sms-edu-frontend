@@ -1,0 +1,341 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage,
+  FormDescription
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+const examSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().optional(),
+  classId: z.string().min(1, "Please select a class"),
+  subjectId: z.string().min(1, "Please select a subject"),
+  durationMins: z.coerce.number().int().min(5).max(180),
+  totalMarks: z.coerce.number().int().min(1),
+  questionCount: z.coerce.number().int().min(1),
+  randomise: z.boolean().default(true),
+  startAt: z.string().min(1, "Start date is required"),
+  endAt: z.string().min(1, "End date is required"),
+});
+
+type ExamFormValues = z.infer<typeof examSchema>;
+
+interface AddExamModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}
+
+export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProps) {
+  const [loading, setLoading] = useState(false);
+  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
+  const supabase = createClient();
+
+  const form = useForm<ExamFormValues>({
+    resolver: zodResolver(examSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      durationMins: 60,
+      totalMarks: 100,
+      questionCount: 50,
+      randomise: true,
+      startAt: "",
+      endAt: "",
+    },
+  });
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("school_id")
+        .eq("id", user.id)
+        .single() as any;
+
+      if (profile?.school_id) {
+        const [{ data: classesData }, { data: subjectsData }] = await Promise.all([
+          (supabase as any).from("classes").select("id, name").eq("school_id", profile.school_id),
+          (supabase as any).from("subjects").select("id, name").eq("school_id", profile.school_id),
+        ]);
+        if (classesData) setClasses(classesData);
+        if (subjectsData) setSubjects(subjectsData);
+      }
+    }
+    if (open) fetchData();
+  }, [open, supabase]);
+
+  const onSubmit = async (values: ExamFormValues) => {
+    setLoading(true);
+    try {
+      // 1. Get Session Token for Backend Auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No active session");
+
+      // 2. Call MongoDB Backend
+      const response = await fetch("http://localhost:5000/api/exams", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          ...values,
+          startAt: new Date(values.startAt).toISOString(),
+          endAt: new Date(values.endAt).toISOString(),
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || "Failed to create exam");
+
+      toast.success("Exam created successfully in draft mode!");
+      onSuccess();
+      onOpenChange(false);
+      form.reset();
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New MCQ Exam</DialogTitle>
+          <DialogDescription>
+            Define the exam settings. You will be able to add questions after creation.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }: { field: any }) => (
+                  <FormItem className="col-span-1 md:col-span-2">
+                    <FormLabel>Exam Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Second Term Physics Mid-Term" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }: { field: any }) => (
+                  <FormItem className="col-span-1 md:col-span-2">
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Instructions for students..." 
+                        className="resize-none"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="classId"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Class</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select class" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {classes.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="subjectId"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Subject</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select subject" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {subjects.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="durationMins"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Duration (Minutes)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="totalMarks"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Total Marks</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormDescription>Max possible score for this exam</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="questionCount"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Questions to Display</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormDescription>Number of Qs each student will take</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="randomise"
+                render={({ field }: { field: any }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Randomise Questions</FormLabel>
+                      <FormDescription>
+                        Shuffle questions and options for each student.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="startAt"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Start Date & Time</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endAt"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>End Date & Time</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter className="pt-4 mt-4 border-t">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Exam Shell
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
