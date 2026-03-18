@@ -18,7 +18,9 @@ import {
   ChevronRight,
   ClipboardCheck,
   CalendarDays,
-  BarChart3
+  BarChart3,
+  TrendingUp,
+  Megaphone,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -38,6 +40,7 @@ const iconMap = {
   ClipboardCheck,
   CalendarDays,
   BarChart3,
+  Megaphone,
 };
 
 export interface SidebarItem {

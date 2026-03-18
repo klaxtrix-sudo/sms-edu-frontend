@@ -8,6 +8,7 @@ export default function AdminLayout({
   const adminNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/admin", icon: "LayoutDashboard" },
     { label: "Executive Analytics", href: "/dashboard/admin/analytics", icon: "BarChart3" },
+    { label: "Global Communications", href: "/dashboard/admin/communications", icon: "Megaphone" },
     { label: "Attendance Intel", href: "/dashboard/admin/attendance", icon: "ClipboardCheck" },
     { label: "School Setup", href: "/dashboard/admin/settings/school", icon: "School" },
     { label: "Teachers", href: "/dashboard/admin/users/teachers", icon: "Users" },
