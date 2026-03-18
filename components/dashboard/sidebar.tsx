@@ -3,19 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  School, 
-  Users, 
-  BookOpen, 
-  UserCog, 
-  GraduationCap, 
-  CreditCard, 
-  Settings, 
+import {
+  LayoutDashboard,
+  School,
+  Users,
+  BookOpen,
+  UserCog,
+  GraduationCap,
+  CreditCard,
+  Settings,
   LogOut,
   CheckSquare,
   ClipboardList,
-  ChevronRight
+  ChevronRight,
+  ClipboardCheck,
+  CalendarDays,
+  BarChart3
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -32,6 +35,9 @@ const iconMap = {
   Settings,
   CheckSquare,
   ClipboardList,
+  ClipboardCheck,
+  CalendarDays,
+  BarChart3,
 };
 
 export interface SidebarItem {

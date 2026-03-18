@@ -7,8 +7,10 @@ export default function StudentLayout({
 }) {
   const studentNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/student", icon: "LayoutDashboard" },
+    { label: "My Timetable", href: "/dashboard/student/timetable", icon: "CalendarDays" },
+    { label: "My Assignments", href: "/dashboard/student/assignments", icon: "BookOpen" },
     { label: "My Exams", href: "/dashboard/student/exams", icon: "ClipboardList" },
-    { label: "My Results", href: "/dashboard/student/results", icon: "CheckSquare" },
+    { label: "My Results", href: "/dashboard/student/results", icon: "GraduationCap" },
     { label: "Payments", href: "/dashboard/student/finance", icon: "CreditCard" },
     { label: "Settings", href: "/dashboard/student/settings", icon: "Settings" },
   ];

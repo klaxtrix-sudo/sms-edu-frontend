@@ -7,11 +7,14 @@ export default function AdminLayout({
 }) {
   const adminNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/admin", icon: "LayoutDashboard" },
+    { label: "Executive Analytics", href: "/dashboard/admin/analytics", icon: "BarChart3" },
+    { label: "Attendance Intel", href: "/dashboard/admin/attendance", icon: "ClipboardCheck" },
     { label: "School Setup", href: "/dashboard/admin/settings/school", icon: "School" },
     { label: "Teachers", href: "/dashboard/admin/users/teachers", icon: "Users" },
     { label: "Students", href: "/dashboard/admin/users/students", icon: "GraduationCap" },
-    { label: "Staff", href: "/dashboard/admin/users/staff", icon: "UserCog" }, // Added new item with UserCog icon
+    { label: "Staff", href: "/dashboard/admin/users/staff", icon: "UserCog" },
     { label: "Classes & Subjects", href: "/dashboard/admin/academics", icon: "BookOpen" },
+    { label: "Academic Timetable", href: "/dashboard/admin/academics/timetable", icon: "CalendarDays" },
     { label: "MCQ Exams", href: "/dashboard/admin/exams", icon: "ClipboardList" },
     { label: "Academic Results", href: "/dashboard/admin/academics/results", icon: "CheckSquare" },
     { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
