@@ -150,7 +150,7 @@ export const ResultSlipPDF = ({ student, results, term, year }: ResultSlipPDFPro
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.schoolInfo}>
-          <Text style={styles.schoolName}>SMS-EDU ACADEMY</Text>
+          <Text style={styles.schoolName}>KLAXTRIX ACADEMY</Text>
           <Text style={styles.schoolAddress}>Nigeria's Premier Digital Institution · Innovation Hub</Text>
         </View>
         <Text style={{ fontSize: 10, fontWeight: "bold", color: "#3b82f6" }}>OFFICIAL ACADEMIC RECORD</Text>
@@ -241,7 +241,7 @@ export const ResultSlipPDF = ({ student, results, term, year }: ResultSlipPDFPro
         color: "#94a3b8",
         fontStyle: "italic" 
       }}>
-        This is a digitally generated document. Verified by SMS-Edu Academy Internal Ledger.
+        This is a digitally generated document. Verified by Klaxtrix Academy Internal Ledger.
       </Text>
     </Page>
   </Document>

@@ -1,4 +1,4 @@
-# SMS-Edu — Frontend
+# Klaxtrix — Frontend
 
 Modern School Management System frontend for Nigerian schools, built with **Next.js 14**, **TypeScript**, **Tailwind CSS**, and **shadcn/ui**.
 

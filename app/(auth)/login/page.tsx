@@ -55,11 +55,14 @@ export default function LoginPage() {
       >
         {/* Logo & Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 gradient-brand rounded-2xl mb-4 shadow-lg">
-            <span className="text-2xl">🎓</span>
+          <div className="text-center space-y-3">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-glow">
+              Klaxtrix <span className="text-primary tracking-widest text-lg md:text-xl align-middle">ALPHA</span>
+            </h1>
+            <p className="text-muted-foreground text-lg font-medium">
+              Access the future of institutional management.
+            </p>
           </div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">SMS-Edu</h1>
-          <p className="text-muted-foreground mt-1">Sign in to your school portal</p>
         </div>
 
         {/* Card */}

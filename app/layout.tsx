@@ -17,11 +17,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'SMS-Edu | School Management System',
+  title: 'Klaxtrix | School Management System',
   description:
-    'A modern School Management System for Nigerian schools. Manage students, teachers, exams, results, and fee payments in one place.',
+    'A premium institution management portal by Klaxtrix',
   keywords: ['school management', 'Nigerian schools', 'student portal', 'CBT exams', 'school fees'],
-  authors: [{ name: 'SMS-Edu' }],
+  authors: [{ name: 'Klaxtrix' }],
   manifest: '/manifest.json',
 };
 

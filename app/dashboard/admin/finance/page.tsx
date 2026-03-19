@@ -11,10 +11,14 @@ import {
   Search,
   Filter,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  Wallet,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 import { 
   Card, 
   CardContent, 
@@ -30,7 +34,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { formatNGN, cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -97,35 +100,55 @@ export default function FinanceDashboard() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-primary">Fee Management</h1>
-          <p className="text-muted-foreground mt-1 text-lg">Track revenue and manage school fee structures.</p>
-        </div>
-        <AddFeeStructureModal onSuccess={fetchFinanceData} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-xl bg-primary text-primary-foreground overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <TrendingUp size={80} />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium opacity-80 uppercase tracking-wider text-primary-foreground">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-primary-foreground">{formatNGN(stats.totalRevenue)}</div>
-            <p className="text-xs mt-2 opacity-70 flex items-center gap-1 font-medium">
-              <ArrowUpRight size={14} /> From {stats.successCount} successful txns
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* Executive Header */}
+      <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-10 group bg-white/5 border-white/10 text-foreground">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider mb-2">
+              Revenue Alpha
+            </Badge>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
+              Fee <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Management</span>
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-xl font-medium">
+              Overseeing the financial health of your institution. Track revenue trends and manage academic fee structures with precision.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+          <AddFeeStructureModal onSuccess={fetchFinanceData} />
+        </div>
+        
+        {/* Decorative background glow */}
+        <div className="absolute -top-24 -right-24 size-64 bg-primary/20 blur-[100px] rounded-full group-hover:bg-primary/30 transition-colors" />
+      </header>
+
+      {/* Bento Metric Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* Primary Revenue Card */}
+        <div className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-gradient-to-br from-primary to-blue-700 text-white overflow-hidden relative">
+          <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+             <TrendingUp className="size-32" />
+          </div>
+          <div className="relative z-10 space-y-4">
+            <div className="size-12 rounded-2xl bg-white/20 p-3 shadow-lg backdrop-blur-md">
+              <Wallet className="size-full text-white" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-white/70 uppercase tracking-widest">Total Revenue</span>
+              <div className="text-3xl font-black">{formatNGN(stats.totalRevenue)}</div>
+              <p className="text-[10px] font-bold text-white/60 flex items-center gap-1 uppercase tracking-tighter pt-1">
+                <ArrowUpRight size={12} /> From {stats.successCount} successful txns
+              </p>
+            </div>
+          </div>
+        </div>
 
         <MetricCard 
           title="Pending Collections" 
           value={formatNGN(stats.pendingAmount)} 
-          subText={`Potential revenue from ${stats.totalCount - stats.successCount} pending txns`}
+          subText={`Potential collections from ${stats.totalCount - stats.successCount} pending records`}
           icon={Clock}
           color="orange"
         />
@@ -133,13 +156,13 @@ export default function FinanceDashboard() {
         <MetricCard 
           title="Success Rate" 
           value={`${stats.totalCount > 0 ? Math.round((stats.successCount / stats.totalCount) * 100) : 0}%`} 
-          subText="Transaction completion percentage"
+          subText="Transaction completion fidelity"
           icon={CheckCircle2}
           color="green"
         />
 
         <MetricCard 
-          title="Total Students Paid" 
+          title="Active Payees" 
           value={stats.successCount.toString()} 
           subText="Unique fee payment records"
           icon={Users}
@@ -147,80 +170,83 @@ export default function FinanceDashboard() {
         />
       </div>
 
-      <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-xl">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="text-2xl font-bold">Transaction History</CardTitle>
-              <CardDescription>A real-time log of all student fee payments.</CardDescription>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+              <Activity className="size-6" />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search student or ref..." 
-                  className="pl-9 w-64 bg-background/50 border-none ring-1 ring-border focus-visible:ring-primary"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button variant="outline" size="icon" className="shrink-0 group">
-                <Filter className="size-4 group-hover:text-primary transition-colors" />
-              </Button>
+            <div>
+              <h2 className="text-2xl font-black">Transaction Ledger</h2>
+              <p className="text-sm text-muted-foreground font-medium italic opacity-70">A real-time log of administrative academic collections.</p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="size-12 animate-spin text-primary" />
-              <p className="text-muted-foreground animate-pulse font-medium">Loading ledger...</p>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search student or ref..." 
+                className="pl-9 w-64 bg-white/5 border-white/10 rounded-xl focus-visible:ring-primary focus-visible:bg-white/10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          ) : (
-            <div className="rounded-xl border border-border/50 overflow-hidden">
+            <Button variant="outline" size="icon" className="shrink-0 rounded-xl border-white/10 hover:bg-white/10 transition-all">
+              <Filter className="size-4" />
+            </Button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <Loader2 className="size-12 animate-spin text-primary" />
+            <p className="text-muted-foreground animate-pulse font-medium">Synchronizing transaction data...</p>
+          </div>
+        ) : (
+            <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
               <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead className="font-bold py-4">Student</TableHead>
-                    <TableHead className="font-bold py-4">Fee Structure</TableHead>
-                    <TableHead className="font-bold py-4">Reference</TableHead>
-                    <TableHead className="font-bold py-4">Amount</TableHead>
-                    <TableHead className="font-bold py-4">Status</TableHead>
-                    <TableHead className="font-bold py-4">Date</TableHead>
+                <TableHeader className="bg-white/10">
+                  <TableRow className="border-white/10 hover:bg-transparent">
+                    <TableHead className="font-bold py-5 text-foreground h-auto pl-6">Student</TableHead>
+                    <TableHead className="font-bold py-5 text-foreground h-auto">Fee Structure</TableHead>
+                    <TableHead className="font-bold py-5 text-foreground h-auto">Reference</TableHead>
+                    <TableHead className="font-bold py-5 text-foreground h-auto">Amount</TableHead>
+                    <TableHead className="font-bold py-5 text-foreground h-auto">Status</TableHead>
+                    <TableHead className="font-bold py-5 text-foreground h-auto pr-6">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredPayments.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic">
-                        No transactions found matching your search.
+                    <TableRow className="border-white/5">
+                      <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic font-medium">
+                        No financial transactions found matching your audit criteria.
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredPayments.map((p) => (
-                      <TableRow key={p.id} className="hover:bg-accent/30 transition-colors group">
-                        <TableCell>
+                      <TableRow key={p.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                        <TableCell className="pl-6">
                           <div className="font-bold text-foreground group-hover:text-primary transition-colors">
                             {p.students?.profiles?.full_name}
                           </div>
-                          <div className="text-xs text-muted-foreground font-medium uppercase tracking-tighter">{p.students?.admission_no}</div>
+                          <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{p.students?.admission_no}</div>
                         </TableCell>
-                        <TableCell className="font-medium">{p.fee_structures?.name}</TableCell>
-                        <TableCell className="font-mono text-xs opacity-60 uppercase tracking-tighter">{p.reference}</TableCell>
-                        <TableCell className="font-black">{formatNGN(p.amount)}</TableCell>
+                        <TableCell className="font-medium text-muted-foreground">{p.fee_structures?.name}</TableCell>
+                        <TableCell className="font-mono text-[10px] opacity-40 uppercase tracking-tighter">{p.reference}</TableCell>
+                        <TableCell className="font-black text-lg">{formatNGN(p.amount)}</TableCell>
                         <TableCell>
                           <Badge 
                             variant={p.status === 'success' ? 'default' : p.status === 'pending' ? 'outline' : 'destructive'}
                             className={cn(
-                              "capitalize rounded-full px-3 py-1 font-bold tracking-tight text-[10px]",
-                              p.status === 'success' && "bg-green-500 hover:bg-green-600 text-white border-none",
-                              p.status === 'pending' && "border-orange-500 text-orange-600 animate-pulse bg-orange-50"
+                              "capitalize rounded-xl px-4 py-1 font-black tracking-tight text-[10px] shadow-sm",
+                              p.status === 'success' && "bg-emerald-500 hover:bg-emerald-600 text-white border-none",
+                              p.status === 'pending' && "border-orange-500/30 text-orange-500 bg-orange-500/10 animate-pulse"
                             )}
                           >
                             {p.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground font-medium">
+                        <TableCell className="text-xs text-muted-foreground font-bold pr-6">
                           {new Date(p.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
@@ -234,8 +260,7 @@ export default function FinanceDashboard() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </motion.div>
     </div>
   );
 }
@@ -249,21 +274,23 @@ function MetricCard({ title, value, subText, icon: Icon, color }: any) {
   };
 
   return (
-    <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md hover:translate-y-[-4px] transition-transform duration-300">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+    <div className="glass-panel border border-white/5 bg-white/5 rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 relative overflow-hidden">
+      <div className="flex flex-row items-center justify-between pb-2">
+        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           {title}
-        </CardTitle>
-        <div className={cn("p-2 rounded-lg", colorMap[color] || colorMap.primary)}>
-          <Icon size={20} />
+        </span>
+        <div className={cn("p-2 rounded-xl backdrop-blur-md shadow-sm", colorMap[color] || colorMap.primary)}>
+          <Icon size={18} />
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-black tabular-nums">{value}</div>
-        <p className="text-xs text-muted-foreground mt-2 font-medium italic opacity-70 leading-relaxed">
+      </div>
+      <div className="mt-4">
+        <div className="text-3xl font-black tabular-nums tracking-tighter">{value}</div>
+        <p className="text-[10px] text-muted-foreground mt-2 font-bold uppercase tracking-tighter opacity-70 leading-relaxed italic">
           {subText}
         </p>
-      </CardContent>
-    </Card>
+      </div>
+      {/* Subtle background glow */}
+      <div className="absolute -bottom-10 -right-10 size-24 bg-white/5 blur-2xl rounded-full" />
+    </div>
   );
 }

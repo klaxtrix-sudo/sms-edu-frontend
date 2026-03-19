@@ -69,12 +69,19 @@ export function Sidebar({ items, role }: SidebarProps) {
     <aside className="sticky top-0 h-screen w-64 border-r bg-card flex flex-col">
       <div className="p-6 border-b">
         <div className="flex items-center justify-between font-bold text-xl tracking-tight text-primary">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
-              S
-            </div>
-            SMS-Edu
+          <div className="flex items-center gap-3 px-2 mb-2">
+          <div className="size-10 rounded-xl gradient-brand flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform shrink-0">
+            <School className="size-6 text-white" />
           </div>
+          <div className="flex flex-col group-hover:translate-x-1 transition-transform overflow-hidden">
+            <span className="text-xl font-black tracking-tighter text-glow whitespace-nowrap">
+              Klaxtrix
+            </span>
+            <span className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase opacity-80 whitespace-nowrap">
+              Executive
+            </span>
+          </div>
+        </div>
           <NotificationDrawer />
         </div>
         <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest font-semibold">
