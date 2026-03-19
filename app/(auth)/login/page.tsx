@@ -28,6 +28,14 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginValues) => {
     setLoading(true);
     setError(null);
+
+    // TEMPORARY: Admin Login Bypass for "Executive Edition" PoC Review
+    if (values.email === 'admin@sms-edu.com' && values.password === 'admin123') {
+      console.log('PoC Bypass active for admin user');
+      router.push('/dashboard/admin');
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword(values);
     if (error) {
       setError(error.message);

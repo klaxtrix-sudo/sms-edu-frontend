@@ -18,7 +18,21 @@ import Link from 'next/link';
 
 export default async function AdminDashboard() {
   const supabase = createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let { data: { user } } = await supabase.auth.getUser();
+
+  // DEVELOPMENT BYPASS for a seamless PoC Review
+  const isDev = process.env.NODE_ENV === 'development';
+  if (!user && isDev) {
+    user = {
+      id: 'a0000000-0000-0000-0000-000000000000',
+      user_metadata: {
+        full_name: 'System Administrator',
+        role: 'admin',
+        school_id: '00000000-0000-0000-0000-000000000000'
+      }
+    } as any;
+  }
+
   if (!user || user.user_metadata?.role !== 'admin') redirect('/login');
 
   const schoolId = user.user_metadata?.school_id;
