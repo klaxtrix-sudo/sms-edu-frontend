@@ -1,7 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 interface TenantConfig {
   id: string;
@@ -15,6 +18,7 @@ interface TenantConfig {
 
 interface TenantContextType {
   tenant: TenantConfig | null;
+  supabase: SupabaseClient<Database, any, any> | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -29,6 +33,15 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize tenant-specific supabase client
+  const supabase = useMemo(() => {
+    if (tenant?.supabaseUrl && tenant?.supabaseAnonKey) {
+      console.log(`[Klaxtrix] Initializing isolated client for ${tenant.name}`);
+      return createClient(tenant.supabaseUrl, tenant.supabaseAnonKey);
+    }
+    return null;
+  }, [tenant]);
+
   useEffect(() => {
     if (!subdomain) return;
 
@@ -36,18 +49,15 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       try {
         // MOCK: In production, this calls the 'Main Control Database' API
-        // to get the school's specific infrastructure keys.
         console.log(`[Klaxtrix] Provisioning context for tenant: ${subdomain}`);
         
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Mock data for 'monidams' or any other test subdomain
         const mockTenant: TenantConfig = {
           id: 'tenant_123',
           name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1) + ' Academy',
           subdomain: subdomain,
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL, // Defaulting to master for PoC
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
           supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
           primaryColor: '#3b82f6',
         };
@@ -65,7 +75,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   }, [subdomain]);
 
   return (
-    <TenantContext.Provider value={{ tenant, isLoading, error }}>
+    <TenantContext.Provider value={{ tenant, supabase, isLoading, error }}>
       {children}
     </TenantContext.Provider>
   );
@@ -77,4 +87,9 @@ export function useTenant() {
     throw new Error('useTenant must be used within a TenantProvider');
   }
   return context;
+}
+
+export function useTenantSupabase() {
+  const { supabase } = useTenant();
+  return supabase;
 }

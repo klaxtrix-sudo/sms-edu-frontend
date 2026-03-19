@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
+import { useTenant } from '@/components/providers/tenant-provider';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -17,7 +18,8 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createBrowserClient();
+  const { tenant, isLoading: isTenantLoading } = useTenant();
+  const supabase = createBrowserClient(tenant?.supabaseUrl, tenant?.supabaseAnonKey);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -56,11 +58,11 @@ export default function LoginPage() {
         {/* Logo & Header */}
         <div className="text-center mb-8">
           <div className="text-center space-y-3">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-glow">
-              Klaxtrix <span className="text-primary tracking-widest text-lg md:text-xl align-middle">ALPHA</span>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-glow uppercase">
+              {tenant?.name || 'Klaxtrix'} <span className="text-primary tracking-widest text-lg md:text-xl align-middle">PORTAL</span>
             </h1>
             <p className="text-muted-foreground text-lg font-medium">
-              Access the future of institutional management.
+              {tenant ? `Managed institutional access for ${tenant.name}` : 'Access the future of institutional management.'}
             </p>
           </div>
         </div>
