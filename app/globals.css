@@ -74,8 +74,20 @@
   .dark .glass-panel {
     @apply bg-black/40 backdrop-blur-3xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
   }
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/30 rounded-[2rem] shadow-xl;
+  }
+  .dark .glass-card {
+    @apply bg-black/50 backdrop-blur-md border border-white/10 rounded-[2rem] shadow-2xl;
+  }
   .bento-inner {
     @apply rounded-[2rem] p-8 h-full flex flex-col;
+  }
+  .gradient-brand {
+    @apply bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 text-white;
+  }
+  .gradient-executive {
+    @apply bg-gradient-to-tr from-slate-900 via-indigo-950 to-blue-900 text-white;
   }
   .text-glow {
     text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);

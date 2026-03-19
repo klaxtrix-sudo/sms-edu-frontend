@@ -82,17 +82,31 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-destructive text-sm">
-                {error}
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-destructive text-sm font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <span>❌</span>
+                  <span>{error}</span>
+                </div>
+              </motion.div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 gradient-brand text-white font-semibold rounded-xl shadow-md hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 bg-primary text-primary-foreground font-semibold rounded-xl shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                  Signing in…
+                </>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </form>
         </div>
