@@ -30,7 +30,7 @@ export default function LoginPage() {
     setError(null);
 
     // TEMPORARY: Admin Login Bypass for "Executive Edition" PoC Review
-    if (values.email === 'admin@sms-edu.com' && values.password === 'admin123') {
+    if (values.email === 'admin@klaxtrix.com' && values.password === 'admin123') {
       console.log('PoC Bypass active for admin user');
       router.push('/dashboard/admin');
       return;

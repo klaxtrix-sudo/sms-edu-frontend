@@ -16,7 +16,7 @@ Modern School Management System frontend for Nigerian schools, built with **Next
 | Forms | React Hook Form + Zod |
 | Animations | Framer Motion |
 | Charts | Recharts |
-| Backend API | sms-edu-backend (Express.js + MongoDB) |
+| Backend API | klaxtrix-backend (Express.js + MongoDB) |
 
 ## User Roles
 
@@ -67,4 +67,4 @@ public/
 
 ## Related Repositories
 
-- **Backend**: [sms-edu-backend](https://github.com/eveshogweyore/sms-edu-backend) — Express.js + MongoDB Atlas
+- **Backend**: [klaxtrix-backend](https://github.com/eveshogweyore/klaxtrix-backend) — Express.js + MongoDB Atlas
