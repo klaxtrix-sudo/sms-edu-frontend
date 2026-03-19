@@ -56,9 +56,6 @@ export function LandingHeader() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" className="text-sm font-semibold rounded-full px-6" asChild>
-             <Link href="/login">Login</Link>
-          </Button>
           <Button className="text-sm font-semibold rounded-full px-6 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform" asChild>
              <Link href="/register">Get Started</Link>
           </Button>
@@ -89,9 +86,6 @@ export function LandingHeader() {
               ))}
            </nav>
            <div className="flex flex-col gap-3">
-              <Button variant="outline" className="w-full rounded-xl py-6" asChild>
-                 <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
-              </Button>
               <Button className="w-full rounded-xl py-6 bg-primary shadow-lg shadow-primary/20" asChild>
                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
               </Button>

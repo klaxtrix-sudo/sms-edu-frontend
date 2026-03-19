@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const STEPS = [
+  { id: 'verify', title: 'Verify Access', icon: Shield },
   { id: 'identity', title: 'School Identity', icon: Zap },
   { id: 'subdomain', title: 'Subdomain', icon: Globe },
   { id: 'cloud', title: 'Partner-Cloud', icon: Server },
@@ -23,6 +24,7 @@ const STEPS = [
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
+    accessCode: '',
     schoolName: '',
     address: '',
     subdomain: '',
@@ -32,6 +34,7 @@ export default function RegisterPage() {
     adminPassword: '',
   });
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
@@ -45,9 +48,27 @@ export default function RegisterPage() {
     }
   };
 
+  const verifyAccessCode = async () => {
+     setIsVerifying(true);
+     await new Promise(resolve => setTimeout(resolve, 800));
+     
+     if (formData.accessCode.toUpperCase() === 'KLAX-2026') {
+        setIsVerified(true);
+        setIsVerifying(false);
+        toast.success('Access Granted', {
+           description: 'Your institutional identity is verified.',
+        });
+        handleNext();
+     } else {
+        setIsVerifying(false);
+        toast.error('Invalid Access Code', {
+           description: 'Please contact Klaxtrix admin for an invitation.',
+        });
+     }
+  };
+
   const verifySubdomain = async () => {
      setIsVerifying(true);
-     // MOCK: Subdomain availability check
      await new Promise(resolve => setTimeout(resolve, 1000));
      setIsVerifying(false);
      handleNext();
@@ -102,6 +123,37 @@ export default function RegisterPage() {
           >
             <Card className="p-8 md:p-12 glass-card overflow-hidden">
                {currentStep === 0 && (
+                 <div className="space-y-8 py-4">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                       <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                          <Shield className="w-10 h-10" />
+                       </div>
+                       <div className="space-y-2">
+                          <h2 className="text-3xl font-heading font-bold tracking-tight">Institutional Verification</h2>
+                          <p className="text-muted-foreground text-lg max-w-md">Klaxtrix Executive Edition is currently invitation-only. Please enter your institutional access code to begin.</p>
+                       </div>
+                    </div>
+                    
+                    <div className="max-w-xs mx-auto space-y-4">
+                       <div className="space-y-2">
+                          <Label htmlFor="accessCode" className="text-center block font-semibold text-muted-foreground">Access Code</Label>
+                          <Input 
+                            id="accessCode" 
+                            placeholder="Enter Code (e.g. KLAX-2026)" 
+                            className="h-14 rounded-2xl text-center text-xl font-mono tracking-widest uppercase focus:ring-primary/30"
+                            value={formData.accessCode}
+                            onChange={e => setFormData({...formData, accessCode: e.target.value})}
+                          />
+                       </div>
+                    </div>
+
+                    <div className="p-6 rounded-2xl bg-muted/30 border border-border/50 text-center max-w-md mx-auto">
+                       <p className="text-sm text-muted-foreground italic">"Securing the future of academics, one institution at a time."</p>
+                    </div>
+                 </div>
+               )}
+
+               {currentStep === 1 && (
                  <div className="space-y-6">
                     <div className="space-y-2">
                        <h2 className="text-3xl font-heading font-bold tracking-tight">Tell us about your school</h2>
@@ -132,7 +184,7 @@ export default function RegisterPage() {
                  </div>
                )}
 
-               {currentStep === 1 && (
+               {currentStep === 2 && (
                  <div className="space-y-6">
                     <div className="space-y-2">
                        <h2 className="text-3xl font-heading font-bold tracking-tight">Choose your domain</h2>
@@ -155,7 +207,7 @@ export default function RegisterPage() {
                  </div>
                )}
 
-               {currentStep === 2 && (
+               {currentStep === 3 && (
                  <div className="space-y-6">
                     <div className="space-y-2">
                        <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">Partner-Cloud Isolation</Badge>
@@ -192,7 +244,7 @@ export default function RegisterPage() {
                  </div>
                )}
 
-               {currentStep === 3 && (
+               {currentStep === 4 && (
                  <div className="space-y-6">
                     <div className="space-y-2">
                        <h2 className="text-3xl font-heading font-bold tracking-tight">Establish Mission Control</h2>
@@ -246,7 +298,7 @@ export default function RegisterPage() {
                   ) : (
                     <Button 
                       className="rounded-xl px-8 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform h-12 text-base font-bold"
-                      onClick={currentStep === 1 ? verifySubdomain : handleNext}
+                      onClick={currentStep === 0 ? verifyAccessCode : (currentStep === 2 ? verifySubdomain : handleNext)}
                       disabled={isVerifying}
                     >
                        {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ArrowRight className="ml-2 w-4 h-4" /></>}
