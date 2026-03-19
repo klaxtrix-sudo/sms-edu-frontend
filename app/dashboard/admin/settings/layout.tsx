@@ -52,7 +52,7 @@ export default function SettingsLayout({
       <div className="flex flex-col gap-2">
         <h1 className="text-4xl font-heading font-extrabold tracking-tight text-slate-900 drop-shadow-sm flex items-center gap-3">
           <Settings className="w-10 h-10 text-blue-600" />
-          Settings <span className="text-blue-600">ALPHA</span>
+          Settings
         </h1>
         <p className="text-slate-500 font-medium">
           Configure institutional identity, academic cycles, and global system integration.

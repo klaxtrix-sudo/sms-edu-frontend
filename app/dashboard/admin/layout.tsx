@@ -18,7 +18,7 @@ export default function AdminLayout({
     { label: "MCQ Exams", href: "/dashboard/admin/exams", icon: "ClipboardList" },
     { label: "Academic Results", href: "/dashboard/admin/academics/results", icon: "CheckSquare" },
     { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
-    { label: "Mission Control", href: "/dashboard/admin/settings", icon: "Settings" },
+    { label: "Settings", href: "/dashboard/admin/settings", icon: "Settings" },
   ] as const;
 
   return (
