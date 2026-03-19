@@ -72,9 +72,10 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        lg: '1.5rem',
+        md: '1.25rem',
+        sm: '1rem',
+        full: '9999px',
       },
       keyframes: {
         'accordion-down': {
@@ -94,6 +95,10 @@ const config: Config = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in': 'fade-in 0.3s ease-out',
+      },
+      gridTemplateColumns: {
+        'bento': 'repeat(auto-fit, minmax(300px, 1fr))',
+        'executive': '2fr 1fr 1fr',
       },
     },
   },

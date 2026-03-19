@@ -4,30 +4,27 @@
 
 @layer base {
   :root {
-    --background: 210 40% 96%;
-    --foreground: 222 47% 11%;
+    /* 2025 Executive Palette */
+    --background: 226 50% 98%;
+    --foreground: 224 71% 4%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 224 71% 4%;
     --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 221 100% 97%;
-    --secondary-foreground: 221 83% 43%;
-    --muted: 210 40% 93%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 221 100% 97%;
-    --accent-foreground: 221 83% 43%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 226 50% 94%;
+    --secondary-foreground: 224 71% 4%;
+    --muted: 226 50% 94%;
+    --muted-foreground: 215 20% 45%;
+    --accent: 226 50% 94%;
+    --accent-foreground: 224 71% 4%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 226 50% 90%;
+    --input: 226 50% 90%;
     --ring: 221 83% 53%;
-    --radius: 0.75rem;
+    --radius: 1.5rem; /* More modern, larger radius */
   }
 
   .dark {
@@ -69,15 +66,27 @@
   }
 }
 
-/* Glassmorphism utility */
+/* Enhanced Glassmorphism & Bento Utilities */
 @layer utilities {
-  .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/30 dark:bg-white/5 dark:border-white/10;
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-3xl border border-white/20 shadow-2xl;
   }
-  .glass-card {
-    @apply glass rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)];
+  .dark .glass-panel {
+    @apply bg-black/40 backdrop-blur-3xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
   }
-  .gradient-brand {
-    @apply bg-gradient-to-br from-brand-500 to-blue-600;
+  .bento-inner {
+    @apply rounded-[2rem] p-8 h-full flex flex-col;
   }
+  .text-glow {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
