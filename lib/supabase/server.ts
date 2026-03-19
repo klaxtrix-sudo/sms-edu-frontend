@@ -2,11 +2,11 @@ import { createServerClient as createClient, type CookieOptions } from '@supabas
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/supabase';
 
-export function createServerClient() {
+export function createServerClient(supabaseUrl?: string, supabaseAnonKey?: string) {
   const cookieStore = cookies();
   return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) { return cookieStore.get(name)?.value; },
