@@ -16,8 +16,8 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        heading: ['Plus Jakarta Sans', 'sans-serif'],
+        sans: ['var(--font-plus-jakarta)', 'Inter', 'sans-serif'],
+        heading: ['var(--font-outfit)', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {

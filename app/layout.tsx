@@ -1,19 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-outfit',
+  display: 'swap',
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -46,7 +47,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#3b82f6" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className={`${inter.variable} ${plusJakarta.variable} font-sans antialiased`}>
+      <body className={`${outfit.variable} ${plusJakartaSans.variable} font-sans antialiased text-foreground bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <QueryProvider>
             {children}
