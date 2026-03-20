@@ -139,13 +139,6 @@ export default function AccessManagementPage() {
         
         <div className="flex items-center gap-3">
            <Button 
-             variant="outline" 
-             className="bg-slate-900/50 border-slate-800 text-slate-400 hover:text-white"
-           >
-              <Filter className="w-4 h-4 mr-2" />
-              Filter Gates
-           </Button>
-           <Button 
              onClick={handleGenerateCode}
              disabled={isGenerating}
              className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-6 h-12 rounded-xl shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)] transition-all flex items-center gap-2"
