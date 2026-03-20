@@ -48,21 +48,32 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     const fetchTenantConfig = async () => {
       setIsLoading(true);
       try {
-        // MOCK: In production, this calls the 'Main Control Database' API
-        console.log(`[Klaxtrix] Provisioning context for tenant: ${subdomain}`);
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${backendUrl}/tenant/resolve?subdomain=${subdomain}`);
         
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!res.ok) {
+          // Fallback: use master keys so the UI still renders during development
+          console.warn(`[Klaxtrix] Tenant "${subdomain}" not found — using master keys as fallback`);
+          setTenant({
+            id: 'fallback',
+            name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1),
+            subdomain,
+            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          });
+          return;
+        }
 
-        const mockTenant: TenantConfig = {
-          id: 'tenant_123',
-          name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1) + ' Academy',
-          subdomain: subdomain,
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-          primaryColor: '#3b82f6',
-        };
-
-        setTenant(mockTenant);
+        const data = await res.json();
+        setTenant({
+          id: data.data.id ?? subdomain,
+          name: data.data.name ?? subdomain,
+          subdomain,
+          supabaseUrl: data.data.supabaseUrl,
+          supabaseAnonKey: data.data.supabaseAnonKey,
+          logoUrl: data.data.logoUrl,
+          primaryColor: data.data.primaryColor ?? '#3b82f6',
+        });
       } catch (err) {
         setError('Failed to load school configuration');
         console.error(err);

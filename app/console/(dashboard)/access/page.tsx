@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { cn } from '@/lib/utils';
 import AuditLogsDrawer from '@/components/console/audit-logs-drawer';
 import { Trash2 } from 'lucide-react';
 
@@ -296,13 +297,27 @@ export default function AccessManagementPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-slate-800 text-slate-300">
                             <DropdownMenuItem
-                              onSelect={() => setPendingDeleteId(item.id)}
-                              className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer gap-2"
+                              onSelect={() => item.status !== 'used' && setPendingDeleteId(item.id)}
+                              disabled={item.status === 'used'}
+                              className={cn(
+                                "gap-2",
+                                item.status === 'used'
+                                  ? "text-slate-600 cursor-not-allowed opacity-50"
+                                  : "text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer"
+                              )}
                             >
                               <Trash2 className="w-4 h-4" /> Delete Access Code
                             </DropdownMenuItem>
                             <DropdownMenuSeparator className="bg-slate-800" />
-                            <DropdownMenuItem className="gap-2 cursor-pointer">
+                            <DropdownMenuItem
+                              disabled={item.status === 'used'}
+                              className={cn(
+                                "gap-2",
+                                item.status === 'used'
+                                  ? "cursor-not-allowed opacity-50"
+                                  : "cursor-pointer"
+                              )}
+                            >
                               <Zap className="w-4 h-4" /> Force Expire
                             </DropdownMenuItem>
                           </DropdownMenuContent>

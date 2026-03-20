@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
-import { createClient } from '@supabase/supabase-js';
 
 // Simple in-process cache to avoid a DB hit on every request
 // Key: subdomain → Value: { supabaseUrl, supabaseAnonKey, cachedAt }
@@ -63,7 +62,10 @@ export async function middleware(request: NextRequest) {
 
   if (isTenantSpace) {
     return NextResponse.rewrite(
-      new URL(`/(schools)/${subdomain}${url.pathname === '/' ? '' : url.pathname}`, request.url)
+      // Route groups like (schools) and (auth) are file-system only — they are NOT
+      // part of the URL. Rewriting to /{subdomain}/login correctly matches
+      // app/(schools)/[subdomain]/(auth)/login/page.tsx
+      new URL(`/${subdomain}${url.pathname === '/' ? '' : url.pathname}`, request.url)
     );
   }
 
