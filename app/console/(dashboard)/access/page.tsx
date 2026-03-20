@@ -49,6 +49,7 @@ export default function AccessManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Fetch real codes from backend
   const fetchCodes = async () => {
@@ -95,17 +96,18 @@ export default function AccessManagementPage() {
   };
 
   const handleDeleteCode = async (id: string, code: string) => {
-    if (!confirm(`Permanently delete access code ${code}? This action cannot be undone and will be logged.`)) return;
     try {
       const response = await axios.delete(`${BACKEND_URL}/access/admin/delete/${id}`);
       if (response.data.success) {
         toast.success('Access Code Purged', {
           description: `Gate ${code} has been permanently removed from the Matrix.`,
         });
-        fetchCodes(); // Refresh list
+        setPendingDeleteId(null);
+        fetchCodes();
       }
     } catch (error) {
       toast.error('Purge protocol failed.');
+      setPendingDeleteId(null);
     }
   };
 
@@ -260,40 +262,60 @@ export default function AccessManagementPage() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                       <Button 
-                         variant="outline" 
-                         size="icon" 
-                         className="w-8 h-8 rounded-lg bg-slate-900/50 border-slate-800 text-slate-500 hover:text-cyan-400 hover:border-cyan-500/30 transition-all"
-                         onClick={() => copyToClipboard(item.code)}
-                       >
+                    {pendingDeleteId === item.id ? (
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Confirm?</span>
+                        <Button
+                          size="sm"
+                          className="h-7 px-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider"
+                          onClick={() => handleDeleteCode(item.id, item.code)}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-3 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-wider"
+                          onClick={() => setPendingDeleteId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="w-8 h-8 rounded-lg bg-slate-900/50 border-slate-800 text-slate-500 hover:text-cyan-400 hover:border-cyan-500/30 transition-all"
+                          onClick={() => copyToClipboard(item.code)}
+                        >
                           <Copy className="w-3.5 h-3.5" />
-                       </Button>
-
-                       <DropdownMenu>
-                         <DropdownMenuTrigger asChild>
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             className="w-8 h-8 rounded-lg text-slate-600 hover:text-white"
-                           >
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 rounded-lg text-slate-600 hover:text-white"
+                            >
                               <MoreVertical className="w-4 h-4" />
-                           </Button>
-                         </DropdownMenuTrigger>
-                         <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-slate-800 text-slate-300">
-                           <DropdownMenuItem 
-                             onSelect={() => handleDeleteCode(item.id, item.code)}
-                             className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer gap-2"
-                           >
-                             <Trash2 className="w-4 h-4" /> Delete Access Code
-                           </DropdownMenuItem>
-                           <DropdownMenuSeparator className="bg-slate-800" />
-                           <DropdownMenuItem className="gap-2 cursor-pointer">
-                             <Zap className="w-4 h-4" /> Force Expire
-                           </DropdownMenuItem>
-                         </DropdownMenuContent>
-                       </DropdownMenu>
-                    </div>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-slate-800 text-slate-300">
+                            <DropdownMenuItem
+                              onSelect={() => setPendingDeleteId(item.id)}
+                              className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" /> Delete Access Code
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-slate-800" />
+                            <DropdownMenuItem className="gap-2 cursor-pointer">
+                              <Zap className="w-4 h-4" /> Force Expire
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
