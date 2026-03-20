@@ -22,9 +22,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import axios from 'axios';
 import AuditLogsDrawer from '@/components/console/audit-logs-drawer';
+import { Trash2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
@@ -84,6 +92,21 @@ export default function AccessManagementPage() {
     toast.success('Copied to Clipboard', {
       description: `Access code ${code} is ready for distribution.`,
     });
+  };
+
+  const handleDeleteCode = async (id: string, code: string) => {
+    if (!confirm(`Permanently delete access code ${code}? This action cannot be undone and will be logged.`)) return;
+    try {
+      const response = await axios.delete(`${BACKEND_URL}/access/admin/delete/${id}`);
+      if (response.data.success) {
+        toast.success('Access Code Purged', {
+          description: `Gate ${code} has been permanently removed from the Matrix.`,
+        });
+        fetchCodes(); // Refresh list
+      }
+    } catch (error) {
+      toast.error('Purge protocol failed.');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -246,13 +269,30 @@ export default function AccessManagementPage() {
                        >
                           <Copy className="w-3.5 h-3.5" />
                        </Button>
-                       <Button 
-                         variant="ghost" 
-                         size="icon" 
-                         className="w-8 h-8 rounded-lg text-slate-600 hover:text-white"
-                       >
-                          <MoreVertical className="w-4 h-4" />
-                       </Button>
+
+                       <DropdownMenu>
+                         <DropdownMenuTrigger asChild>
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             className="w-8 h-8 rounded-lg text-slate-600 hover:text-white"
+                           >
+                              <MoreVertical className="w-4 h-4" />
+                           </Button>
+                         </DropdownMenuTrigger>
+                         <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-slate-800 text-slate-300">
+                           <DropdownMenuItem 
+                             onSelect={() => handleDeleteCode(item.id, item.code)}
+                             className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer gap-2"
+                           >
+                             <Trash2 className="w-4 h-4" /> Delete Access Code
+                           </DropdownMenuItem>
+                           <DropdownMenuSeparator className="bg-slate-800" />
+                           <DropdownMenuItem className="gap-2 cursor-pointer">
+                             <Zap className="w-4 h-4" /> Force Expire
+                           </DropdownMenuItem>
+                         </DropdownMenuContent>
+                       </DropdownMenu>
                     </div>
                   </td>
                 </tr>
