@@ -172,9 +172,9 @@ export default function AccessManagementPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800/50">
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Access Gate</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Access Code</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Status</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Assigned Institutional Node</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Assigned School</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Usage</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Expiration</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-right">Actions</th>
@@ -267,7 +267,7 @@ export default function AccessManagementPage() {
                  <Clock className="w-3 h-3" /> Latest Session Activity:
               </div>
               <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/5 px-2 py-0.5 rounded border border-cyan-500/10">
-                 {codes.length > 0 ? `${codes[0].code} Identified in Matrix Hub` : 'Protocol Initialized...'}
+                 {codes.length > 0 ? `${codes[0].code} created on ${new Date(codes[0].created_at).toLocaleDateString()}` : 'Protocol Initialized...'}
               </div>
             </div>
            <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all">
