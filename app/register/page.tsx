@@ -41,6 +41,7 @@ export default function RegisterPage() {
     supabaseUrl:           '',
     supabaseAnonKey:       '',
     supabaseServiceRoleKey:'',
+    dbConnectionString:    '',
     mongodbUri:            '',
     adminEmail:            '',
     adminPassword:         '',
@@ -95,7 +96,7 @@ export default function RegisterPage() {
   const handleLaunch = async () => {
     const required: (keyof typeof formData)[] = [
       'schoolName','address','subdomain','supabaseUrl',
-      'supabaseAnonKey','supabaseServiceRoleKey','mongodbUri','adminEmail','adminPassword'
+      'supabaseAnonKey','supabaseServiceRoleKey','dbConnectionString','mongodbUri','adminEmail','adminPassword'
     ];
     for (const field of required) {
       if (!formData[field].trim()) {
@@ -164,18 +165,10 @@ export default function RegisterPage() {
                 </Button>
               </div>
 
-              {/* Provisioning SQL notice */}
-              <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-sm text-amber-600 text-left space-y-2">
-                <p className="font-bold">⚠️ One final step required</p>
-                <p>
-                  To complete database provisioning, run the Klaxtrix School Setup SQL in your Supabase project's SQL Editor.
-                </p>
-                <a
-                  href="/klaxtrix_school_setup.sql" download
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
-                >
-                  Download Setup SQL <ExternalLink className="w-3 h-3" />
-                </a>
+              {/* Auto-provisioned confirmation */}
+              <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/20 text-sm text-green-600 text-left flex gap-3">
+                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                <span>Database schema automatically provisioned — your school management system is fully ready. No manual steps required.</span>
               </div>
 
               <Button
@@ -350,6 +343,22 @@ export default function RegisterPage() {
                           value={formData.supabaseServiceRoleKey} onChange={e => update('supabaseServiceRoleKey', e.target.value)} />
                         <p className="text-[10px] text-muted-foreground">Used for one-time provisioning only. Never stored in plaintext.</p>
                       </div>
+                    </div>
+
+                    {/* Database direct connection for schema provisioning */}
+                    <div className="space-y-2">
+                      <Label htmlFor="dbConnectionString">Database Connection String</Label>
+                      <Input
+                        id="dbConnectionString"
+                        type="password"
+                        placeholder="postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres"
+                        className="h-11 rounded-xl font-mono text-sm"
+                        value={formData.dbConnectionString}
+                        onChange={e => update('dbConnectionString', e.target.value)}
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Find this in Supabase → Settings → Database → Connection String (URI). Used for one-time automated schema setup.
+                      </p>
                     </div>
 
                     <div className="pt-2 border-t border-border/50">
