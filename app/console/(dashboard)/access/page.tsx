@@ -205,7 +205,6 @@ export default function AccessManagementPage() {
                        </div>
                        <div className="flex flex-col">
                           <span className="text-sm font-black text-white font-mono tracking-wider tabular-nums">{item.code}</span>
-                          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Genesis Protocol Code</span>
                        </div>
                     </div>
                   </td>
