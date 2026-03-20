@@ -351,13 +351,13 @@ export default function RegisterPage() {
                       <Input
                         id="dbConnectionString"
                         type="password"
-                        placeholder="postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres"
+                        placeholder="postgresql://postgres.[ref]:[password]@aws-0-region.pooler.supabase.com:5432/postgres"
                         className="h-11 rounded-xl font-mono text-sm"
                         value={formData.dbConnectionString}
                         onChange={e => update('dbConnectionString', e.target.value)}
                       />
                       <p className="text-[10px] text-muted-foreground">
-                        Find this in Supabase → Settings → Database → Connection String (URI). Used for one-time automated schema setup.
+                        Supabase → Settings → Database → Connection String → <strong>Session mode</strong> tab. Do NOT use "Direct connection" — it may be unreachable.
                       </p>
                     </div>
 
