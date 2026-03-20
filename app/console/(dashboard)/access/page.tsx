@@ -28,11 +28,10 @@ import axios from 'axios';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
 const MOCK_CODES = [
-  { id: '1', code: 'KLAX-2026-X8Y2', status: 'active', institution: '-', created: '2026-03-20', expires: '2026-04-20', usage: '0/1' },
-  { id: '2', code: 'KLAX-2026-M9N1', status: 'used', institution: 'Monidams Academy', created: '2026-03-18', expires: '2026-04-18', usage: '1/1' },
-  { id: '3', code: 'KLAX-2026-P4Q5', status: 'active', institution: '-', created: '2026-03-19', expires: '2026-04-19', usage: '0/1' },
-  { id: '4', code: 'KLAX-2026-R7T3', status: 'expired', institution: '-', created: '2026-02-15', expires: '2026-03-15', usage: '0/1' },
-  { id: '5', code: 'KLAX-2026-B1C8', status: 'used', institution: 'Grace Hill International', created: '2026-03-10', expires: '2026-04-10', usage: '1/1' },
+  { id: '1', code: 'X8Y2M9N1', status: 'active', institution: '-', created: '2026-03-20', expires: '2026-04-20', usage: '0/1' },
+  { id: '2', code: 'P4Q5R7T3', status: 'used', institution: 'Monidams Academy', created: '2026-03-18', expires: '2026-04-18', usage: '1/1' },
+  { id: '3', code: 'B1C8L2O9', status: 'active', institution: '-', created: '2026-03-19', expires: '2026-04-19', usage: '0/1' },
+  { id: '4', code: 'T5U6V7W8', status: 'expired', institution: '-', created: '2026-02-15', expires: '2026-03-15', usage: '0/1' },
 ];
 
 export default function AccessManagementPage() {
@@ -63,9 +62,7 @@ export default function AccessManagementPage() {
   const handleGenerateCode = async () => {
     try {
       setIsGenerating(true);
-      const response = await axios.post(`${BACKEND_URL}/access/admin/generate`, {
-        prefix: 'KLAX-2026'
-      });
+      const response = await axios.post(`${BACKEND_URL}/access/admin/generate`);
       
       if (response.data.success) {
         toast.success('Access Code Generated', {
