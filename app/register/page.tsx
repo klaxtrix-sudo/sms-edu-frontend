@@ -12,6 +12,9 @@ import { CheckCircle2, Globe, Server, Shield, User, Zap, ArrowRight, ArrowLeft, 
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
 const STEPS = [
   { id: 'verify', title: 'Verify Access', icon: Shield },
@@ -49,21 +52,29 @@ export default function RegisterPage() {
   };
 
   const verifyAccessCode = async () => {
-     setIsVerifying(true);
-     await new Promise(resolve => setTimeout(resolve, 800));
-     
-     if (formData.accessCode.toUpperCase() === 'KLAX-2026') {
-        setIsVerified(true);
-        setIsVerifying(false);
-        toast.success('Access Granted', {
-           description: 'Your institutional identity is verified.',
+     try {
+        setIsVerifying(true);
+        const response = await axios.post(`${BACKEND_URL}/access/auth/verify`, {
+           code: formData.accessCode.toUpperCase()
         });
-        handleNext();
-     } else {
-        setIsVerifying(false);
-        toast.error('Invalid Access Code', {
-           description: 'Please contact Klaxtrix admin for an invitation.',
+        
+        if (response.data.success) {
+           setIsVerified(true);
+           toast.success('Access Granted', {
+              description: 'Your institutional identity is verified.',
+           });
+           handleNext();
+        } else {
+           toast.error('Invalid Access Code', {
+              description: response.data.message || 'Please contact Klaxtrix admin for an invitation.',
+           });
+        }
+     } catch (error) {
+        toast.error('Verification System Error', {
+           description: 'Unable to reach the global node network. Please try again.',
         });
+     } finally {
+        setIsVerifying(false);
      }
   };
 

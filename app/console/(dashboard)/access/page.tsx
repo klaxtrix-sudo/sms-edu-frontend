@@ -23,6 +23,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
 const MOCK_CODES = [
   { id: '1', code: 'KLAX-2026-X8Y2', status: 'active', institution: '-', created: '2026-03-20', expires: '2026-04-20', usage: '0/1' },
@@ -33,17 +36,48 @@ const MOCK_CODES = [
 ];
 
 export default function AccessManagementPage() {
+  const [codes, setCodes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerateCode = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      toast.success('Access Code Generated', {
-        description: 'New secure gate KLAX-2026-H4J9 created and logged.',
+  // Fetch real codes from backend
+  const fetchCodes = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BACKEND_URL}/access/admin/list`);
+      if (response.data.success) {
+        setCodes(response.data.data);
+      }
+    } catch (error) {
+      toast.error('Failed to sync with Access Matrix.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchCodes();
+  }, []);
+
+  const handleGenerateCode = async () => {
+    try {
+      setIsGenerating(true);
+      const response = await axios.post(`${BACKEND_URL}/access/admin/generate`, {
+        prefix: 'KLAX-2026'
       });
-    }, 1200);
+      
+      if (response.data.success) {
+        toast.success('Access Code Generated', {
+          description: `New secure gate ${response.data.data.code} created and logged.`,
+        });
+        fetchCodes(); // Refresh list
+      }
+    } catch (error) {
+      toast.error('Code generation protocol failed.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const copyToClipboard = (code: string) => {
@@ -101,15 +135,17 @@ export default function AccessManagementPage() {
       {/* Stats Quick View */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
          {[
-           { label: 'Total Gates', value: '42', color: 'slate' },
-           { label: 'Active Gates', value: '15', color: 'cyan' },
-           { label: 'Redeemed', value: '24', color: 'emerald' },
-           { label: 'Expirations', value: '3', color: 'red' },
+           { label: 'Total Gates', value: codes.length.toString(), color: 'slate' },
+           { label: 'Active Gates', value: codes.filter(c => c.status === 'active').length.toString(), color: 'cyan' },
+           { label: 'Redeemed', value: codes.filter(c => c.status === 'used').length.toString(), color: 'emerald' },
+           { label: 'Expirations', value: codes.filter(c => c.status === 'expired').length.toString(), color: 'red' },
          ].map((stat, i) => (
            <Card key={i} className="p-4 bg-[#0c0c0c]/50 border-slate-800/50 relative overflow-hidden group">
               <div className="space-y-1 relative z-10">
                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                 <p className={`text-2xl font-black text-${stat.color === 'slate' ? 'white' : stat.color + '-400'} font-heading`}>{stat.value}</p>
+                 <p className={`text-2xl font-black text-${stat.color === 'slate' ? 'white' : stat.color + '-400'} font-heading tabular-nums animate-in slide-in-from-bottom-2 duration-500`}>
+                    {isLoading ? '...' : stat.value}
+                 </p>
               </div>
               <div className={`absolute top-0 right-0 w-16 h-16 bg-${stat.color}-500/5 blur-2xl -mr-8 -mt-8`} />
            </Card>
@@ -148,7 +184,22 @@ export default function AccessManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30">
-              {MOCK_CODES.map((item) => (
+              {isLoading ? (
+                <tr>
+                   <td colSpan={6} className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                         <Zap className="w-8 h-8 text-cyan-500 animate-spin" />
+                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Accessing Node Network...</span>
+                      </div>
+                   </td>
+                </tr>
+              ) : codes.length === 0 ? (
+                <tr>
+                   <td colSpan={6} className="px-6 py-20 text-center">
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Active Access Gates Identified.</span>
+                   </td>
+                </tr>
+              ) : codes.filter(c => c.code.toLowerCase().includes(searchQuery.toLowerCase()) || c.institution_name?.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
                 <tr key={item.id} className="group hover:bg-slate-900/30 transition-colors">
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center gap-3">
@@ -166,10 +217,10 @@ export default function AccessManagementPage() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
-                       {item.institution !== '-' ? (
+                       {item.institution_name ? (
                           <>
                              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                             <span className="text-sm font-bold text-slate-300">{item.institution}</span>
+                             <span className="text-sm font-bold text-slate-300">{item.institution_name}</span>
                           </>
                        ) : (
                           <span className="text-sm font-bold text-slate-600 italic">Unassigned Gate</span>
@@ -177,12 +228,14 @@ export default function AccessManagementPage() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-center">
-                    <span className="text-[11px] font-black text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-800/50 tabular-nums">{item.usage}</span>
+                    <span className="text-[11px] font-black text-slate-400 bg-slate-900/50 px-2 py-1 rounded border border-slate-800/50 tabular-nums">{item.usage_count}/{item.usage_limit}</span>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2 text-slate-500">
                        <Calendar className="w-3 h-3" />
-                       <span className="text-[11px] font-bold uppercase tracking-tight">{item.expires}</span>
+                       <span className="text-[11px] font-bold uppercase tracking-tight">
+                         {item.expires_at ? new Date(item.expires_at).toLocaleDateString() : 'NO EXPIRY'}
+                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
@@ -212,14 +265,14 @@ export default function AccessManagementPage() {
 
         {/* Audit Log Overlay (Floating Indicator) */}
         <div className="p-4 bg-slate-900/40 border-t border-slate-800/50 flex items-center justify-between">
-           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
                  <Clock className="w-3 h-3" /> Latest Session Activity:
               </div>
               <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/5 px-2 py-0.5 rounded border border-cyan-500/10">
-                 KLAX-2026-X8Y2 Generated by Admin (2m ago)
+                 {codes.length > 0 ? `${codes[0].code} Identified in Matrix Hub` : 'Protocol Initialized...'}
               </div>
-           </div>
+            </div>
            <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all">
               Full Protocol Logs <ArrowUpRight className="w-3 h-3 ml-1" />
            </div>
