@@ -20,7 +20,7 @@ import {
 const MENU_ITEMS = [
   { id: 'overview', title: 'Mission Overview', icon: LayoutDashboard, href: '/console/dashboard' },
   { id: 'tenants', title: 'Institutional Nodes', icon: Globe, href: '/console/tenants' },
-  { id: 'access', title: 'Access Gates', icon: Key, href: '/console/access' },
+  { id: 'access', title: 'Access', icon: Key, href: '/console/access' },
   { id: 'infrastructure', title: 'Cloud Matrix', icon: Server, href: '/console/infrastructure' },
   { id: 'analytics', title: 'Global Pulse', icon: Activity, href: '/console/analytics' },
 ];
