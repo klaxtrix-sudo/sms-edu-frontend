@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import axios from 'axios';
+import AuditLogsDrawer from '@/components/console/audit-logs-drawer';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
@@ -39,6 +40,7 @@ export default function AccessManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLogsOpen, setIsLogsOpen] = useState(false);
 
   // Fetch real codes from backend
   const fetchCodes = async () => {
@@ -269,11 +271,16 @@ export default function AccessManagementPage() {
                  {codes.length > 0 ? `${codes[0].code} created on ${new Date(codes[0].created_at).toLocaleDateString()}` : 'Protocol Initialized...'}
               </div>
             </div>
-           <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all">
-              Full Protocol Logs <ArrowUpRight className="w-3 h-3 ml-1" />
+           <div 
+             onClick={() => setIsLogsOpen(true)}
+             className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all group"
+           >
+              Full Protocol Logs <ArrowUpRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
            </div>
         </div>
       </Card>
+
+      <AuditLogsDrawer isOpen={isLogsOpen} onClose={() => setIsLogsOpen(false)} />
       
       {/* Footer Warning */}
       <div className="p-6 rounded-2xl bg-[#0c0c0c]/40 border border-slate-800/50 flex gap-5 items-center">
