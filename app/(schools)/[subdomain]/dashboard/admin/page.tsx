@@ -16,8 +16,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
-export default async function AdminDashboard() {
-  const supabase = createServerClient();
+import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
+
+export default async function AdminDashboard({ params }: { params: { subdomain: string } }) {
+  const { subdomain } = params;
+  
+  // Resolve tenant-specific keys server-side
+  const tenantKeys = await resolveTenantKeys(subdomain);
+  
+  if (!tenantKeys) {
+    redirect('/login');
+  }
+
+  const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
   let { data: { user } } = await supabase.auth.getUser();
 
   // DEVELOPMENT BYPASS for a seamless PoC Review

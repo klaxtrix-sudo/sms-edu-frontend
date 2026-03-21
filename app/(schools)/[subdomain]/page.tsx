@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
+import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
 
 interface PageProps {
   params: {
@@ -10,12 +11,15 @@ interface PageProps {
 export default async function SubdomainRootPage({ params }: PageProps) {
   const { subdomain } = params;
 
-  // TODO: Fetch tenant-specific keys from 'Main Control Database'
-  // For PoC, we use master keys but passing them dynamically prepares for Phase 2
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Resolve tenant-specific keys server-side
+  const tenantKeys = await resolveTenantKeys(subdomain);
+  
+  if (!tenantKeys) {
+    console.error(`[CRITICAL] Could not resolve keys for subdomain: ${subdomain}`);
+    redirect('/login');
+  }
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey);
+  const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

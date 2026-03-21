@@ -52,15 +52,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         const res = await fetch(`${backendUrl}/tenant/resolve?subdomain=${subdomain}`);
         
         if (!res.ok) {
-          // Fallback: use master keys so the UI still renders during development
-          console.warn(`[Klaxtrix] Tenant "${subdomain}" not found — using master keys as fallback`);
-          setTenant({
-            id: 'fallback',
-            name: subdomain.charAt(0).toUpperCase() + subdomain.slice(1),
-            subdomain,
-            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-            supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-          });
+          setError(`School "${subdomain}" not found or not yet provisioned.`);
+          setIsLoading(false);
           return;
         }
 
