@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Key, ArrowRight, Loader2, Lock, Zap } from 'lucide-react';
+import { Shield, Key, ArrowRight, Loader2, Lock, Zap, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 export default function ConsoleLoginPage() {
   const [credentials, setCredentials] = useState({ accessId: '', masterKey: '' });
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -82,12 +83,24 @@ export default function ConsoleLoginPage() {
                     </div>
                     <Input 
                       id="masterKey" 
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••" 
-                      className="h-14 bg-slate-900/50 border-slate-800 rounded-2xl pl-12 text-slate-200 focus:border-cyan-500/50 focus:ring-cyan-500/10 transition-all"
+                      className="h-14 bg-slate-900/50 border-slate-800 rounded-2xl pl-12 pr-12 text-slate-200 focus:border-cyan-500/50 focus:ring-cyan-500/10 transition-all"
                       value={credentials.masterKey}
                       onChange={e => setCredentials({...credentials, masterKey: e.target.value})}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-400 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                  </div>
               </div>
 

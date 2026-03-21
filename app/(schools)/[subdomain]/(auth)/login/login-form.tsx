@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useTenant } from '@/components/providers/tenant-provider';
+import { Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -20,6 +21,7 @@ export function LoginForm() {
   const { supabase, isLoading: isTenantLoading, error: tenantError } = useTenant();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Combine local and tenant errors
   const activeError = error || tenantError;
@@ -80,14 +82,29 @@ export function LoginForm() {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-            <input
-              {...register('password')}
-              type="password"
-              autoComplete="current-password"
-              disabled={!!tenantError}
-              placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
-            />
+            <div className="relative group">
+              <input
+                {...register('password')}
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                disabled={!!tenantError}
+                placeholder="••••••••"
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={!!tenantError}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
             {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
           </div>
 
