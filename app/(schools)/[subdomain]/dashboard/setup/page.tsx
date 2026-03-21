@@ -180,14 +180,14 @@ export default function SetupWizardPage() {
                 {currentStep === 0 && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
                     <div className="space-y-1">
-                      <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Institutional Identity</h2>
+                      <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Identity</h2>
                       <p className="text-muted-foreground font-medium">Define your school's brand and physical presence.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">School Motto</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">School Motto</Label>
                           <Input 
                             value={formData.motto}
                             onChange={e => update('motto', e.target.value)}
@@ -197,7 +197,7 @@ export default function SetupWizardPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">State</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">State</Label>
                             <Select value={formData.state} onValueChange={v => update('state', v)}>
                               <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
                                 <SelectValue placeholder="Select State" />
@@ -208,7 +208,7 @@ export default function SetupWizardPage() {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">LGA</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">LGA</Label>
                             <Select value={formData.lga} onValueChange={v => update('lga', v)} disabled={!formData.state}>
                               <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
                                 <SelectValue placeholder="Select LGA" />
@@ -223,7 +223,7 @@ export default function SetupWizardPage() {
 
                       <div className="space-y-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Official Email</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Official Email</Label>
                           <Input 
                             value={formData.officialEmail}
                             onChange={e => update('officialEmail', e.target.value)}
@@ -232,15 +232,11 @@ export default function SetupWizardPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Visual Assets (Logo/Stamp)</Label>
-                          <div className="grid grid-cols-2 gap-4">
-                             <div className="h-24 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-slate-50/50">
-                                <Camera className="size-5 text-slate-400 group-hover:text-primary transition-colors" />
-                                <span className="text-[8px] font-black uppercase text-slate-400">Upload Logo</span>
-                             </div>
-                             <div className="h-24 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-slate-50/50">
-                                <Shield className="size-5 text-slate-400 group-hover:text-primary transition-colors" />
-                                <span className="text-[8px] font-black uppercase text-slate-400">Upload Stamp</span>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Visual Assets (School Logo)</Label>
+                          <div className="grid grid-cols-1">
+                             <div className="h-32 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-slate-50/50">
+                                <Camera className="size-6 text-slate-400 group-hover:text-primary transition-colors" />
+                                <span className="text-[10px] font-black uppercase text-slate-400">Upload Logo</span>
                              </div>
                           </div>
                           <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-widest text-center mt-2">Recommended: PNG w/ transparency</p>
@@ -260,7 +256,7 @@ export default function SetupWizardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="space-y-6">
                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Active Academic Session</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Active Academic Session</Label>
                             <Select value={formData.academicYear} onValueChange={v => update('academicYear', v)}>
                               <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
                                 <SelectValue placeholder="Select Session" />
@@ -272,7 +268,7 @@ export default function SetupWizardPage() {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Current Term</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Current Term</Label>
                             <div className="grid grid-cols-3 gap-2">
                                {['1', '2', '3'].map(t => (
                                  <button
@@ -293,7 +289,7 @@ export default function SetupWizardPage() {
 
                        <div className="space-y-6">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">School Level / Category</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">School Level / Category</Label>
                             <Select value={formData.schoolType} onValueChange={v => update('schoolType', v)}>
                               <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
                                 <SelectValue placeholder="Select Type" />
@@ -328,7 +324,7 @@ export default function SetupWizardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Bank Name</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Bank Name</Label>
                             <Input 
                               value={formData.bankName}
                               onChange={e => update('bankName', e.target.value)}
@@ -337,7 +333,7 @@ export default function SetupWizardPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Number</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Number</Label>
                             <Input 
                               value={formData.accountNumber}
                               onChange={e => update('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -348,7 +344,7 @@ export default function SetupWizardPage() {
                        </div>
                        <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Name</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Name</Label>
                             <Input 
                               value={formData.accountName}
                               onChange={e => update('accountName', e.target.value)}
@@ -390,14 +386,17 @@ export default function SetupWizardPage() {
 
                 {/* Footer Navigation */}
                 <div className="mt-auto pt-10 flex items-center justify-between border-t border-slate-100">
-                   <Button 
-                     variant="ghost" 
-                     onClick={handlePrev} 
-                     disabled={currentStep === 0 || isSubmitting}
-                     className="px-8 h-12 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5 font-bold uppercase tracking-widest text-[10px] gap-2 transition-all"
-                   >
-                     <ArrowLeft className="size-3" /> Back
-                   </Button>
+                   {currentStep > 0 ? (
+                     <Button 
+                       onClick={handlePrev} 
+                       disabled={isSubmitting}
+                       className="px-10 h-14 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg gap-3 active:scale-95 group"
+                     >
+                       <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Back
+                     </Button>
+                   ) : (
+                     <div /> // Spacer for layout consistency
+                   )}
 
                    {currentStep === STEPS.length - 1 ? (
                      <Button 
