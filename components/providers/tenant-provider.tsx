@@ -14,6 +14,7 @@ interface TenantConfig {
   supabaseUrl?: string;
   supabaseAnonKey?: string;
   primaryColor?: string;
+  isSetupCompleted: boolean;
 }
 
 interface TenantContextType {
@@ -64,6 +65,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           subdomain,
           supabaseUrl: data.data.supabaseUrl,
           supabaseAnonKey: data.data.supabaseAnonKey,
+          isSetupCompleted: data.data.isSetupCompleted ?? false,
           logoUrl: data.data.logoUrl,
           primaryColor: data.data.primaryColor ?? '#3b82f6',
         });
