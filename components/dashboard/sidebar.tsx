@@ -77,9 +77,6 @@ export function Sidebar({ items, role }: SidebarProps) {
             <span className="text-xl font-black tracking-tighter text-glow whitespace-nowrap">
               Klaxtrix
             </span>
-            <span className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase opacity-80 whitespace-nowrap">
-              Executive
-            </span>
           </div>
         </div>
           <NotificationDrawer />
