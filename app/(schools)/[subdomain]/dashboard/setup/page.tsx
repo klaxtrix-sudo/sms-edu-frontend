@@ -60,19 +60,57 @@ export default function SetupWizardPage() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File size exceeds 2MB limit.");
+      // 1. Check File Size (Hard limit 500KB)
+      if (file.size > 500 * 1024) {
+        toast.error("Logo file too large. Max allowed: 500 KB.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => setLogoPreview(reader.result as string);
-      reader.readAsDataURL(file);
+
+      // 2. Check Dimensions
+      const img = new Image();
+      img.onload = () => {
+        const { width, height } = img;
+        if (width < 200 || height < 200) {
+          toast.error(`Resolution too low (${width}x${height}px). Minimum 200x200px required.`);
+          return;
+        }
+        if (width > 1200 || height > 1200) {
+          toast.error(`Resolution too high (${width}x${height}px). Maximum 1200x1200px allowed.`);
+          return;
+        }
+
+        // Accept the file
+        const reader = new FileReader();
+        reader.onloadend = () => setLogoPreview(reader.result as string);
+        reader.readAsDataURL(file);
+      };
+      
+      img.onerror = () => {
+        toast.error("Invalid image file. Please upload a PNG, SVG, or WebP.");
+      };
+
+      img.src = URL.createObjectURL(file);
     }
   };
 
   const lgas = formData.state ? STATE_LGA_MAP[formData.state] || [] : [];
 
   const handleNext = () => {
+    // Phase-based validation
+    if (currentStep === 0) {
+      if (!formData.state || !formData.lga || !formData.officialEmail) {
+        toast.error("Please complete all mandatory Identity fields (State, LGA, Email).");
+        return;
+      }
+    }
+    
+    if (currentStep === 1) {
+      if (!formData.schoolType || !formData.academicYear || !formData.currentTerm) {
+        toast.error("Please select all mandatory Academic configurations.");
+        return;
+      }
+    }
+
     if (currentStep < STEPS.length - 1) setCurrentStep(s => s + 1);
   };
 
@@ -139,6 +177,12 @@ export default function SetupWizardPage() {
     }
   };
 
+  const currentYearValue = new Date().getFullYear();
+  const DYNAMIC_ACADEMIC_YEARS = Array.from({ length: 6 }, (_, i) => {
+    const start = currentYearValue - 1 + i;
+    return `${start}/${start + 1}`;
+  });
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -149,7 +193,7 @@ export default function SetupWizardPage() {
             className="space-y-10"
           >
             <div className="space-y-1">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Identity</h2>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Identity</h2>
               <p className="text-slate-500 font-medium">Define your school's brand and physical presence.</p>
             </div>
 
@@ -204,7 +248,7 @@ export default function SetupWizardPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Visual Assets (School Logo)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">School Logo</Label>
                   <input 
                     type="file" 
                     ref={logoInputRef}
@@ -215,14 +259,25 @@ export default function SetupWizardPage() {
                   <div className="grid grid-cols-1">
                      <div 
                        onClick={() => logoInputRef.current?.click()}
-                       className="h-32 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-slate-50/50 overflow-hidden relative"
+                       className="h-36 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-slate-50/50 overflow-hidden relative"
                      >
                         {logoPreview ? (
-                          <img src={logoPreview} alt="Logo Preview" className="h-full w-full object-contain p-4" />
+                          <div className="relative h-full w-full">
+                            <img src={logoPreview} alt="Logo Preview" className="h-full w-full object-contain p-4" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <p className="text-white text-[10px] font-black uppercase">Click to Replace</p>
+                            </div>
+                          </div>
                         ) : (
                           <>
-                            <Camera className="size-6 text-slate-400 group-hover:text-primary transition-colors" />
-                            <span className="text-[10px] font-black uppercase text-slate-400">Upload Logo</span>
+                            <Camera className="size-6 text-slate-400 group-hover:text-primary transition-colors mb-1" />
+                            <div className="text-center space-y-1">
+                              <span className="text-[10px] font-black uppercase text-slate-900 block">Capture Brand Asset</span>
+                              <div className="flex flex-col gap-0.5 opacity-60">
+                                <p className="text-[8px] font-bold uppercase text-slate-500">• Max 500 KB • Min 200px</p>
+                                <p className="text-[8px] font-bold uppercase text-slate-500">• PNG, SVG or WebP</p>
+                              </div>
+                            </div>
                           </>
                         )}
                      </div>
@@ -241,7 +296,7 @@ export default function SetupWizardPage() {
             className="space-y-10"
           >
             <div className="space-y-1">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Academic</h2>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Academic</h2>
               <p className="text-slate-500 font-medium">Configure your institution's operational scope.</p>
             </div>
 
@@ -269,8 +324,9 @@ export default function SetupWizardPage() {
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-slate-200 text-slate-700">
-                      <SelectItem value="2024/2025">2024/2025</SelectItem>
-                      <SelectItem value="2025/2026">2025/2026</SelectItem>
+                      {DYNAMIC_ACADEMIC_YEARS.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -284,9 +340,9 @@ export default function SetupWizardPage() {
                       <SelectValue placeholder="Select term" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-slate-200 text-slate-700">
-                      <SelectItem value="1">First Term (Alpha)</SelectItem>
-                      <SelectItem value="2">Second Term (Beta)</SelectItem>
-                      <SelectItem value="3">Third Term (Gamma)</SelectItem>
+                      <SelectItem value="1">First Term</SelectItem>
+                      <SelectItem value="2">Second Term</SelectItem>
+                      <SelectItem value="3">Third Term</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -302,14 +358,14 @@ export default function SetupWizardPage() {
             className="space-y-10"
           >
             <div className="space-y-1">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Financial</h2>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Financial</h2>
               <p className="text-slate-500 font-medium">Standardize your institutional billing protocols.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Official Bank Name</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Official Bank Name (Optional)</Label>
                   <Input 
                     placeholder="e.g. Zenith Bank" 
                     value={formData.bankName}
@@ -318,7 +374,7 @@ export default function SetupWizardPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Name</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Name (Optional)</Label>
                   <Input 
                     placeholder="Institutional Account Title" 
                     value={formData.accountName}
@@ -330,7 +386,7 @@ export default function SetupWizardPage() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Number</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Number (Optional)</Label>
                   <Input 
                     placeholder="10 Digits" 
                     maxLength={10}
@@ -359,7 +415,7 @@ export default function SetupWizardPage() {
               />
             </div>
             <div className="space-y-2">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Institutional Sync Ready</h2>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Institutional Sync Ready</h2>
               <p className="text-slate-500 font-medium max-w-md mx-auto">
                 Your school's protocols have been mapped. Finalize the synchronization to activate your executive command center.
               </p>
