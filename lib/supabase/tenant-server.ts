@@ -1,13 +1,12 @@
-// Simple in-process cache to avoid a DB hit on every request
-// Key: subdomain → Value: { supabaseUrl, supabaseAnonKey, cachedAt }
-const tenantCache = new Map<string, { supabaseUrl: string; supabaseAnonKey: string; cachedAt: number }>();
+// Key: subdomain → Value: { name, supabaseUrl, supabaseAnonKey, cachedAt }
+const tenantCache = new Map<string, { name: string; supabaseUrl: string; supabaseAnonKey: string; cachedAt: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-export async function resolveTenantKeys(subdomain: string): Promise<{ supabaseUrl: string; supabaseAnonKey: string } | null> {
+export async function resolveTenantKeys(subdomain: string): Promise<{ name: string; supabaseUrl: string; supabaseAnonKey: string } | null> {
   // Return from cache if fresh
   const cached = tenantCache.get(subdomain);
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-    return { supabaseUrl: cached.supabaseUrl, supabaseAnonKey: cached.supabaseAnonKey };
+    return { name: cached.name, supabaseUrl: cached.supabaseUrl, supabaseAnonKey: cached.supabaseAnonKey };
   }
 
   // Fetch from master Klaxtrix DB via a lightweight internal API call
@@ -23,6 +22,7 @@ export async function resolveTenantKeys(subdomain: string): Promise<{ supabaseUr
     if (!data.success) return null;
 
     const result = { 
+      name: data.data.name,
       supabaseUrl: data.data.supabaseUrl, 
       supabaseAnonKey: data.data.supabaseAnonKey 
     };
