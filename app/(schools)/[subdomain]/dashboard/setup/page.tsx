@@ -113,7 +113,7 @@ export default function SetupWizardPage() {
 
       // 3. Force reload or navigate
       setTimeout(() => {
-        window.location.href = '/console';
+        window.location.href = '/dashboard/admin';
       }, 1500);
 
     } catch (err: any) {

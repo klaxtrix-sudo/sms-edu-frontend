@@ -1,3 +1,8 @@
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useTenant } from '@/components/providers/tenant-provider';
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 
 export default function AdminLayout({
@@ -5,6 +10,17 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { tenant, isLoading } = useTenant();
+
+  useEffect(() => {
+    if (!isLoading && tenant && !tenant.isSetupCompleted && !pathname.includes('/setup')) {
+      console.log(`[Klaxtrix] Institutional setup incomplete for "${tenant.name}". Redirecting to onboarding wizard.`);
+      router.push('/dashboard/setup');
+    }
+  }, [tenant, isLoading, pathname, router]);
+
   const adminNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/admin", icon: "LayoutDashboard" },
     { label: "Executive Analytics", href: "/dashboard/admin/analytics", icon: "BarChart3" },
@@ -21,10 +37,26 @@ export default function AdminLayout({
     { label: "Settings", href: "/dashboard/admin/settings", icon: "Settings" },
   ] as const;
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="space-y-4 text-center">
+          <div className="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-[10px] font-black uppercase text-cyan-500 tracking-[0.3em] animate-pulse">Syncing Protocols...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent layout flash if setup is incomplete (redirection will happen in useEffect)
+  if (tenant && !tenant.isSetupCompleted && !pathname.includes('/setup')) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen">
       <Sidebar items={adminNavItems} role="Admin" />
-      <main className="flex-1 overflow-y-auto p-8 lg:p-12">
+      <main className="flex-1 overflow-y-auto p-8 lg:p-12 bg-[#fafbfc]">
         {children}
       </main>
     </div>
