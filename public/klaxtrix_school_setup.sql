@@ -95,38 +95,44 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- 8. Basic RLS Policies
-CREATE POLICY IF NOT EXISTS "Users can see own profile"
+DROP POLICY IF EXISTS "Users can see own profile" ON public.profiles;
+CREATE POLICY "Users can see own profile"
   ON public.profiles FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "Admins can manage profiles"
+DROP POLICY IF EXISTS "Admins can manage profiles" ON public.profiles;
+CREATE POLICY "Admins can manage profiles"
   ON public.profiles FOR ALL
   USING (EXISTS (
     SELECT 1 FROM public.profiles p
     WHERE p.id = auth.uid() AND p.role = 'admin'
   ));
 
-CREATE POLICY IF NOT EXISTS "Users can view their school"
+DROP POLICY IF EXISTS "Users can view their school" ON public.schools;
+CREATE POLICY "Users can view their school"
   ON public.schools FOR SELECT
   USING (EXISTS (
     SELECT 1 FROM public.profiles
     WHERE profiles.id = auth.uid() AND profiles.school_id = schools.id
   ));
 
-CREATE POLICY IF NOT EXISTS "Admins can update their school"
+DROP POLICY IF EXISTS "Admins can update their school" ON public.schools;
+CREATE POLICY "Admins can update their school"
   ON public.schools FOR UPDATE
   USING (EXISTS (
     SELECT 1 FROM public.profiles
     WHERE profiles.id = auth.uid() AND profiles.role = 'admin' AND profiles.school_id = schools.id
   ));
 
-CREATE POLICY IF NOT EXISTS "School members can view classes"
+DROP POLICY IF EXISTS "School members can view classes" ON public.classes;
+CREATE POLICY "School members can view classes"
   ON public.classes FOR SELECT
   USING (EXISTS (
     SELECT 1 FROM public.profiles
     WHERE profiles.id = auth.uid() AND profiles.school_id = classes.school_id
   ));
 
-CREATE POLICY IF NOT EXISTS "School members can view subjects"
+DROP POLICY IF EXISTS "School members can view subjects" ON public.subjects;
+CREATE POLICY "School members can view subjects"
   ON public.subjects FOR SELECT
   USING (EXISTS (
     SELECT 1 FROM public.profiles
