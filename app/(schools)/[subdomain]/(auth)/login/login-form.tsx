@@ -17,9 +17,12 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
-  const { supabase, isLoading: isTenantLoading } = useTenant();
+  const { supabase, isLoading: isTenantLoading, error: tenantError } = useTenant();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Combine local and tenant errors
+  const activeError = error || tenantError;
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -27,7 +30,7 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginValues) => {
     if (!supabase) {
-      setError('System initializing. Please wait a moment...');
+      setError(tenantError || 'System initializing. Please wait a moment...');
       return;
     }
 
@@ -68,8 +71,9 @@ export function LoginForm() {
               {...register('email')}
               type="email"
               autoComplete="email"
+              disabled={!!tenantError}
               placeholder="you@school.edu.ng"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
             />
             {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
           </div>
@@ -80,28 +84,29 @@ export function LoginForm() {
               {...register('password')}
               type="password"
               autoComplete="current-password"
+              disabled={!!tenantError}
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
             />
             {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
           </div>
 
-          {error && (
+          {activeError && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-destructive text-sm font-medium"
             >
-              <div className="flex items-center gap-2">
-                <span>❌</span>
-                <span>{error}</span>
+              <div className="flex items-center gap-2 text-left">
+                <span className="shrink-0 text-lg">⚠️</span>
+                <span>{activeError}</span>
               </div>
             </motion.div>
           )}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !!tenantError}
             className="w-full py-2.5 px-4 bg-primary text-primary-foreground font-semibold rounded-xl shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
