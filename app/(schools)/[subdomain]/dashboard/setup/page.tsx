@@ -22,7 +22,7 @@ import {
 import { toast } from 'sonner';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { NIGERIA_STATES, STATE_LGA_MAP } from '@/lib/constants/nigeria-locations';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 const STEPS = [
   { id: 'identity', title: 'Identity', icon: Building2 },
@@ -33,6 +33,8 @@ const STEPS = [
 
 export default function SetupWizardPage() {
   const router = useRouter();
+  const params = useParams();
+  const subdomain = params?.subdomain as string;
   const { tenant, supabase } = useTenant();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -128,45 +130,33 @@ export default function SetupWizardPage() {
       setIsSubmitting(true);
       toast.loading('Synchronizing institutional protocols...', { id: 'setup' });
 
-      // 1. Update the local school record in the school's own DB
-      const { error: schoolError } = await supabase
-        .from('schools')
-        .update({
-          motto: formData.motto,
-          state: formData.state,
-          lga: formData.lga,
-          official_phone: formData.officialPhone,
-          official_email: formData.officialEmail,
-          school_type: formData.schoolType,
-          academic_year: formData.academicYear,
-          current_term: parseInt(formData.currentTerm),
-          bank_name: formData.bankName,
-          account_name: formData.accountName,
-          account_number: formData.accountNumber,
-          is_setup_completed: true,
-        })
-        .eq('id', tenant.id);
-
-      if (schoolError) throw new Error(`School Update Failed: ${schoolError.message}`);
-
-      // 2. Sync with central DB via backend endpoint
-      const response = await fetch('/api/tenant/setup-complete', {
+      // 1. Perform a secure synchronized setup via the backend
+      // This bypasses RLS recursion issues by using Service Role Keys server-side.
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${backendUrl}/tenant/setup-complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          subdomain: subdomain,
           schoolId: tenant.id,
-          isSetupCompleted: true
+          formData: {
+            ...formData,
+            logoUrl: logoPreview // Pass the base64 or URL for server-side processing
+          }
         }),
       });
 
-      if (!response.ok) throw new Error('Central database synchronization failed');
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.message || 'Central database synchronization failed');
+      }
 
       toast.success('Institutional protocols synchronized successfully!', { id: 'setup' });
       
-      // Refresh to update tenant state and redirect to dashboard
-      router.refresh();
+      // Use a hard navigation so the middleware re-fetches is_setup_completed: true
+      // from the backend cleanly, rather than re-running against a stale client-side cache.
       setTimeout(() => {
-        router.push(`/dashboard/admin`);
+        window.location.href = '/dashboard/admin';
       }, 1000);
 
     } catch (error: any) {
