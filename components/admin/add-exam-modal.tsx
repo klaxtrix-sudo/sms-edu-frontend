@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { getBackendUrl } from "@/lib/utils";
 
 const examSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -108,7 +109,7 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
       if (!session) throw new Error("No active session");
 
       // 2. Call MongoDB Backend
-      const response = await fetch("http://localhost:5000/api/exams", {
+      const response = await fetch(`${getBackendUrl()}/exams`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { getBackendUrl } from "@/lib/utils";
 
 interface Question {
   _id: string;
@@ -66,7 +67,7 @@ export default function ExamPortalPage() {
         selected: idx,
       }));
 
-      const res = await fetch(`http://localhost:5000/api/attempts/${attempt.attemptId}/submit`, {
+      const res = await fetch(`${getBackendUrl()}/attempts/${attempt.attemptId}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,7 +99,7 @@ export default function ExamPortalPage() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        const res = await fetch("http://localhost:5000/api/attempts/start", {
+        const res = await fetch(`${getBackendUrl()}/attempts/start`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -152,7 +153,7 @@ export default function ExamPortalPage() {
         // Log to backend
         const { data: { session } } = await supabase.auth.getSession();
         if (attempt?.attemptId) {
-          await fetch(`http://localhost:5000/api/attempts/${attempt.attemptId}/flag`, {
+          await fetch(`${getBackendUrl()}/attempts/${attempt.attemptId}/flag`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",

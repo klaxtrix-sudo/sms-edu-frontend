@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { 
   Card, 
   CardContent, 
@@ -37,8 +37,9 @@ import {
 import { calculateGrade } from "@/lib/utils";
 import { saveResults } from "@/app/actions/admin-actions";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-export default function ResultsPage() {
+export default function AdminResultsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export default function ResultsPage() {
   const [students, setStudents] = useState<any[]>([]);
   const [results, setResults] = useState<Record<string, any>>({});
   
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   const fetchInitialData = async () => {
     try {

@@ -27,8 +27,8 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
-import { formatNGN, cn } from "@/lib/utils";
+import { createTenantClient } from "@/lib/supabase/client";
+import { formatNGN, cn, getBackendUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 declare const PaystackPop: any;
@@ -38,7 +38,7 @@ export default function StudentFinancePage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [payingId, setPayingId] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   const fetchData = async () => {
     setLoading(true);
@@ -67,7 +67,7 @@ export default function StudentFinancePage() {
 
       // 3. Fetch payment history from backend
       const { data: { session } } = await supabase.auth.getSession();
-      const historyRes = await fetch("http://localhost:5000/api/payments/history", {
+      const historyRes = await fetch(`${getBackendUrl()}/payments/history`, {
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const historyResult = await historyRes.json();
@@ -96,7 +96,7 @@ export default function StudentFinancePage() {
       if (!session) return;
       
       // 1. Initialize on backend
-      const res = await fetch("http://localhost:5000/api/payments/initialize", {
+      const res = await fetch(`${getBackendUrl()}/payments/initialize`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

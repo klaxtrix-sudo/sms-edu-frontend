@@ -21,6 +21,7 @@ import {
   SheetDescription
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { getBackendUrl } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -46,7 +47,7 @@ export function NotificationDrawer() {
     if (!session) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/notifications", {
+      const res = await fetch(`${getBackendUrl()}/notifications`, {
         headers: { "Authorization": `Bearer ${session.access_token}` },
       });
       const result = await res.json();
@@ -65,7 +66,7 @@ export function NotificationDrawer() {
   const markAsRead = async (id: string) => {
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
-      const res = await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+      const res = await fetch(`${getBackendUrl()}/notifications/${id}/read`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${authSession?.access_token}` },
       });
@@ -81,7 +82,7 @@ export function NotificationDrawer() {
   const markAllRead = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      await fetch("http://localhost:5000/api/notifications/read-all", {
+      await fetch(`${getBackendUrl()}/notifications/read-all`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${session?.access_token}` },
       });

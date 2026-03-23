@@ -28,7 +28,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddTimetableEntryModal } from "@/components/admin/add-timetable-entry-modal";
@@ -46,7 +46,7 @@ export default function AdminTimetablePage() {
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [timetable, setTimetable] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   useEffect(() => {
     fetchClasses();

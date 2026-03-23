@@ -25,7 +25,7 @@ import {
   DialogFooter,
   DialogDescription
 } from "@/components/ui/dialog";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 interface Question {
@@ -48,7 +48,7 @@ export default function ManageQuestionsPage() {
   const params = useParams();
   const examId = params.id as string;
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);

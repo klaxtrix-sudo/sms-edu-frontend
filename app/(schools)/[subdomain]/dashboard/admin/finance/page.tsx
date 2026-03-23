@@ -34,7 +34,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { formatNGN, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AddFeeStructureModal } from "@/components/admin/add-fee-structure-modal";
@@ -49,7 +49,7 @@ export default function FinanceDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   const fetchFinanceData = async () => {
     setLoading(true);

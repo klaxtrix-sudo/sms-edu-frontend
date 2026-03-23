@@ -20,6 +20,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { getBackendUrl } from "@/lib/utils";
 import { useTenant } from '@/components/providers/tenant-provider';
 import { NIGERIA_STATES, STATE_LGA_MAP } from '@/lib/constants/nigeria-locations';
 import { useRouter, useParams } from 'next/navigation';
@@ -132,8 +133,7 @@ export default function SetupWizardPage() {
 
       // 1. Perform a secure synchronized setup via the backend
       // This bypasses RLS recursion issues by using Service Role Keys server-side.
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${backendUrl}/tenant/setup-complete`, {
+      const response = await fetch(`${getBackendUrl()}/tenant/setup-complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

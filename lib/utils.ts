@@ -37,3 +37,9 @@ export function seededShuffle<T>(arr: T[], seed: string): T[] {
   }
   return result;
 }
+
+/** Get backend API URL with fallback */
+export function getBackendUrl(): string {
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+  return url.endsWith('/api') ? url : `${url}/api`;
+}

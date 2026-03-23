@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getBackendUrl } from "@/lib/utils";
 
 interface Exam {
   _id: string;
@@ -59,7 +60,7 @@ export default function StudentExamsPage() {
 
         if (student?.class_id) {
           // 2. Get Exams for Class from MongoDB
-          const examRes = await fetch(`http://localhost:5000/api/exams?classId=${student.class_id}&status=published`, {
+          const examRes = await fetch(`${getBackendUrl()}/exams?classId=${student.class_id}&status=published`, {
             headers: { "Authorization": `Bearer ${session.access_token}` },
           });
           const examData = await examRes.json();

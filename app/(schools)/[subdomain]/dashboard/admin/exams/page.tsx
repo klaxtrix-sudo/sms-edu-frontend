@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { AddExamModal } from "@/components/admin/add-exam-modal";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -35,7 +35,7 @@ export default function ExamsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const supabase = createClient();
+  const supabase = createTenantClient();
   const router = useRouter();
 
   const fetchExams = async () => {

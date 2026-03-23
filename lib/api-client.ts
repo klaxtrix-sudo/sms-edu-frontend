@@ -2,7 +2,7 @@
  * Axios-style fetch wrapper for the Express.js backend API
  * All MongoDB-related operations (exams, questions, notifications) go through here
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
 type FetchOptions = RequestInit & { token?: string };
 

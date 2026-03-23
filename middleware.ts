@@ -14,13 +14,16 @@ export async function middleware(request: NextRequest) {
   }
 
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-  const subdomain = host?.replace(`.${rootDomain}`, '');
-  const isTenantSpace = subdomain && subdomain !== 'www' && subdomain !== rootDomain && !host?.startsWith('localhost:3000');
+  
+  // A tenant space is any host that is NOT the root domain and NOT 'www'
+  // Example: 'fenster.klaxtrix.site' vs 'klaxtrix.site'
+  const isTenantSpace = host && host !== rootDomain && host !== `www.${rootDomain}`;
+  const subdomain = isTenantSpace ? host.split(`.${rootDomain}`)[0] : null;
 
   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (isTenantSpace) {
+  if (isTenantSpace && subdomain) {
     const tenantKeys = await resolveTenantKeys(subdomain);
     if (tenantKeys) {
       supabaseUrl = tenantKeys.supabaseUrl;
@@ -37,7 +40,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  if (isTenantSpace) {
+  if (isTenantSpace && subdomain) {
     response = NextResponse.rewrite(
       new URL(`/${subdomain}${url.pathname === '/' ? '' : url.pathname}`, request.url)
     );

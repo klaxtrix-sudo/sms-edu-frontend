@@ -42,6 +42,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { getBackendUrl } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -99,7 +100,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const res = await fetch("http://localhost:5000/api/assignments", {
+      const res = await fetch(`${getBackendUrl()}/assignments`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

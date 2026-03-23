@@ -43,6 +43,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { getBackendUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 export default function AdminAttendanceDashboard() {
@@ -91,20 +92,22 @@ export default function AdminAttendanceDashboard() {
       const totalStudents = students?.length || 0;
 
       // 2. Fetch Attendance for Date
-      let attnQuery = supabase.from("attendance").select(`
-        *,
-        students(admission_no, profiles(full_name, avatar_url)),
-        classes(name)
-      `).eq("date", date);
+      const { data: attnData, error } = await supabase
+        .from("attendance")
+        .select(`
+          *,
+          students(admission_no, profiles(full_name, avatar_url)),
+          classes(name)
+        `)
+        .eq("date", date) as any;
 
-      if (selectedClass !== "all") {
-        attnQuery = attnQuery.eq("class_id", selectedClass);
-      }
-
-      const { data: attnData, error } = await attnQuery;
       if (error) throw error;
 
-      setSummary(attnData || []);
+      const classFilteredData = selectedClass === "all" 
+        ? attnData 
+        : attnData.filter((a: any) => a.class_id === selectedClass);
+
+      setSummary(classFilteredData || []);
 
       // 3. Calculate Stats
       const s = (attnData || []).reduce((acc: any, curr: any) => {

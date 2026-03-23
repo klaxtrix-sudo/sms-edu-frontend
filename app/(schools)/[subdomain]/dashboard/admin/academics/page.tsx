@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { 
   Card, 
   CardContent, 
@@ -42,7 +42,7 @@ export default function AcademicsPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   const fetchData = async () => {
     try {
