@@ -89,10 +89,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
 export function useTenant() {
   const context = useContext(TenantContext);
-  if (context === undefined) {
-    throw new Error('useTenant must be used within a TenantProvider');
-  }
-  return context;
+  // Return a safe null-state if used outside a provider (e.g. Master Console)
+  return context || { tenant: null, supabase: null, isLoading: false, error: null };
 }
 
 export function useTenantSupabase() {
