@@ -124,7 +124,7 @@ export default function ConsoleDashboard() {
                         <div className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider">Joined {tenant.created}</div>
                       </td>
                       <td className="px-6 py-4 font-mono text-cyan-400 text-xs">
-                        {tenant.subdomain}.klaxtrix.com.ng
+                        {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'solabacademy.com.ng'}
                       </td>
                       <td className="px-6 py-4">
                         <Badge variant="outline" className={cn(

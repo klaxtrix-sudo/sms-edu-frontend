@@ -13,11 +13,11 @@ import {
   ArrowRight, ArrowLeft, Loader2, Database, ExternalLink, Copy
 } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { cn, getBackendUrl } from '@/lib/utils';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const BACKEND_URL = getBackendUrl();
 
 const STEPS = [
   { id: 'verify',    title: 'Verify Access',   icon: Shield  },
@@ -305,7 +305,9 @@ export default function RegisterPage() {
                       value={formData.subdomain}
                       onChange={e => update('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                     />
-                    <span className="text-xl font-bold text-muted-foreground">.klaxtrix.com.ng</span>
+                    <span className="text-xl font-bold text-muted-foreground">
+                      .{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'solabacademy.com.ng'}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground flex items-center gap-2">
                     <Globe className="w-3 h-3" /> Lowercase letters, numbers, and hyphens only. No setup fees.
