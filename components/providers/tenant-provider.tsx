@@ -87,6 +87,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Build Trigger: Ensuring latest fail-safe context is deployed to unblock Master Console prerendering.
 export function useTenant() {
   const context = useContext(TenantContext);
   // Return a safe null-state if used outside a provider (e.g. Master Console)
