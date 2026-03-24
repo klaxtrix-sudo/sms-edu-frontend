@@ -26,9 +26,6 @@ export default async function LoginPage({ params }: PageProps) {
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-glow uppercase">
                 {schoolName} <span className="text-primary tracking-widest text-lg md:text-xl align-middle">PORTAL</span>
               </h1>
-              <p className="text-muted-foreground text-lg font-medium">
-                Managed institutional access for {schoolName}
-              </p>
             </div>
           </div>
 
