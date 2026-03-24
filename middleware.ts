@@ -13,14 +13,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-  
-  // A tenant space is any host that is NOT the root domain and NOT 'www'
-  // Example: 'fenster.klaxtrix.site' vs 'klaxtrix.site'
-  const isTenantSpace = host && host !== rootDomain && host !== `www.${rootDomain}`;
-  const subdomain = isTenantSpace ? host.split(`.${rootDomain}`)[0] : null;
+   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+   const RESERVED_PATHS = ['/login', '/register', '/console', '/api', '/home'];
+   const isReservedPath = RESERVED_PATHS.some(path => url.pathname.startsWith(path));
 
-  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+   // A tenant space is any host that is NOT the root domain and NOT 'www'
+   const isTenantSpace = host && host !== rootDomain && host !== `www.${rootDomain}`;
+   const subdomain = isTenantSpace ? host.split(`.${rootDomain}`)[0] : null;
+
+   // If we are on the root domain and hitting a reserved path, don't treat it as a tenant
+   if (!isTenantSpace && isReservedPath) {
+     return NextResponse.next();
+   }
+
+   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (isTenantSpace && subdomain) {

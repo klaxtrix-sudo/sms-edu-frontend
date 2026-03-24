@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
 
@@ -16,7 +16,7 @@ export default async function SubdomainRootPage({ params }: PageProps) {
   
   if (!tenantKeys) {
     console.error(`[CRITICAL] Could not resolve keys for subdomain: ${subdomain}`);
-    redirect('/login');
+    return notFound();
   }
 
   const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
