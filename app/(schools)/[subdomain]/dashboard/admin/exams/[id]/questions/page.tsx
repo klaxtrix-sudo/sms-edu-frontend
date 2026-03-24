@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { getBackendUrl } from "@/lib/utils";
 
 interface Question {
   _id: string;
@@ -71,14 +72,14 @@ export default function ManageQuestionsPage() {
         if (!session) return;
 
         // Fetch Exam Details
-        const examRes = await fetch(`http://localhost:5000/api/exams/${examId}`, {
+        const examRes = await fetch(`${getBackendUrl()}/exams/${examId}`, {
           headers: { "Authorization": `Bearer ${session.access_token}` },
         });
         const examData = await examRes.json();
         if (examData.success) setExam(examData.data);
 
         // Fetch Questions
-        const qRes = await fetch(`http://localhost:5000/api/questions?examId=${examId}`, {
+        const qRes = await fetch(`${getBackendUrl()}/questions?examId=${examId}`, {
           headers: { "Authorization": `Bearer ${session.access_token}` },
         });
         const qData = await qRes.json();
@@ -103,8 +104,8 @@ export default function ManageQuestionsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const url = editingQuestion 
-        ? `http://localhost:5000/api/questions/${editingQuestion._id}`
-        : `http://localhost:5000/api/questions`;
+        ? `${getBackendUrl()}/questions/${editingQuestion._id}`
+        : `${getBackendUrl()}/questions`;
       
       const method = editingQuestion ? "PATCH" : "POST";
 
@@ -147,7 +148,7 @@ export default function ManageQuestionsPage() {
     if (!confirm("Are you sure?")) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      await fetch(`http://localhost:5000/api/questions/${id}`, {
+      await fetch(`${getBackendUrl()}/questions/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session?.access_token}` },
       });

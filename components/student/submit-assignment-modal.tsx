@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, getBackendUrl } from "@/lib/utils";
 
 const formSchema = z.object({
   content: z.string().min(10, "Your response must be at least 10 characters"),
@@ -62,7 +62,7 @@ export function SubmitAssignmentModal({ assignmentId, isOpen, onClose, onSuccess
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const res = await fetch("http://localhost:5000/api/assignments/submit", {
+      const res = await fetch(`${getBackendUrl()}/assignments/submit`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

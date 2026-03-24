@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { SubmitAssignmentModal } from "@/components/student/submit-assignment-modal";
+import { getBackendUrl } from "@/lib/utils";
 
 export default function StudentAssignmentsPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -60,7 +61,7 @@ export default function StudentAssignmentsPage() {
       if (!(student as any)?.class_id) throw new Error("Class not found");
 
       // 2. Fetch Assignments
-      const res = await fetch(`http://localhost:5000/api/assignments/class/${(student as any).class_id}`, {
+      const res = await fetch(`${getBackendUrl()}/assignments/class/${(student as any).class_id}`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
       const result = await res.json();

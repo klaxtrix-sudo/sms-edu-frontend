@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CreateAssignmentModal } from "@/components/teacher/create-assignment-modal";
+import { getBackendUrl } from "@/lib/utils";
 
 export default function TeacherAssignmentsPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -78,7 +79,7 @@ export default function TeacherAssignmentsPage() {
       
       const allAssignments: any[] = [];
       for (const cid of targetClasses) {
-        const res = await fetch(`http://localhost:5000/api/assignments/class/${cid}`, {
+        const res = await fetch(`${getBackendUrl()}/assignments/class/${cid}`, {
           headers: { "Authorization": `Bearer ${session.access_token}` }
         });
         const result = await res.json();

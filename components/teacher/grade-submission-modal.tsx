@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, getBackendUrl } from "@/lib/utils";
 
 const formSchema = z.object({
   grade: z.number().min(0, "Grade cannot be negative"),
@@ -70,7 +70,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const res = await fetch(`http://localhost:5000/api/assignments/submissions/${submission._id}/grade`, {
+      const res = await fetch(`${getBackendUrl()}/assignments/submissions/${submission._id}/grade`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

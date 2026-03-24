@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { getBackendUrl } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
@@ -49,8 +50,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     const fetchTenantConfig = async () => {
       setIsLoading(true);
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
-        const res = await fetch(`${backendUrl}/tenant/resolve?subdomain=${subdomain}`);
+        const res = await fetch(`${getBackendUrl()}/tenant/resolve?subdomain=${subdomain}`);
         
         if (!res.ok) {
           setError(`School "${subdomain}" not found or not yet provisioned.`);

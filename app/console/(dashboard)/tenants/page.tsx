@@ -28,9 +28,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { cn } from '@/lib/utils';
+import { cn, getBackendUrl } from '@/lib/utils';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const BACKEND_URL = getBackendUrl();
 
 interface Tenant {
   id: string;

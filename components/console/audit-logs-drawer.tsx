@@ -14,8 +14,9 @@ import {
   Terminal
 } from 'lucide-react';
 import axios from 'axios';
+import { getBackendUrl } from '@/lib/utils';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const BACKEND_URL = getBackendUrl();
 
 interface AuditLog {
   id: string;

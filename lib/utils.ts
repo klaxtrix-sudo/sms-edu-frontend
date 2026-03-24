@@ -40,6 +40,7 @@ export function seededShuffle<T>(arr: T[], seed: string): T[] {
 
 /** Get backend API URL with fallback */
 export function getBackendUrl(): string {
-  const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
-  return url.endsWith('/api') ? url : `${url}/api`;
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+  return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
 }

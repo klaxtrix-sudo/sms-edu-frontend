@@ -31,11 +31,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { cn } from '@/lib/utils';
+import { cn, getBackendUrl } from '@/lib/utils';
 import AuditLogsDrawer from '@/components/console/audit-logs-drawer';
 import { Trash2 } from 'lucide-react';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const BACKEND_URL = getBackendUrl();
 
 const MOCK_CODES = [
   { id: '1', code: 'X8Y2M9N1', status: 'active', institution: '-', created: '2026-03-20', expires: '2026-04-20', usage: '0/1' },

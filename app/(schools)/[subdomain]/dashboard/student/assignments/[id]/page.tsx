@@ -28,6 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SubmitAssignmentModal } from "@/components/student/submit-assignment-modal";
+import { getBackendUrl } from "@/lib/utils";
 
 export default function StudentAssignmentDetailsPage() {
   const params = useParams();
@@ -49,7 +50,7 @@ export default function StudentAssignmentDetailsPage() {
       if (!session) return;
 
       // 1. Fetch Assignment
-      const assRes = await fetch(`http://localhost:5000/api/assignments/${params.id}`, {
+      const assRes = await fetch(`${getBackendUrl()}/assignments/${params.id}`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
       const assResult = await assRes.json();
@@ -60,7 +61,7 @@ export default function StudentAssignmentDetailsPage() {
       // I'll assume we can fetch by assignment + student through the submissions list for now 
       // but ideally we add an endpoint: GET /api/assignments/:id/my-submission
       
-      const subRes = await fetch(`http://localhost:5000/api/assignments/${params.id}/submissions`, {
+      const subRes = await fetch(`${getBackendUrl()}/assignments/${params.id}/submissions`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
       const subResult = await subRes.json();

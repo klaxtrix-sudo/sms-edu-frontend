@@ -28,6 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { GradeSubmissionModal } from "@/components/teacher/grade-submission-modal";
+import { getBackendUrl } from "@/lib/utils";
 
 export default function AssignmentDetailsPage() {
   const params = useParams();
@@ -52,7 +53,7 @@ export default function AssignmentDetailsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const res = await fetch(`http://localhost:5000/api/assignments/${params.id}`, {
+      const res = await fetch(`${getBackendUrl()}/assignments/${params.id}`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
       const result = await res.json();
@@ -70,7 +71,7 @@ export default function AssignmentDetailsPage() {
   const fetchSubmissions = async (token: string) => {
     setSubLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/assignments/${params.id}/submissions`, {
+      const res = await fetch(`${getBackendUrl()}/assignments/${params.id}/submissions`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const result = await res.json();

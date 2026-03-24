@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AddExamModal } from "@/components/admin/add-exam-modal";
 import { createTenantClient } from "@/lib/supabase/client";
+import { getBackendUrl } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -44,7 +45,7 @@ export default function ExamsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch("http://localhost:5000/api/exams", {
+      const response = await fetch(`${getBackendUrl()}/exams`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
         },
