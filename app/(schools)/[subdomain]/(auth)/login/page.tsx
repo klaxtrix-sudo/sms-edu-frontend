@@ -35,9 +35,6 @@ export default async function LoginPage({ params }: PageProps) {
           {/* Client-side LoginForm */}
           <LoginForm />
 
-          <p className="text-center text-xs text-muted-foreground mt-6 uppercase tracking-widest font-bold opacity-60">
-            Institutional Access Protocol • v1.0
-          </p>
         </div>
       )}
     </div>
