@@ -12,7 +12,7 @@ import {
   RefreshCcw, 
   Plus,
   Trash2,
-  KeyRounded,
+  KeyRound,
   UserCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -140,8 +140,8 @@ export default function ConfigPage() {
              <Settings className="w-4 h-4" />
              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Console Management</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">Configuration</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Advanced governance for master administrators and platform-wide security protocols.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Configuration</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium">Advanced governance for master administrators and platform-wide security protocols.</p>
         </div>
         
         <Button 
@@ -155,13 +155,13 @@ export default function ConfigPage() {
 
       <Tabs defaultValue="admins" className="space-y-6">
         <TabsList className="bg-[#0b0b0b] border border-slate-800 p-1 h-14 rounded-2xl gap-2">
-          <TabsTrigger value="admins" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter italic text-xs gap-2">
+          <TabsTrigger value="admins" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
             <Users className="w-4 h-4" /> Administrative Team
           </TabsTrigger>
-          <TabsTrigger value="profile" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter italic text-xs gap-2">
+          <TabsTrigger value="profile" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
             <UserCircle className="w-4 h-4" /> My Profile
           </TabsTrigger>
-          <TabsTrigger value="governance" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter italic text-xs gap-2">
+          <TabsTrigger value="governance" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
             <Shield className="w-4 h-4" /> Platform Governance
           </TabsTrigger>
         </TabsList>
@@ -170,7 +170,7 @@ export default function ConfigPage() {
         <TabsContent value="admins" className="space-y-6">
           <Card className="bg-[#0c0c0c]/50 border-slate-800 p-0 overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-800/50 flex items-center justify-between">
-               <h2 className="text-xl font-bold text-white flex items-center gap-2 italic">
+               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Users className="w-5 h-5 text-indigo-400" /> Active Master Nodes
                </h2>
                <Dialog>
@@ -181,7 +181,7 @@ export default function ConfigPage() {
                   </DialogTrigger>
                   <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white">
                     <DialogHeader>
-                      <DialogTitle className="text-xl font-black italic uppercase tracking-tight">Access Escalation</DialogTitle>
+                      <DialogTitle className="text-xl font-black uppercase tracking-tight">Access Escalation</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                        <div className="space-y-1.5">
@@ -215,7 +215,7 @@ export default function ConfigPage() {
                        </div>
                     </div>
                     <DialogFooter>
-                       <Button onClick={handleCreateAdmin} className="w-full bg-indigo-500 h-12 font-black italic uppercase rounded-xl">Initialize Node</Button>
+                       <Button onClick={handleCreateAdmin} className="w-full bg-indigo-500 h-12 font-black uppercase rounded-xl">Initialize Node</Button>
                     </DialogFooter>
                   </DialogContent>
                </Dialog>
@@ -239,7 +239,7 @@ export default function ConfigPage() {
                           </div>
                           <div className="flex flex-col">
                              <span className="text-sm font-bold text-slate-100">{admin.username}</span>
-                             <span className="text-[10px] text-slate-500 italic">{admin.email}</span>
+                             <span className="text-[10px] text-slate-500">{admin.email}</span>
                           </div>
                        </div>
                     </TableCell>
@@ -251,7 +251,7 @@ export default function ConfigPage() {
                           {admin.role}
                        </Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-[10px] text-slate-400 italic">
+                    <TableCell className="font-mono text-[10px] text-slate-400">
                        {admin.last_login ? new Date(admin.last_login).toLocaleString() : 'Never Recorded'}
                     </TableCell>
                     <TableCell className="text-right">
@@ -270,7 +270,7 @@ export default function ConfigPage() {
         <TabsContent value="profile" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
            <Card className="bg-[#0c0c0c]/50 border-slate-800 p-8 space-y-6">
               <div className="space-y-1">
-                 <h2 className="text-xl font-bold text-white flex items-center gap-2 italic">
+                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <Lock className="w-5 h-5 text-indigo-400" /> Identity Lockdown
                  </h2>
                  <p className="text-xs text-slate-500">Update your master administrative credentials.</p>
@@ -294,7 +294,7 @@ export default function ConfigPage() {
                       onChange={(e) => setProfileUpdate({ ...profileUpdate, password: e.target.value })}
                     />
                  </div>
-                 <Button onClick={handleUpdateProfile} className="w-full bg-slate-100 hover:bg-white text-black font-black italic uppercase rounded-xl h-12 mt-4">
+                 <Button onClick={handleUpdateProfile} className="w-full bg-slate-100 hover:bg-white text-black font-black uppercase rounded-xl h-12 mt-4">
                     Update Node Credentials
                  </Button>
               </div>
@@ -305,7 +305,7 @@ export default function ConfigPage() {
                  <Shield className="w-10 h-10 text-indigo-400" />
               </div>
               <div className="space-y-1">
-                 <h3 className="text-white font-bold italic underline decoration-indigo-500">Level 5 Clearance</h3>
+                 <h3 className="text-white font-bold underline decoration-indigo-500">Level 5 Clearance</h3>
                  <p className="text-xs text-slate-500 font-medium">Authentication session expires in 24 hours.</p>
               </div>
            </Card>
@@ -317,10 +317,10 @@ export default function ConfigPage() {
               <Card className="bg-[#0c0c0c]/50 border-slate-800 p-8 space-y-6">
                  <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                       <h2 className="text-xl font-bold text-white flex items-center gap-2 italic">
+                       <h2 className="text-xl font-bold text-white flex items-center gap-2">
                           <Power className="w-5 h-5 text-red-500" /> Maintenance Matrix
                        </h2>
-                       <p className="text-xs text-slate-500 italic">Toggle platform-wide access restriction.</p>
+                       <p className="text-xs text-slate-500">Toggle platform-wide access restriction.</p>
                     </div>
                     <Switch 
                        checked={config?.maintenance_mode.enabled || false} 
@@ -335,14 +335,14 @@ export default function ConfigPage() {
 
               <Card className="bg-[#0c0c0c]/50 border-slate-800 p-8 space-y-6">
                  <div className="space-y-1">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2 italic">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
                        <Palette className="w-5 h-5 text-indigo-400" /> Platform Branding
                     </h2>
-                    <p className="text-xs text-slate-500 italic">Global UI visual parameters.</p>
+                    <p className="text-xs text-slate-500">Global UI visual parameters.</p>
                  </div>
                  <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                       <div className="size-12 rounded-xl border-2 border-slate-800 flex items-center justify-center font-black italic bg-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.3)]">K</div>
+                       <div className="size-12 rounded-xl border-2 border-slate-800 flex items-center justify-center font-black bg-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.3)]">K</div>
                        <div className="flex-1 space-y-1.5">
                           <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest px-1">Primary Color HEX</label>
                           <Input value="#06b6d4" readOnly className="bg-slate-900 border-slate-800 h-10 rounded-lg text-xs" />

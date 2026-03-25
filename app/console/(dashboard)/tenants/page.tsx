@@ -93,8 +93,8 @@ export default function TenantManagementPage() {
              <Globe className="w-4 h-4" />
              <span className="text-[10px] font-black uppercase tracking-[0.3em]">School Registry</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">School Registry</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Global oversight and synchronization of all registered school environments.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">School Registry</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium">Global oversight and synchronization of all registered school environments.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -185,7 +185,7 @@ export default function TenantManagementPage() {
                           <Shield className="w-5 h-5" />
                        </div>
                        <div className="flex flex-col">
-                          <span className="text-sm font-black text-slate-200 group-hover:text-white transition-colors uppercase tracking-tight italic">{node.name}</span>
+                          <span className="text-sm font-black text-slate-200 group-hover:text-white transition-colors uppercase tracking-tight">{node.name}</span>
                           <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-0.5">ID: {node.id.slice(0, 8)}...</span>
                        </div>
                     </div>
@@ -252,7 +252,7 @@ export default function TenantManagementPage() {
                <Shield className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-               <h4 className="text-cyan-400 text-xs font-black uppercase tracking-[0.2em] italic">Encryption Layer Active</h4>
+               <h4 className="text-cyan-400 text-xs font-black uppercase tracking-[0.2em]">Encryption Layer Active</h4>
                <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-2xl">
                   ALL SCHOOL DATA AND REGISTRY ACCESS ARE SECURED WITH AES-256-GCM. MASTER ORCHESTRATION KEYS ARE STORED IN A CLASSIFIED HARDENED ENVIRONMENT.
                </p>
@@ -262,7 +262,7 @@ export default function TenantManagementPage() {
          <Card className="p-6 bg-slate-900/40 border-slate-800 flex items-center justify-between gap-8 min-w-[300px]">
             <div className="space-y-1">
                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Matrix Integrity</p>
-               <h3 className="text-xl font-black text-white italic">100% ONLINE</h3>
+                <h3 className="text-xl font-black text-white">100% ONLINE</h3>
             </div>
             <div className="flex gap-1">
                {[1,2,3,4,5].map(i => (

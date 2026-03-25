@@ -31,7 +31,7 @@ export default function ConsoleLoginPage() {
       });
 
       if (response.data.success) {
-        setConsoleToken(response.data.data.token);
+        setConsoleToken(response.data.data.token, response.data.data.admin);
         toast.success('Access Granted', {
           description: 'Establishing orbital link to Mission Control.',
         });
@@ -64,7 +64,7 @@ export default function ConsoleLoginPage() {
               <Shield className="w-12 h-12" />
            </motion.div>
            <div className="space-y-1">
-              <h1 className="text-3xl font-heading font-black tracking-tighter text-white italic italic uppercase tracking-[0.05em]">KLAXTRIX</h1>
+              <h1 className="text-3xl font-heading font-black tracking-tighter text-white uppercase tracking-[0.05em]">KLAXTRIX</h1>
               <p className="text-[10px] font-bold text-cyan-500 tracking-[0.4em] uppercase">Admin Login</p>
            </div>
         </div>

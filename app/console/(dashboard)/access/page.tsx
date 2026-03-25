@@ -135,8 +135,8 @@ export default function AccessManagementPage() {
              <Key className="w-4 h-4" />
              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Registry Access</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">Access Codes</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Generate and coordinate secure onboarding for the Klaxtrix school network.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Access Codes</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium">Generate and coordinate secure onboarding for the Klaxtrix school network.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -241,7 +241,7 @@ export default function AccessManagementPage() {
                              <span className="text-sm font-bold text-slate-300">{item.institution_name}</span>
                           </>
                        ) : (
-                          <span className="text-sm font-bold text-slate-600 italic">Unused Code</span>
+                          <span className="text-sm font-bold text-slate-600">Unused Code</span>
                        )}
                     </div>
                   </td>
@@ -359,7 +359,7 @@ export default function AccessManagementPage() {
             <ShieldCheck className="w-6 h-6" />
          </div>
          <div className="space-y-1">
-            <h4 className="text-red-400 text-xs font-black uppercase tracking-[0.2em] italic">Security Protocols Enforced</h4>
+            <h4 className="text-red-400 text-xs font-black uppercase tracking-[0.2em]">Security Protocols Enforced</h4>
             <p className="text-[11px] font-bold text-slate-500 leading-relaxed max-w-3xl">
                ATTENTION: EVERY ACCESS CODE GENERATED IS AUDITED BY THE KLAXTRIX REGISTRY. CODES ARE CRYPTOGRAPHICALLY LINKED TO THE ISSUING ADMIN SESSION. SHARING CODES OUTSIDE OF VERIFIED SCHOOL CHANNELS IS A VIOLATION OF SECURITY COMPLIANCE.
             </p>

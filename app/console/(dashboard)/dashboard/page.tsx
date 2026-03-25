@@ -147,7 +147,7 @@ export default function ConsoleDashboard() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-4xl font-heading font-bold tracking-tight text-white italic">Operations Hub</h1>
+          <h1 className="text-4xl font-heading font-bold tracking-tight text-white">Operations Hub</h1>
           <p className="text-slate-400 text-lg">Centralized oversight of the Klaxtrix global institutional network.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -174,9 +174,9 @@ export default function ConsoleDashboard() {
              <Activity className="w-12 h-12 text-red-500/50" />
              <div className="space-y-1">
                <p className="text-red-400 font-bold uppercase tracking-widest text-sm">{error}</p>
-               <p className="text-slate-500 text-xs italic">Registry link severed or cryptographic mismatch.</p>
+               <p className="text-slate-500 text-xs">Registry link severed or cryptographic mismatch.</p>
              </div>
-             <Button onClick={fetchStats} variant="outline" size="sm" className="border-red-500/20 hover:bg-red-500/10 text-red-300">
+             <Button onClick={fetchData} variant="outline" size="sm" className="border-red-500/20 hover:bg-red-500/10 text-red-300">
                 Retry Sync
              </Button>
           </div>
@@ -261,7 +261,7 @@ export default function ConsoleDashboard() {
                     </tr>
                   ) : paginatedTenants.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">No nodes matching your query.</td>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">No nodes matching your query.</td>
                     </tr>
                   ) : (
                     paginatedTenants.map((tenant) => (
@@ -344,7 +344,7 @@ export default function ConsoleDashboard() {
                     <div key={i} className="h-20 rounded-xl bg-slate-900/30 border border-slate-800/50 animate-pulse" />
                   ))
                 ) : logs.length === 0 ? (
-                   <div className="col-span-full py-6 text-center text-slate-500 italic text-sm border border-dashed border-slate-800 rounded-xl">
+                   <div className="col-span-full py-6 text-center text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
                       No system events logged in the current cycle.
                    </div>
                 ) : (

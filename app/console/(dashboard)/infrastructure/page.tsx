@@ -74,8 +74,8 @@ export default function InfrastructurePage() {
              <Server className="w-4 h-4" />
              <span className="text-[10px] font-black uppercase tracking-[0.3em]">System Infrastructure</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">Cloud Matrix</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Master oversight of global resource clusters and service mesh health.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Cloud Matrix</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium">Master oversight of global resource clusters and service mesh health.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -137,7 +137,7 @@ export default function InfrastructurePage() {
          {/* Resource Allocation */}
          <Card className="bg-[#0c0c0c]/40 border-slate-800/50 p-8 space-y-6">
             <div className="flex items-center justify-between">
-               <h2 className="text-xl font-bold text-white flex items-center gap-2 italic">
+               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-indigo-400" /> Resource Matrix
                </h2>
                <Badge variant="outline" className="border-indigo-500/30 text-indigo-400">Real-time</Badge>
@@ -189,7 +189,7 @@ export default function InfrastructurePage() {
                <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
             <div className="flex-1 p-4 font-mono text-[10px] text-slate-400 space-y-2 overflow-y-auto bg-black/40">
-               <p className="text-emerald-500/50 italic">[SYSTEM] Kernel initialized. Klaxtrix Core v1.2 ready.</p>
+               <p className="text-emerald-500/50">[SYSTEM] Kernel initialized. Klaxtrix Core v1.2 ready.</p>
                <p className="text-slate-600">[{new Date().toLocaleTimeString()}] - INFO: Registry health check initiated...</p>
                <p className="text-indigo-400">[{new Date().toLocaleTimeString()}] - SUCCESS: Central Registry link verified (8ms latency).</p>
                <p className="text-slate-600">[{new Date().toLocaleTimeString()}] - INFO: Polling regional school matrix nodes...</p>
