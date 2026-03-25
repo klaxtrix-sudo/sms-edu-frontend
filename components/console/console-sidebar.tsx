@@ -47,7 +47,7 @@ export function ConsoleSidebar() {
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-heading font-bold tracking-tight text-slate-100 italic">KLAXTRIX</h1>
+            <h1 className="text-xl font-heading font-bold tracking-tight text-slate-100">KLAXTRIX</h1>
           </div>
         </Link>
       </div>

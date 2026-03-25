@@ -94,8 +94,8 @@ export default function AnalyticsPage() {
              <Activity className="w-4 h-4" />
              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Global Intelligence</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">Platform Analytics</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">High-fidelity oversight of institutional growth and academic engagement markers.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Platform Analytics</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium">High-fidelity oversight of institutional growth and academic engagement markers.</p>
         </div>
         
         <Button 
@@ -118,7 +118,7 @@ export default function AnalyticsPage() {
            <Card key={i} className="bg-[#0b0b0b]/50 border-slate-800/50 p-6 flex items-start justify-between group hover:border-slate-700 transition-all">
               <div className="space-y-2">
                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                 <h3 className="text-3xl font-black text-white italic">{stat.value || '--'}</h3>
+                 <h3 className="text-3xl font-black text-white">{stat.value || '--'}</h3>
                  <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
                     <ArrowUpRight className="w-3 h-3" /> 12% Growth
                  </div>
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
          <Card className="lg:col-span-2 bg-[#0c0c0c]/50 border-slate-800/50 p-8 flex flex-col gap-8">
             <div className="flex items-center justify-between">
                <div className="space-y-1">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2 italic">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
                      <TrendingUp className="w-5 h-5 text-cyan-400" /> Enrollment Velocity
                   </h2>
                   <p className="text-xs text-slate-500 font-medium">Monthly acquisition and retention trajectory.</p>
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
          {/* Distribution & Pulse */}
          <div className="space-y-8 flex flex-col">
             <Card className="flex-1 bg-[#0c0c0c]/50 border-slate-800/50 p-8 space-y-6">
-               <h2 className="text-lg font-bold text-white flex items-center gap-2 italic">
+               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Globe className="w-5 h-5 text-violet-400" /> Regional Density
                </h2>
                <div className="h-[200px] w-full flex items-center justify-center relative">
@@ -212,7 +212,7 @@ export default function AnalyticsPage() {
                      </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                     <span className="text-2xl font-black text-white italic">{data?.aggregate.activeSchools || 0}</span>
+                     <span className="text-2xl font-black text-white">{data?.aggregate.activeSchools || 0}</span>
                      <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Active Nodes</span>
                   </div>
                </div>
@@ -238,17 +238,17 @@ export default function AnalyticsPage() {
                   {pulse.map((item) => (
                     <div key={item.id} className="space-y-1 group border-b border-slate-800/30 pb-3 last:border-0">
                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-black text-cyan-400 uppercase tracking-tighter italic">{item.school}</span>
+                          <span className="text-[9px] font-black text-cyan-400 uppercase tracking-tighter">{item.school}</span>
                           <span className="text-[8px] font-mono text-slate-600">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                        </div>
                        <p className="text-[10px] font-bold text-slate-200">{item.event}</p>
-                       <p className="text-[9px] text-slate-500 italic truncate group-hover:text-slate-400 transition-colors uppercase tracking-tight">{item.description}</p>
+                       <p className="text-[9px] text-slate-500 truncate group-hover:text-slate-400 transition-colors uppercase tracking-tight">{item.description}</p>
                     </div>
                   ))}
                   {pulse.length === 0 && (
                      <div className="py-8 text-center space-y-2">
                         <Activity className="w-6 h-6 text-slate-800 mx-auto animate-pulse" />
-                        <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest italic">Awaiting Platform Engagement...</p>
+                        <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Awaiting Platform Engagement...</p>
                      </div>
                   )}
                </div>
