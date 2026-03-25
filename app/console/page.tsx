@@ -9,6 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import axios from 'axios';
+import { getBackendUrl } from '@/lib/utils';
+import { setConsoleToken } from '@/lib/console-auth';
 
 export default function ConsoleLoginPage() {
   const [credentials, setCredentials] = useState({ accessId: '', masterKey: '' });
@@ -20,19 +23,28 @@ export default function ConsoleLoginPage() {
     e.preventDefault();
     setIsAuthenticating(true);
     
-    // MOCK: Executive Authentication
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    if (credentials.accessId.toLowerCase() === 'admin' && credentials.masterKey === 'admin') {
-       toast.success('Access Granted', {
+    try {
+      const backendUrl = getBackendUrl();
+      const response = await axios.post(`${backendUrl}/console/login`, {
+        username: credentials.accessId,
+        password: credentials.masterKey
+      });
+
+      if (response.data.success) {
+        setConsoleToken(response.data.data.token);
+        toast.success('Access Granted', {
           description: 'Establishing orbital link to Mission Control.',
-       });
-       router.push('/console/dashboard');
-    } else {
-       setIsAuthenticating(false);
-       toast.error('Access Denied', {
-          description: 'Invalid credentials. This event has been logged.',
-       });
+        });
+        router.push('/console/dashboard');
+      } else {
+        throw new Error(response.data.message || 'Access Denied');
+      }
+    } catch (error: any) {
+      setIsAuthenticating(false);
+      const message = error.response?.data?.message || error.message || 'Connection Failure';
+      toast.error('Access Denied', {
+        description: message,
+      });
     }
   };
 

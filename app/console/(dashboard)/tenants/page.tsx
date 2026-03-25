@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
+import { getConsoleAuthHeaders } from '@/lib/console-auth';
 
 const BACKEND_URL = getBackendUrl();
 
@@ -48,7 +49,7 @@ export default function TenantManagementPage() {
   const fetchTenants = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BACKEND_URL}/tenant/admin/list`);
+      const response = await axios.get(`${BACKEND_URL}/tenant/admin/list`, getConsoleAuthHeaders());
       if (response.data.success) {
         setTenants(response.data.data);
       }

@@ -32,6 +32,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
+import { getConsoleAuthHeaders } from '@/lib/console-auth';
 import AuditLogsDrawer from '@/components/console/audit-logs-drawer';
 import { Trash2 } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export default function AccessManagementPage() {
   const fetchCodes = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BACKEND_URL}/access/admin/list`);
+      const response = await axios.get(`${BACKEND_URL}/access/admin/list`, getConsoleAuthHeaders());
       if (response.data.success) {
         setCodes(response.data.data);
       }
@@ -74,7 +75,7 @@ export default function AccessManagementPage() {
   const handleGenerateCode = async () => {
     try {
       setIsGenerating(true);
-      const response = await axios.post(`${BACKEND_URL}/access/admin/generate`);
+      const response = await axios.post(`${BACKEND_URL}/access/admin/generate`, {}, getConsoleAuthHeaders());
       
       if (response.data.success) {
         toast.success('Access Code Generated', {
@@ -98,7 +99,7 @@ export default function AccessManagementPage() {
 
   const handleDeleteCode = async (id: string, code: string) => {
     try {
-      const response = await axios.delete(`${BACKEND_URL}/access/admin/delete/${id}`);
+      const response = await axios.delete(`${BACKEND_URL}/access/admin/delete/${id}`, getConsoleAuthHeaders());
       if (response.data.success) {
         toast.success('Access Code Purged', {
           description: `Gate ${code} has been permanently removed from the Matrix.`,

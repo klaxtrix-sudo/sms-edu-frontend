@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useRouter, usePathname } from 'next/navigation';
+import { clearConsoleToken } from '@/lib/console-auth';
+import { toast } from 'sonner';
 import { 
   Shield, 
   LayoutDashboard, 
@@ -18,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const MENU_ITEMS = [
-  { id: 'overview', title: 'Mission Overview', icon: LayoutDashboard, href: '/console/dashboard' },
+  { id: 'overview', title: 'Operations Hub', icon: LayoutDashboard, href: '/console/dashboard' },
   { id: 'tenants', title: 'Institutional Nodes', icon: Globe, href: '/console/tenants' },
   { id: 'access', title: 'Access', icon: Key, href: '/console/access' },
   { id: 'infrastructure', title: 'Cloud Matrix', icon: Server, href: '/console/infrastructure' },
@@ -27,6 +29,15 @@ const MENU_ITEMS = [
 
 export function ConsoleSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    clearConsoleToken();
+    toast.info('Orbital Link Severed', {
+      description: 'Session terminated. Access denied.'
+    });
+    router.push('/console');
+  };
 
   return (
     <aside className="w-72 border-r border-slate-800/50 bg-[#0a0a0a] flex flex-col">
@@ -74,7 +85,10 @@ export function ConsoleSidebar() {
           <Settings className="w-5 h-5" />
           Console Config
         </button>
-        <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group cursor-pointer hover:bg-red-500/10 transition-all">
+        <div 
+          onClick={handleLogout}
+          className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group cursor-pointer hover:bg-red-500/10 transition-all active:scale-95"
+        >
           <div className="flex items-center gap-3">
             <LogOut className="w-5 h-5 text-red-400" />
             <span className="text-sm font-bold text-red-200">Terminate</span>
