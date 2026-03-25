@@ -22,6 +22,11 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: [],
   },
+  // Keep compiled pages alive longer in dev to prevent 404 on first hit after cache clear
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,     // Keep pages compiled for 60s
+    pagesBufferLength: 10,          // Keep up to 10 pages in memory at once
+  },
   images: {
     remotePatterns: [
       {

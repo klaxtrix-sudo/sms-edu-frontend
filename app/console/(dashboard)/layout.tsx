@@ -30,6 +30,9 @@ export default function ConsoleLayout({
           router.push('/console');
           return;
         }
+        // Small buffer to absorb Next.js on-demand compilation lag
+        // Prevents white 404 screen on fresh cache loads
+        await new Promise(resolve => setTimeout(resolve, 300));
         setIsVerifying(false);
       } catch (err) {
         setError('Security Protocol Failure. Re-authenticating...');
