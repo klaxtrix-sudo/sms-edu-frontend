@@ -1,26 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Globe, 
   Key, 
   Server, 
-  Activity, 
-  Shield, 
-  TrendingUp, 
+  Activity,
+  Shield,
+  TrendingUp,
   Zap,
   MoreVertical,
   Plus,
   Search,
   CheckCircle2,
   AlertTriangle,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { cn, getBackendUrl } from '@/lib/utils';
+import axios from 'axios';
+import { getConsoleAuthHeaders } from '@/lib/console-auth';
 
 const MOCK_TENANTS = [
   { id: 1, name: 'Monidams Academy', subdomain: 'monidams', cloud: 'Healthy', region: 'us-east-1', created: '2 days ago' },
@@ -29,15 +34,63 @@ const MOCK_TENANTS = [
   { id: 4, name: 'Sterling Heights High', subdomain: 'sterling', cloud: 'Healthy', region: 'ap-south-1', created: '14 days ago' },
 ];
 
-const STATS = [
-  { title: 'Global Nodes', value: '42', change: '+12%', icon: Globe, color: 'text-cyan-400' },
-  { title: 'Cloud Matrix Health', value: '98.4%', change: '+0.2%', icon: Server, color: 'text-emerald-400' },
-  { title: 'Active Gates', value: '15', change: '-2', icon: Key, color: 'text-amber-400' },
-  { title: 'Data Pulse', value: '1.2M', change: '+24k', icon: Activity, color: 'text-purple-400' },
-];
-
 export default function ConsoleDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [stats, setStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      setError(null); // Clear previous errors
+      const backendUrl = getBackendUrl();
+      const response = await axios.get(`${backendUrl}/stats/console`, getConsoleAuthHeaders());
+
+      if (response.data.success) {
+        const data = response.data.data;
+        setStats([
+          {
+            title: 'Active Institutions',
+            value: data.institutions.toString(),
+            change: '+1',
+            icon: Globe,
+            color: 'text-cyan-400'
+          },
+          {
+            title: 'Platform Stability',
+            value: `${data.stability}%`,
+            change: 'Stable',
+            icon: Server,
+            color: 'text-indigo-400'
+          },
+          {
+            title: 'Onboarding Tokens',
+            value: data.tokens.toString(),
+            change: 'Active',
+            icon: Key,
+            color: 'text-amber-400'
+          },
+          {
+            title: 'Registry Volume',
+            value: data.volume > 1000 ? `${(data.volume / 1000).toFixed(1)}k` : data.volume.toString(),
+            change: 'Live',
+            icon: Activity,
+            color: 'text-fuchsia-400'
+          },
+        ]);
+      }
+      setIsLoading(false);
+    } catch (err: any) {
+      console.error('Stats Fetch Error:', err);
+      setError('Telemetry Link Failure');
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -48,8 +101,14 @@ export default function ConsoleDashboard() {
           <p className="text-slate-400 text-lg">Centralized oversight of the Klaxtrix global institutional network.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 rounded-xl">
-             Download Matrix Report
+          <Button 
+            onClick={fetchStats}
+            variant="outline" 
+            className="border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 rounded-xl"
+            disabled={isLoading}
+          >
+             <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+             Sync Telemetry
           </Button>
           <Button className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)]">
              <Plus className="w-4 h-4 mr-2" /> New Access Gate
@@ -59,30 +118,47 @@ export default function ConsoleDashboard() {
 
       {/* Statistics Bento */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {STATS.map((stat, i) => (
-          <Card key={stat.title} className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 hover:border-cyan-500/30 transition-all group overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <stat.icon className="w-16 h-16" />
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg bg-slate-900 border border-slate-800", stat.color)}>
-                  <stat.icon className="w-5 h-5" />
+        {isLoading ? (
+          Array(4).fill(0).map((_, i) => (
+            <Card key={i} className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 animate-pulse h-32" />
+          ))
+        ) : error ? (
+          <div className="col-span-full p-8 rounded-2xl bg-red-500/5 border border-red-500/10 flex flex-col items-center justify-center gap-4 text-center">
+             <Activity className="w-12 h-12 text-red-500/50" />
+             <div className="space-y-1">
+               <p className="text-red-400 font-bold uppercase tracking-widest text-sm">{error}</p>
+               <p className="text-slate-500 text-xs italic">Registry link severed or cryptographic mismatch.</p>
+             </div>
+             <Button onClick={fetchStats} variant="outline" size="sm" className="border-red-500/20 hover:bg-red-500/10 text-red-300">
+                Retry Sync
+             </Button>
+          </div>
+        ) : (
+          stats?.map((stat: any, i: number) => (
+            <Card key={stat.title} className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 hover:border-cyan-500/30 transition-all group overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <stat.icon className="w-16 h-16" />
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-lg bg-slate-900 border border-slate-800", stat.color)}>
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.title}</span>
                 </div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.title}</span>
+                <div className="flex items-end justify-between">
+                  <span className="text-3xl font-bold text-white tabular-nums">{stat.value}</span>
+                  <span className={cn(
+                    "text-xs font-bold px-2 py-1 rounded-full",
+                    stat.change.startsWith('+') || stat.change === 'Stable' || stat.change === 'Live' ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"
+                  )}>
+                    {stat.change}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-end justify-between">
-                <span className="text-3xl font-bold text-white tabular-nums">{stat.value}</span>
-                <span className={cn(
-                  "text-xs font-bold px-2 py-1 rounded-full",
-                  stat.change.startsWith('+') ? "text-emerald-400 bg-emerald-400/10" : "text-red-400 bg-red-400/10"
-                )}>
-                  {stat.change}
-                </span>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -198,6 +274,3 @@ export default function ConsoleDashboard() {
   );
 }
 
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
-}
