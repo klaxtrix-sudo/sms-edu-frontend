@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Key, ArrowRight, Loader2, Lock, Zap, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,13 +11,35 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getBackendUrl } from '@/lib/utils';
-import { setConsoleToken } from '@/lib/console-auth';
+import { setConsoleToken, getConsoleToken, verifyConsoleSession } from '@/lib/console-auth';
 
 export default function ConsoleLoginPage() {
   const [credentials, setCredentials] = useState({ accessId: '', masterKey: '' });
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = getConsoleToken();
+        if (token) {
+          const authData = await verifyConsoleSession();
+          if (authData.success) {
+            router.push('/console/dashboard');
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('No active session identified.');
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
+    
+    checkSession();
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +69,17 @@ export default function ConsoleLoginPage() {
       });
     }
   };
+
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+         <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Authorizing Session...</span>
+         </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
