@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ConsoleSidebar } from '@/components/console/console-sidebar';
 import { useRouter } from 'next/navigation';
-import { getBackendUrl } from '@/lib/utils';
 import { verifyConsoleSession } from '@/lib/console-auth';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function ConsoleLayout({
   children,
@@ -15,14 +14,19 @@ export default function ConsoleLayout({
   const router = useRouter();
   const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasChecked = useRef(false);
 
   useEffect(() => {
+    // Guard: run exactly once on mount — router is intentionally excluded from deps
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
     const checkAuth = async () => {
       try {
-        const backendUrl = getBackendUrl();
-        const { valid } = await verifyConsoleSession(backendUrl);
+        // verifyConsoleSession now resolves backend URL internally
+        const { success } = await verifyConsoleSession();
         
-        if (!valid) {
+        if (!success) {
           router.push('/console');
           return;
         }
@@ -34,7 +38,8 @@ export default function ConsoleLayout({
     };
 
     checkAuth();
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isVerifying) {
     return (

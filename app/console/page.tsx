@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Key, ArrowRight, Loader2, Lock, Zap, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,14 @@ export default function ConsoleLoginPage() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  // Use a ref to prevent the session check from re-running if router changes identity
+  const hasChecked = useRef(false);
 
   useEffect(() => {
+    // Guard: only run once on mount
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
     const checkSession = async () => {
       try {
         const token = getConsoleToken();
@@ -37,9 +43,10 @@ export default function ConsoleLoginPage() {
         setIsCheckingSession(false);
       }
     };
-    
+
     checkSession();
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
