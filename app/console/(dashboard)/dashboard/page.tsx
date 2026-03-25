@@ -44,7 +44,6 @@ export default function ConsoleDashboard() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <Badge variant="outline" className="text-cyan-500 border-cyan-500/20 bg-cyan-500/5 mb-2">SYSTEM CLASSIFIED: LEVEL 5</Badge>
           <h1 className="text-4xl font-heading font-bold tracking-tight text-white italic">Operations Hub</h1>
           <p className="text-slate-400 text-lg">Centralized oversight of the Klaxtrix global institutional network.</p>
         </div>

@@ -48,7 +48,6 @@ export function ConsoleSidebar() {
           </div>
           <div>
             <h1 className="text-xl font-heading font-bold tracking-tight text-slate-100 italic">KLAXTRIX</h1>
-            <p className="text-[10px] font-bold text-cyan-500 tracking-[0.2em] uppercase">Executive Guard</p>
           </div>
         </Link>
       </div>
