@@ -44,6 +44,10 @@ export default function ConsoleDashboard() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [isTenantsLoading, setIsTenantsLoading] = useState(true);
   const [tenantsError, setTenantsError] = useState<string | null>(null);
+  
+  const [logs, setLogs] = useState<any[]>([]);
+  const [isLogsLoading, setIsLogsLoading] = useState(true);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -57,10 +61,11 @@ export default function ConsoleDashboard() {
       const backendUrl = getBackendUrl();
       const headers = getConsoleAuthHeaders();
       
-      // Fetch Stats and Tenants in parallel
-      const [statsRes, tenantsRes] = await Promise.all([
+      // Fetch Stats, Tenants, and Audit Logs in parallel
+      const [statsRes, tenantsRes, logsRes] = await Promise.all([
         axios.get(`${backendUrl}/stats/console`, headers),
-        axios.get(`${backendUrl}/tenant/admin/list`, headers)
+        axios.get(`${backendUrl}/tenant/admin/list`, headers),
+        axios.get(`${backendUrl}/audit/admin/logs`, headers)
       ]);
 
       if (statsRes.data.success) {
@@ -105,8 +110,13 @@ export default function ConsoleDashboard() {
         setTenants(tenantsRes.data.data);
       }
 
+      if (logsRes.data.success) {
+        setLogs(logsRes.data.logs.slice(0, 4)); // Only show top 4 for the dashboard
+      }
+
       setIsLoading(false);
       setIsTenantsLoading(false);
+      setIsLogsLoading(false);
     } catch (err: any) {
       console.error('Data Fetch Error:', err);
       setError('Telemetry Link Failure');
@@ -149,9 +159,6 @@ export default function ConsoleDashboard() {
           >
              <RefreshCw className={cn("w-4 h-4 mr-2", (isLoading || isTenantsLoading) && "animate-spin")} />
              Sync Telemetry
-          </Button>
-          <Button className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)]">
-             <Plus className="w-4 h-4 mr-2" /> New Access Gate
           </Button>
         </div>
       </div>
@@ -332,26 +339,47 @@ export default function ConsoleDashboard() {
                 <Zap className="w-5 h-5 text-purple-400" /> Command Log
              </h2>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { type: 'Sync', msg: 'Data matrix parity verified for Node 42', time: '2m ago' },
-                  { type: 'Gate', msg: 'New Institutional Access Code generated (KLAX-99)', time: '14m ago' },
-                  { type: 'Alert', msg: 'High latency detected in AP-SOUTH-1 cluster', time: '41m ago', critical: true },
-                  { type: 'Onboard', msg: 'Sterling Heights High activated global endpoint', time: '1h ago' },
-                ].map((log, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/50 flex gap-4 relative overflow-hidden group hover:border-slate-700 transition-colors">
-                     <div className={cn(
-                       "w-1 h-full absolute left-0 top-0",
-                       log.critical ? "bg-red-500" : (log.type === 'Gate' ? "bg-amber-500" : "bg-cyan-500")
-                     )} />
-                     <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-4">
-                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{log.type}</span>
-                           <span className="text-[10px] font-bold text-slate-600">{log.time}</span>
+                {isLogsLoading ? (
+                  Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="h-20 rounded-xl bg-slate-900/30 border border-slate-800/50 animate-pulse" />
+                  ))
+                ) : logs.length === 0 ? (
+                   <div className="col-span-full py-6 text-center text-slate-500 italic text-sm border border-dashed border-slate-800 rounded-xl">
+                      No system events logged in the current cycle.
+                   </div>
+                ) : (
+                  logs.map((log: any, i: number) => {
+                    // Map backend action to display type
+                    let type = 'System';
+                    let colorClass = 'bg-cyan-500';
+                    let critical = false;
+
+                    if (log.action.includes('REGISTER')) { type = 'Onboard'; colorClass = 'bg-emerald-500'; }
+                    if (log.action.includes('GATE') || log.action.includes('CODE')) { type = 'Gate'; colorClass = 'bg-amber-500'; }
+                    if (log.action.includes('DELETE') || log.action.includes('FAIL')) { type = 'Alert'; colorClass = 'bg-red-500'; critical = true; }
+
+                    return (
+                      <div key={log.id} className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/50 flex gap-4 relative overflow-hidden group hover:border-slate-700 transition-colors">
+                        <div className={cn(
+                          "w-1 h-full absolute left-0 top-0",
+                          colorClass
+                        )} />
+                        <div className="space-y-1 w-full">
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{type}</span>
+                              <span className="text-[10px] font-bold text-slate-600">
+                                {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs font-semibold text-slate-300 leading-snug truncate">
+                              {log.details?.institution_name || log.action.replace(/_/g, ' ')}
+                            </p>
+                            <p className="text-[10px] text-slate-500 truncate">{log.actor_id}</p>
                         </div>
-                        <p className="text-sm font-semibold text-slate-300 leading-snug">{log.msg}</p>
-                     </div>
-                  </div>
-                ))}
+                      </div>
+                    );
+                  })
+                )}
              </div>
           </div>
         </div>
