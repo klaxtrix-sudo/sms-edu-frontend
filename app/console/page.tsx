@@ -31,7 +31,7 @@ export default function ConsoleLoginPage() {
       });
 
       if (response.data.success) {
-        setConsoleToken(response.data.data.token, response.data.data.admin);
+        setConsoleToken(response.data.data.token, response.data.data);
         toast.success('Access Granted', {
           description: 'Establishing orbital link to Mission Control.',
         });

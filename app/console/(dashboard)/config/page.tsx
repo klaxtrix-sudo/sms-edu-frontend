@@ -79,7 +79,20 @@ export default function ConfigPage() {
       if (adminRes.data.success) setAdmins(adminRes.data.data);
       if (configRes.data.success) setConfig(configRes.data.data);
       
-      setCurrentUser(getConsoleUser());
+      let user = getConsoleUser();
+      if (user && !user.id) {
+        // Legacy session without ID - refresh from backend
+        const meRes = await axios.get(`${BACKEND_URL}/console/me`, getConsoleAuthHeaders());
+        if (meRes.data.success) {
+          user = meRes.data.data;
+          // Synchronize localStorage
+          const token = localStorage.getItem('klaxtrix_console_token');
+          if (token) {
+            localStorage.setItem('klaxtrix_console_user', JSON.stringify(user));
+          }
+        }
+      }
+      setCurrentUser(user);
     } catch (error) {
       console.error('Config Fetch Error:', error);
       toast.error('Failed to load administrative parameters.');
