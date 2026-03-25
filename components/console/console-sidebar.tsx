@@ -80,10 +80,18 @@ export function ConsoleSidebar() {
       </nav>
 
       <div className="p-6 border-t border-slate-800/50 space-y-4">
-        <button className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-slate-100 w-full transition-colors">
-          <Settings className="w-5 h-5" />
+        <Link 
+          href="/console/config"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-all rounded-xl",
+            pathname === "/console/config" 
+              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_15px_-5px_rgba(99,102,241,0.3)]"
+              : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/30 border border-transparent"
+          )}
+        >
+          <Settings className={cn("w-5 h-5", pathname === "/console/config" && "text-indigo-400")} />
           Console Config
-        </button>
+        </Link>
         <div 
           onClick={handleLogout}
           className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group cursor-pointer hover:bg-red-500/10 transition-all active:scale-95"
