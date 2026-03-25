@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getBackendUrl } from './utils';
 
 const CONSOLE_TOKEN_KEY = 'klaxtrix_console_token';
 const CONSOLE_USER_KEY = 'klaxtrix_console_user';
@@ -41,14 +42,15 @@ export const getConsoleUser = () => {
  * Checks if the current console session is still valid.
  * Hits the /api/console/me endpoint.
  */
-export const verifyConsoleSession = async (backendUrl: string) => {
+export const verifyConsoleSession = async () => {
   const token = getConsoleToken();
-  if (!token) return { valid: false };
+  if (!token) return { success: false };
 
   try {
+    const backendUrl = getBackendUrl();
     const response = await axios.get(`${backendUrl}/console/me`, getConsoleAuthHeaders());
-    return { valid: response.data.success, admin: response.data.data };
+    return { success: response.data.success, data: response.data.data };
   } catch (error) {
-    return { valid: false };
+    return { success: false };
   }
 };
