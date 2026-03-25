@@ -33,28 +33,38 @@ import {
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 
-const MOCK_TENANTS = [
-  { id: 1, name: 'Monidams Academy', subdomain: 'monidams', cloud: 'Healthy', region: 'us-east-1', created: '2 days ago' },
-  { id: 2, name: 'Grace Hill International', subdomain: 'gracehill', cloud: 'Healthy', region: 'eu-west-1', created: '1 week ago' },
-  { id: 3, name: 'Lighthouse Preparatory', subdomain: 'lighthouse', cloud: 'Warning', region: 'us-west-2', created: '3 hours ago' },
-  { id: 4, name: 'Sterling Heights High', subdomain: 'sterling', cloud: 'Healthy', region: 'ap-south-1', created: '14 days ago' },
-];
+const MOCK_TENANTS = []; // Deprecated
 
 export default function ConsoleDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [isTenantsLoading, setIsTenantsLoading] = useState(true);
+  const [tenantsError, setTenantsError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
-  const fetchStats = async () => {
+  const fetchData = async () => {
     try {
       setIsLoading(true);
-      setError(null); // Clear previous errors
+      setIsTenantsLoading(true);
+      setError(null);
+      setTenantsError(null);
+      
       const backendUrl = getBackendUrl();
-      const response = await axios.get(`${backendUrl}/stats/console`, getConsoleAuthHeaders());
+      const headers = getConsoleAuthHeaders();
+      
+      // Fetch Stats and Tenants in parallel
+      const [statsRes, tenantsRes] = await Promise.all([
+        axios.get(`${backendUrl}/stats/console`, headers),
+        axios.get(`${backendUrl}/tenant/admin/list`, headers)
+      ]);
 
-      if (response.data.success) {
-        const data = response.data.data;
+      if (statsRes.data.success) {
+        const data = statsRes.data.data;
         setStats([
           {
             title: 'Active Institutions',
@@ -90,17 +100,36 @@ export default function ConsoleDashboard() {
           },
         ]);
       }
+
+      if (tenantsRes.data.success) {
+        setTenants(tenantsRes.data.data);
+      }
+
       setIsLoading(false);
+      setIsTenantsLoading(false);
     } catch (err: any) {
-      console.error('Stats Fetch Error:', err);
+      console.error('Data Fetch Error:', err);
       setError('Telemetry Link Failure');
+      setTenantsError('Failed to sync institutional matrix.');
       setIsLoading(false);
+      setIsTenantsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchData();
   }, []);
+
+  const filteredTenants = tenants.filter(t => 
+    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredTenants.length / itemsPerPage);
+  const paginatedTenants = filteredTenants.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <TooltipProvider>
@@ -113,12 +142,12 @@ export default function ConsoleDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Button 
-            onClick={fetchStats}
+            onClick={fetchData}
             variant="outline" 
             className="border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 rounded-xl"
-            disabled={isLoading}
+            disabled={isLoading || isTenantsLoading}
           >
-             <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+             <RefreshCw className={cn("w-4 h-4 mr-2", (isLoading || isTenantsLoading) && "animate-spin")} />
              Sync Telemetry
           </Button>
           <Button className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)]">
@@ -179,9 +208,9 @@ export default function ConsoleDashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Institutional Nodes Table */}
-        <div className="lg:col-span-2 space-y-4">
+      <div className="space-y-8">
+        {/* Institutional Nodes Table - Now Full Width */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
               <Shield className="w-5 h-5 text-cyan-400" /> Institutional Matrix
@@ -210,85 +239,124 @@ export default function ConsoleDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/30">
-                  {MOCK_TENANTS.map((tenant) => (
-                    <tr key={tenant.id} className="hover:bg-slate-800/20 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-slate-200">{tenant.name}</div>
-                        <div className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider">Joined {tenant.created}</div>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-cyan-400 text-xs">
-                        {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'solabacademy.com.ng'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant="outline" className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                          tenant.cloud === 'Healthy' 
-                            ? "border-emerald-500/20 text-emerald-400 bg-emerald-500/5" 
-                            : "border-amber-500/20 text-amber-400 bg-amber-500/5"
-                        )}>
-                          {tenant.cloud === 'Healthy' ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertTriangle className="w-3 h-3 mr-1" />}
-                          {tenant.cloud.toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-400 font-semibold uppercase tracking-wider">
-                        {tenant.region}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="icon" className="text-slate-500 hover:text-white hover:bg-slate-800">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
+                  {isTenantsLoading ? (
+                    Array(5).fill(0).map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td colSpan={5} className="px-6 py-8 bg-slate-900/10"></td>
+                      </tr>
+                    ))
+                  ) : tenantsError ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center">
+                        <p className="text-red-400 font-bold mb-2">{tenantsError}</p>
+                        <Button onClick={fetchData} variant="outline" size="sm" className="border-red-500/20 text-red-300">Retry Matrix Link</Button>
                       </td>
                     </tr>
-                  ))}
+                  ) : paginatedTenants.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">No nodes matching your query.</td>
+                    </tr>
+                  ) : (
+                    paginatedTenants.map((tenant) => (
+                      <tr key={tenant.id} className="hover:bg-slate-800/20 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-200">{tenant.name}</div>
+                          <div className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider">
+                            Joined {new Date(tenant.created_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-cyan-400 text-xs">
+                          {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'solabacademy.com.ng'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant="outline" className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                            tenant.is_provisioned 
+                              ? "border-emerald-500/20 text-emerald-400 bg-emerald-500/5" 
+                              : "border-amber-500/20 text-amber-400 bg-amber-500/5"
+                          )}>
+                            {tenant.is_provisioned ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertTriangle className="w-3 h-3 mr-1" />}
+                            {tenant.is_provisioned ? 'HEALTHY' : 'PENDING'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                          {tenant.region || 'US-EAST-1'}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button variant="ghost" size="icon" className="text-slate-500 hover:text-white hover:bg-slate-800">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {!isTenantsLoading && !tenantsError && totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-slate-800/50 flex items-center justify-between bg-slate-900/20">
+                <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    className="border-slate-800 bg-slate-900 text-slate-400 h-8 px-3 rounded-lg hover:text-white"
+                  >
+                    Previous
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    className="border-slate-800 bg-slate-900 text-slate-400 h-8 px-3 rounded-lg hover:text-white"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
-        {/* Global Activity Sidebar */}
-        <div className="space-y-6">
-           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-purple-400" /> Command Log
-           </h2>
-           <div className="space-y-4">
-              {[
-                { type: 'Sync', msg: 'Data matrix parity verified for Node 42', time: '2m ago' },
-                { type: 'Gate', msg: 'New Institutional Access Code generated (KLAX-99)', time: '14m ago' },
-                { type: 'Alert', msg: 'High latency detected in AP-SOUTH-1 cluster', time: '41m ago', critical: true },
-                { type: 'Onboard', msg: 'Sterling Heights High activated global endpoint', time: '1h ago' },
-              ].map((log, i) => (
-                <div key={i} className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/50 flex gap-4 relative overflow-hidden group hover:border-slate-700 transition-colors">
-                   <div className={cn(
-                     "w-1 h-full absolute left-0 top-0",
-                     log.critical ? "bg-red-500" : (log.type === 'Gate' ? "bg-amber-500" : "bg-cyan-500")
-                   )} />
-                   <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-4">
-                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{log.type}</span>
-                         <span className="text-[10px] font-bold text-slate-600">{log.time}</span>
-                      </div>
-                      <p className="text-sm font-semibold text-slate-300 leading-snug">{log.msg}</p>
-                   </div>
-                </div>
-              ))}
-           </div>
-           
-           <Card className="p-6 bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border-cyan-500/20 relative overflow-hidden group cursor-pointer hover:border-cyan-500/40 transition-all">
-              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                 <Shield className="w-32 h-32 text-white" />
-              </div>
-              <div className="relative z-10 space-y-4">
-                 <h3 className="text-lg font-bold text-white italic">Executive Guard v1.0</h3>
-                 <p className="text-xs text-slate-300 leading-relaxed font-semibold">Your session is secured with end-to-end mission encryption. All terminal commands are logged for platform integrity.</p>
-                 <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-widest">
-                    View Security Protocols <ArrowUpRight className="w-4 h-4" />
-                 </div>
-              </div>
-           </Card>
+        {/* Global Activity Sidebar - Moved below/different row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
+          <div className="lg:col-span-3 space-y-6">
+             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-purple-400" /> Command Log
+             </h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { type: 'Sync', msg: 'Data matrix parity verified for Node 42', time: '2m ago' },
+                  { type: 'Gate', msg: 'New Institutional Access Code generated (KLAX-99)', time: '14m ago' },
+                  { type: 'Alert', msg: 'High latency detected in AP-SOUTH-1 cluster', time: '41m ago', critical: true },
+                  { type: 'Onboard', msg: 'Sterling Heights High activated global endpoint', time: '1h ago' },
+                ].map((log, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/50 flex gap-4 relative overflow-hidden group hover:border-slate-700 transition-colors">
+                     <div className={cn(
+                       "w-1 h-full absolute left-0 top-0",
+                       log.critical ? "bg-red-500" : (log.type === 'Gate' ? "bg-amber-500" : "bg-cyan-500")
+                     )} />
+                     <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-4">
+                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{log.type}</span>
+                           <span className="text-[10px] font-bold text-slate-600">{log.time}</span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-300 leading-snug">{log.msg}</p>
+                     </div>
+                  </div>
+                ))}
+             </div>
+          </div>
         </div>
       </div>
-      </div>
-    </TooltipProvider>
+    </div>
+  </TooltipProvider>
   );
 }
