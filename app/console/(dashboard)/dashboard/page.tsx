@@ -85,7 +85,7 @@ export default function ConsoleDashboard() {
             change: 'Stable',
             icon: Server,
             color: 'text-indigo-400',
-            description: 'Percentage of institutional nodes reporting healthy connection status and successful provisioning.'
+            description: 'Percentage of schools reporting healthy connection status and successful provisioning.'
           },
           {
             title: 'Onboarding Tokens',
@@ -216,11 +216,11 @@ export default function ConsoleDashboard() {
       </div>
 
       <div className="space-y-8">
-        {/* Institutional Nodes Table - Now Full Width */}
+        {/* School Registry Table - Now Full Width */}
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-cyan-400" /> Institutional Matrix
+              <Shield className="w-5 h-5 text-cyan-400" /> School Registry
             </h2>
             <div className="relative w-64">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />

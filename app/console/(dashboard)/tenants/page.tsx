@@ -91,10 +91,10 @@ export default function TenantManagementPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-cyan-500 mb-2">
              <Globe className="w-4 h-4" />
-             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Institutional Nodes</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.3em]">School Registry</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">Node Registry</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Global oversight and synchronization of all provisioned Klaxtrix instances.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">School Registry</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Global oversight and synchronization of all registered school environments.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -111,9 +111,9 @@ export default function TenantManagementPage() {
       {/* Stats Quick View */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          {[
-           { label: 'Total Nodes', value: tenants.length.toString(), color: 'cyan', icon: Globe },
+           { label: 'Total Schools', value: tenants.length.toString(), color: 'cyan', icon: Globe },
            { label: 'Operational', value: tenants.filter(t => t.is_provisioned).length.toString(), color: 'emerald', icon: Server },
-           { label: 'Pending Auth', value: tenants.filter(t => !t.is_provisioned).length.toString(), color: 'amber', icon: Shield },
+           { label: 'Pending setup', value: tenants.filter(t => !t.is_provisioned).length.toString(), color: 'amber', icon: Shield },
          ].map((stat, i) => (
            <Card key={i} className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 relative overflow-hidden group hover:border-cyan-500/30 transition-all">
               <div className="space-y-2 relative z-10">
@@ -143,7 +143,7 @@ export default function TenantManagementPage() {
               />
            </div>
            <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              <span>Showing {filteredTenants.length} Managed Nodes</span>
+              <span>Showing {filteredTenants.length} Registered Schools</span>
            </div>
         </div>
 
@@ -151,10 +151,10 @@ export default function TenantManagementPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800/50 bg-slate-900/20">
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Institution Identity</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Protocol Area</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Global Endpoint</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Onboarding</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">School Identity</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Service Status</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Access Link</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Joined Date</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-right px-10">Interface</th>
               </tr>
             </thead>
@@ -173,7 +173,7 @@ export default function TenantManagementPage() {
                    <td colSpan={5} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <AlertCircle className="w-8 h-8 text-slate-700" />
-                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No matching institutional nodes identified.</span>
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No matching school records identified.</span>
                       </div>
                    </td>
                 </tr>
@@ -218,7 +218,7 @@ export default function TenantManagementPage() {
                           className="h-9 px-4 bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-400 border border-slate-800 hover:border-cyan-500 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg overflow-hidden group/btn"
                         >
                            <ExternalLink className="w-3.5 h-3.5 mr-2 group-hover/btn:scale-110 transition-transform" />
-                           Open Node
+                           Open Portal
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -228,11 +228,11 @@ export default function TenantManagementPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-[#0c0c0c] border border-slate-800 text-slate-300 w-48 shadow-2xl">
                              <DropdownMenuItem className="gap-2 cursor-pointer focus:bg-cyan-500/10 focus:text-cyan-400 font-bold text-xs" onClick={() => copyToClipboard(node.id, 'School ID')}>
-                                <Copy className="w-4 h-4" /> Copy Secure ID
+                                <Copy className="w-4 h-4" /> Copy Registry ID
                              </DropdownMenuItem>
                              <DropdownMenuSeparator className="bg-slate-800/50" />
                              <DropdownMenuItem className="gap-2 cursor-pointer focus:bg-red-500/10 focus:text-red-400 font-bold text-xs">
-                                <AlertCircle className="w-4 h-4" /> Terminate Node
+                                <AlertCircle className="w-4 h-4" /> Deactivate School
                              </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -254,7 +254,7 @@ export default function TenantManagementPage() {
             <div className="space-y-1">
                <h4 className="text-cyan-400 text-xs font-black uppercase tracking-[0.2em] italic">Encryption Layer Active</h4>
                <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-2xl">
-                  ALL INSTITUTIONAL MATRICES ARE SECURED WITH AES-256-GCM. MASTER ORCHESTRATION KEYS ARE STORED IN A CLASSIFIED HARDENED ENVIRONMENT.
+                  ALL SCHOOL DATA AND REGISTRY ACCESS ARE SECURED WITH AES-256-GCM. MASTER ORCHESTRATION KEYS ARE STORED IN A CLASSIFIED HARDENED ENVIRONMENT.
                </p>
             </div>
          </div>

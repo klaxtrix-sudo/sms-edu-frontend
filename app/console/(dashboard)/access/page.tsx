@@ -133,10 +133,10 @@ export default function AccessManagementPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-cyan-500 mb-2">
              <Key className="w-4 h-4" />
-             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Institutional Verification</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Registry Access</span>
           </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic">Access Matrix</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium">Generate and coordinate institutional onboarding gates for the global Klaxtrix node network.</p>
+          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase italic text-glow">Access Codes</h1>
+          <p className="text-slate-500 text-sm max-w-2xl font-medium italic">Generate and coordinate secure onboarding for the Klaxtrix school network.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export default function AccessManagementPage() {
              className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-6 h-12 rounded-xl shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)] transition-all flex items-center gap-2"
            >
               {isGenerating ? <Zap className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Generate Secure Code
+              Generate Access Code
            </Button>
         </div>
       </div>
@@ -154,8 +154,8 @@ export default function AccessManagementPage() {
       {/* Stats Quick View */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
          {[
-           { label: 'Total Gates', value: codes.length.toString(), color: 'slate' },
-           { label: 'Active Gates', value: codes.filter(c => c.status === 'active').length.toString(), color: 'cyan' },
+           { label: 'Total Codes', value: codes.length.toString(), color: 'slate' },
+           { label: 'Active Codes', value: codes.filter(c => c.status === 'active').length.toString(), color: 'cyan' },
            { label: 'Redeemed', value: codes.filter(c => c.status === 'used').length.toString(), color: 'emerald' },
            { label: 'Expirations', value: codes.filter(c => c.status === 'expired').length.toString(), color: 'red' },
          ].map((stat, i) => (
@@ -208,14 +208,14 @@ export default function AccessManagementPage() {
                    <td colSpan={6} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
                          <Zap className="w-8 h-8 text-cyan-500 animate-spin" />
-                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Accessing Node Network...</span>
+                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Connecting to Registry...</span>
                       </div>
                    </td>
                 </tr>
               ) : codes.length === 0 ? (
                 <tr>
                    <td colSpan={6} className="px-6 py-20 text-center">
-                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Active Access Gates Identified.</span>
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Active Access Codes Identified in Registry.</span>
                    </td>
                 </tr>
               ) : codes.filter(c => c.code.toLowerCase().includes(searchQuery.toLowerCase()) || c.institution_name?.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
@@ -241,7 +241,7 @@ export default function AccessManagementPage() {
                              <span className="text-sm font-bold text-slate-300">{item.institution_name}</span>
                           </>
                        ) : (
-                          <span className="text-sm font-bold text-slate-600 italic">Unassigned Gate</span>
+                          <span className="text-sm font-bold text-slate-600 italic">Unused Code</span>
                        )}
                     </div>
                   </td>
@@ -346,7 +346,7 @@ export default function AccessManagementPage() {
              onClick={() => setIsLogsOpen(true)}
              className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all group"
            >
-              Full Protocol Logs <ArrowUpRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              Full Audit History <ArrowUpRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
            </div>
         </div>
       </Card>
@@ -359,9 +359,9 @@ export default function AccessManagementPage() {
             <ShieldCheck className="w-6 h-6" />
          </div>
          <div className="space-y-1">
-            <h4 className="text-red-400 text-xs font-black uppercase tracking-[0.2em] italic">Access Protocols Enforced</h4>
+            <h4 className="text-red-400 text-xs font-black uppercase tracking-[0.2em] italic">Security Protocols Enforced</h4>
             <p className="text-[11px] font-bold text-slate-500 leading-relaxed max-w-3xl">
-               ATTENTION: EVERY ACCESS CODE GENERATED IS AUDITED BY THE GLOBAL GOVERNANCE LAYER. CODES ARE CRYPTOGRAPHICALLY LINKED TO THE ISSUING ADMIN SESSION. SHARING CODES OUTSIDE OF VERIFIED INSTITUTIONAL CHANNELS IS A VIOLATION OF KLAXTRIX SECURITY COMPLIANCE.
+               ATTENTION: EVERY ACCESS CODE GENERATED IS AUDITED BY THE KLAXTRIX REGISTRY. CODES ARE CRYPTOGRAPHICALLY LINKED TO THE ISSUING ADMIN SESSION. SHARING CODES OUTSIDE OF VERIFIED SCHOOL CHANNELS IS A VIOLATION OF SECURITY COMPLIANCE.
             </p>
          </div>
       </div>
