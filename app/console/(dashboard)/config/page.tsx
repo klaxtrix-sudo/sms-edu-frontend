@@ -118,6 +118,27 @@ export default function ConfigPage() {
     }
   };
 
+  const handleDeleteAdmin = async (id: string, username: string) => {
+    if (id === currentUser?.id) {
+       toast.error('Security Protocol: You cannot purge your own administrative node.');
+       return;
+    }
+
+    if (!window.confirm(`Are you sure you want to permanently purge administrative node: ${username}?`)) {
+       return;
+    }
+
+    try {
+      const response = await axios.delete(`${BACKEND_URL}/console/admins/${id}`, getConsoleAuthHeaders());
+      if (response.data.success) {
+        toast.success(`Node ${username} has been purged from the registry.`);
+        fetchData();
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Purge protocol failed.');
+    }
+  };
+
   const handleToggleMaintenance = async (enabled: boolean) => {
     try {
       const newValue = { ...config?.maintenance_mode, enabled };
@@ -144,13 +165,9 @@ export default function ConfigPage() {
           <p className="text-slate-500 text-sm max-w-2xl font-medium">Advanced governance for master administrators and platform-wide security protocols.</p>
         </div>
         
-        <Button 
-          onClick={fetchData}
-          className="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 text-slate-300 font-bold px-6 h-12 rounded-xl transition-all flex items-center gap-2"
-        >
-          <RefreshCcw className={cn("w-4 h-4", isLoading && "animate-spin text-indigo-400")} />
-          Reload Config
-        </Button>
+        <div className="flex items-center gap-3">
+           {/* Reload functionality moved to breadcrumbs or automatic sync */}
+        </div>
       </div>
 
       <Tabs defaultValue="admins" className="space-y-6">
@@ -255,7 +272,16 @@ export default function ConfigPage() {
                        {admin.last_login ? new Date(admin.last_login).toLocaleString() : 'Never Recorded'}
                     </TableCell>
                     <TableCell className="text-right">
-                       <Button variant="ghost" size="icon" className="text-slate-600 hover:text-red-400">
+                       <Button 
+                         variant="ghost" 
+                         size="icon" 
+                         disabled={admin.id === currentUser?.id}
+                         onClick={() => handleDeleteAdmin(admin.id, admin.username)}
+                         className={cn(
+                           "text-slate-600 hover:text-red-400",
+                           admin.id === currentUser?.id && "opacity-20 cursor-not-allowed grayscale"
+                         )}
+                       >
                           <Trash2 className="w-4 h-4" />
                        </Button>
                     </TableCell>
