@@ -26,6 +26,12 @@ import { Badge } from '@/components/ui/badge';
 import { cn, getBackendUrl } from '@/lib/utils';
 import axios from 'axios';
 import { getConsoleAuthHeaders } from '@/lib/console-auth';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
 const MOCK_TENANTS = [
   { id: 1, name: 'Monidams Academy', subdomain: 'monidams', cloud: 'Healthy', region: 'us-east-1', created: '2 days ago' },
@@ -55,28 +61,32 @@ export default function ConsoleDashboard() {
             value: data.institutions.toString(),
             change: '+1',
             icon: Globe,
-            color: 'text-cyan-400'
+            color: 'text-cyan-400',
+            description: 'Total number of school environments currently provisioned and active on the Klaxtrix network.'
           },
           {
             title: 'Platform Stability',
             value: `${data.stability}%`,
             change: 'Stable',
             icon: Server,
-            color: 'text-indigo-400'
+            color: 'text-indigo-400',
+            description: 'Percentage of institutional nodes reporting healthy connection status and successful provisioning.'
           },
           {
             title: 'Onboarding Tokens',
             value: data.tokens.toString(),
             change: 'Active',
             icon: Key,
-            color: 'text-amber-400'
+            color: 'text-amber-400',
+            description: 'Number of unused Access Codes currently available for new school registration.'
           },
           {
             title: 'Registry Volume',
             value: data.volume > 1000 ? `${(data.volume / 1000).toFixed(1)}k` : data.volume.toString(),
             change: 'Live',
             icon: Activity,
-            color: 'text-fuchsia-400'
+            color: 'text-fuchsia-400',
+            description: 'Aggregate count of records (schools, registrations, and tokens) stored in the master registry.'
           },
         ]);
       }
@@ -93,7 +103,8 @@ export default function ConsoleDashboard() {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <TooltipProvider>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
@@ -135,28 +146,35 @@ export default function ConsoleDashboard() {
           </div>
         ) : (
           stats?.map((stat: any, i: number) => (
-            <Card key={stat.title} className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 hover:border-cyan-500/30 transition-all group overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                 <stat.icon className="w-16 h-16" />
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className={cn("p-2 rounded-lg bg-slate-900 border border-slate-800", stat.color)}>
-                    <stat.icon className="w-5 h-5" />
+            <Tooltip key={stat.title}>
+              <TooltipTrigger asChild>
+                <Card className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 hover:border-cyan-500/30 transition-all group cursor-help overflow-hidden relative">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <stat.icon className="w-16 h-16" />
                   </div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.title}</span>
-                </div>
-                <div className="flex items-end justify-between">
-                  <span className="text-3xl font-bold text-white tabular-nums">{stat.value}</span>
-                  <span className={cn(
-                    "text-xs font-bold px-2 py-1 rounded-full",
-                    stat.change.startsWith('+') || stat.change === 'Stable' || stat.change === 'Live' ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"
-                  )}>
-                    {stat.change}
-                  </span>
-                </div>
-              </div>
-            </Card>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("p-2 rounded-lg bg-slate-900 border border-slate-800", stat.color)}>
+                        <stat.icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.title}</span>
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <span className="text-3xl font-bold text-white tabular-nums">{stat.value}</span>
+                      <span className={cn(
+                        "text-xs font-bold px-2 py-1 rounded-full",
+                        stat.change.startsWith('+') || stat.change === 'Stable' || stat.change === 'Live' ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"
+                      )}>
+                        {stat.change}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[200px] text-center">
+                {stat.description}
+              </TooltipContent>
+            </Tooltip>
           ))
         )}
       </div>
@@ -270,7 +288,7 @@ export default function ConsoleDashboard() {
            </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
-
