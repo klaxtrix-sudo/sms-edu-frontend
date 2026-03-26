@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -15,7 +14,6 @@ interface SchoolLogoUploadProps {
 
 export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const supabase = createClient();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -35,27 +33,25 @@ export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUpload
       }
 
       setUploading(true);
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${schoolId}/logo-${Date.now()}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
-        .from("school-assets")
-        .upload(filePath, file, {
-          upsert: true,
-        });
+      // Convert to Base64 String to bypass multi-tenant storage bucket requirements
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        onChange(base64String);
+        toast.success("Logo processed successfully");
+        setUploading(false);
+      };
+      
+      reader.onerror = () => {
+        toast.error("Failed to read image file");
+        setUploading(false);
+      };
 
-      if (uploadError) throw uploadError;
+      reader.readAsDataURL(file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("school-assets")
-        .getPublicUrl(filePath);
-
-      onChange(publicUrl);
-      toast.success("Logo uploaded successfully");
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload logo");
-    } finally {
+      toast.error(error.message || "Failed to process logo");
       setUploading(false);
     }
   };
@@ -95,7 +91,7 @@ export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUpload
         {uploading && (
           <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-10">
             <Loader2 className="size-6 animate-spin text-primary mb-2" />
-            <span className="text-[10px] font-medium uppercase tracking-tighter">Uploading</span>
+            <span className="text-[10px] font-medium uppercase tracking-tighter">Processing</span>
           </div>
         )}
       </div>
