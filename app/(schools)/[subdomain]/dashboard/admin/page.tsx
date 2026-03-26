@@ -76,11 +76,8 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
       {/* Executive Hero Header */}
       <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 group">
         <div className="relative z-10 space-y-2">
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
-            Institutional Growth Alpha
-          </Badge>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
-            Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{user?.user_metadata?.full_name?.split(' ')[0] ?? 'Administrator'}</span>
+            Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl font-medium">
              Everything is on track. {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} faculty members are active across {classesCount.count ?? 0} departments today.
