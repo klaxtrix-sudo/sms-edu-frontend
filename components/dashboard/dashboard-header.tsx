@@ -37,7 +37,7 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-end px-8 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full focus-visible:ring-1 focus-visible:ring-ring">
+          <Button variant="ghost" className="relative h-10 w-10 rounded-xl focus-visible:ring-1 focus-visible:ring-ring">
             <Avatar className="h-10 w-10 border border-border shadow-sm">
               <AvatarImage src={tenant?.logoUrl} alt={schoolName} className="object-contain p-1" />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
