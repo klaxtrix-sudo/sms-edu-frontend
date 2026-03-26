@@ -7,20 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SchoolLogoUpload } from '@/components/admin/school-logo-upload';
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
 import { useParams, useRouter } from 'next/navigation';
 import { syncSchoolSettingsToMaster } from '@/app/actions/tenant-sync-actions';
 import { useTenant } from '@/components/providers/tenant-provider';
+import { getBackendUrl } from '@/lib/utils';
 
 const schoolSchema = z.object({
   name: z.string().min(3, 'School name must be at least 3 characters'),
   motto: z.string().optional(),
-  address: z.string().min(5, 'Address is required'),
+  address: z.string().optional(),
   official_phone: z.string().optional(),
   official_website: z.string().optional(),
   logo_url: z.string().optional(),
@@ -32,11 +31,10 @@ export default function GeneralSettings() {
   const subdomain = params.subdomain as string;
   const router = useRouter();
   const { tenant } = useTenant();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
-  const supabase = createClient();
 
   const form = useForm<SchoolFormValues>({
     resolver: zodResolver(schoolSchema),
@@ -51,76 +49,97 @@ export default function GeneralSettings() {
   });
 
   useEffect(() => {
+    // Wait for tenant context to be ready
+    if (!tenant?.id) return;
+
     async function loadSchoolData() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('school_id')
-          .eq('id', user.id)
-          .single() as any;
-
-        if (profile?.school_id) {
-          setSchoolId(profile.school_id as string);
-          const { data: school } = await supabase
-            .from('schools')
-            .select('*')
-            .eq('id', profile.school_id)
-            .single() as any;
-
-          if (school) {
-            form.reset({
-              name: school.name || tenant?.name || '',
-              motto: school.motto || '',
-              address: school.address || '',
-              official_phone: school.official_phone || '',
-              official_website: school.official_website || '',
-              logo_url: tenant?.logoUrl || school.logo_url || '',
-            });
-          }
+        // Use the secure backend proxy which uses the service role key to bypass RLS
+        const res = await fetch(`${getBackendUrl()}/tenant/school-data?subdomain=${subdomain}`);
+        
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: 'Unknown error' }));
+          throw new Error(err.message || `Backend error: ${res.status}`);
         }
-      } catch (error) {
+
+        const json = await res.json();
+        const school = json.data;
+
+        if (school?.id) {
+          setSchoolId(school.id);
+        } else if (tenant?.id) {
+          setSchoolId(tenant.id);
+        }
+
+        form.reset({
+          name: school?.name || tenant?.name || '',
+          motto: school?.motto || '',
+          address: school?.address || '',
+          official_phone: school?.official_phone || '',
+          official_website: school?.official_website || '',
+          logo_url: tenant?.logoUrl || school?.logo_url || '',
+        });
+
+      } catch (error: any) {
+        console.error('[Settings] Data load error:', error.message);
         toast.error('Failed to load school settings');
+        // Fallback to tenant context
+        form.reset({
+          name: tenant?.name || '',
+          motto: '',
+          address: '',
+          official_phone: '',
+          official_website: '',
+          logo_url: tenant?.logoUrl || '',
+        });
+        if (tenant?.id) setSchoolId(tenant.id);
       } finally {
         setLoading(false);
       }
     }
+
     loadSchoolData();
-  }, [supabase, form, tenant]);
+  }, [tenant?.id, subdomain]);
 
   const onSubmit = async (values: SchoolFormValues) => {
     if (!schoolId) {
-      toast.error('School ID not found');
+      toast.error('School not ready. Please wait and try again.');
       return;
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('schools')
-        .update({
-          name: values.name,
-          motto: values.motto,
-          address: values.address,
-          official_phone: values.official_phone,
-          official_website: values.official_website,
-          logo_url: values.logo_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', schoolId);
+      // Use the secure backend proxy to save (service role key bypasses RLS)
+      const res = await fetch(`${getBackendUrl()}/tenant/school-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subdomain,
+          schoolId,
+          updates: {
+            name: values.name,
+            motto: values.motto,
+            address: values.address,
+            official_phone: values.official_phone,
+            official_website: values.official_website,
+            logo_url: values.logo_url,
+          },
+        }),
+      });
 
-      if (error) throw error;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(err.message || 'Failed to update');
+      }
 
+      // Sync name and logo to master registry for global header/avatar
       await syncSchoolSettingsToMaster(subdomain, {
         name: values.name,
         logoUrl: values.logo_url,
       });
 
-      toast.success('School identity updated successfully');
+      toast.success('Institutional identity updated successfully');
       router.refresh();
-      
-      // Delay to ensure the router refresh completes and tenant provider refetches
+
       setTimeout(() => {
         window.location.reload();
       }, 700);
@@ -142,7 +161,7 @@ export default function GeneralSettings() {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+
         <div className="glass-panel p-8 rounded-[2rem] space-y-8 col-span-1 md:col-span-2 relative">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-blue-100 rounded-2xl">
@@ -155,10 +174,9 @@ export default function GeneralSettings() {
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            
-            {/* Logo Upload Panel - Placed Prominently at the top for max vertical space */}
+            {/* Logo Upload */}
             <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-              <SchoolLogoUpload 
+              <SchoolLogoUpload
                 schoolId={schoolId!}
                 value={form.watch('logo_url')}
                 onChange={(url) => form.setValue('logo_url', url)}
@@ -166,12 +184,12 @@ export default function GeneralSettings() {
               <div className="flex flex-col text-center md:text-left space-y-2">
                 <h3 className="text-lg font-bold text-slate-900">Institutional Mark</h3>
                 <p className="text-sm text-slate-500 max-w-sm">
-                  Upload your official school logo. This will be displayed across all student, teacher, and parent portals. We automatically optimize the image for performance.
+                  Upload your official school logo. This will be displayed across all student, teacher, and parent portals.
                 </p>
               </div>
             </div>
 
-            {/* Form Inputs - Now utilizing 100% of the available width */}
+            {/* Form Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="school-name" className="text-xs font-black uppercase tracking-widest text-slate-400">School Name</Label>
@@ -191,12 +209,11 @@ export default function GeneralSettings() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-slate-400">Physical Address</Label>
+                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-slate-400">Physical / Institutional Address</Label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-6 w-4 h-4 text-slate-400" />
                   <Textarea id="address" {...form.register('address')} className="pl-12 pt-4 min-h-[100px] bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 text-slate-700" />
                 </div>
-                {form.formState.errors.address && <p className="text-xs text-red-500">{form.formState.errors.address.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -225,7 +242,7 @@ export default function GeneralSettings() {
           </form>
         </div>
 
-        {/* Meta Info Bento Cards */}
+        {/* Meta Info Cards */}
         <div className="glass-panel p-8 rounded-[2rem] flex flex-col justify-center items-center text-center space-y-4">
           <div className="p-4 bg-indigo-100 rounded-3xl">
             <Fingerprint className="w-8 h-8 text-indigo-600" />
