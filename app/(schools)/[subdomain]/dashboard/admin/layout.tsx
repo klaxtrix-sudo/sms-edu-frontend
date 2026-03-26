@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+
 export default function AdminLayout({
   children,
 }: {
@@ -56,9 +58,12 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar items={adminNavItems} role="Admin" />
-      <main className="flex-1 overflow-y-auto p-8 lg:p-12 bg-[#fafbfc]">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <DashboardHeader />
+        <main className="flex-1 overflow-y-auto p-8 lg:p-12 bg-background">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
