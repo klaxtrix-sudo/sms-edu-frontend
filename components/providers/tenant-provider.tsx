@@ -34,18 +34,24 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Initialize tenant-specific supabase client
+  // Memoize it only based on the URL and key values, not the tenant object itself
   const supabase = useMemo(() => {
     if (tenant?.supabaseUrl && tenant?.supabaseAnonKey) {
       console.log(`[Klaxtrix] Initializing isolated client for ${tenant.name}`);
       return createClient(tenant.supabaseUrl, tenant.supabaseAnonKey);
     }
     return null;
-  }, [tenant]);
+  }, [tenant?.supabaseUrl, tenant?.supabaseAnonKey, tenant?.name]);
 
   useEffect(() => {
-    if (!subdomain) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!subdomain || !mounted) return;
 
     const fetchTenantConfig = async () => {
       setIsLoading(true);
@@ -59,7 +65,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         }
 
         const data = await res.json();
-        setTenant({
+        
+        // Only update if something actually changed to avoid infinite cycles
+        const newTenant: TenantConfig = {
           id: data.data.id ?? subdomain,
           name: data.data.name ?? subdomain,
           subdomain,
@@ -68,6 +76,11 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           isSetupCompleted: data.data.isSetupCompleted ?? false,
           logoUrl: data.data.logoUrl,
           primaryColor: data.data.primaryColor ?? '#3b82f6',
+        };
+
+        setTenant(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(newTenant)) return prev;
+          return newTenant;
         });
       } catch (err) {
         setError('Failed to load school configuration');
@@ -78,7 +91,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchTenantConfig();
-  }, [subdomain]);
+  }, [subdomain, mounted]);
+
+  if (!mounted) return null;
 
   return (
     <TenantContext.Provider value={{ tenant, supabase, isLoading, error }}>
