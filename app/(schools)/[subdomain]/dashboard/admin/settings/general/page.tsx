@@ -241,35 +241,6 @@ export default function GeneralSettings() {
             </div>
           </form>
         </div>
-
-        {/* Meta Info Cards */}
-        <div className="glass-panel p-8 rounded-[2rem] flex flex-col justify-center items-center text-center space-y-4">
-          <div className="p-4 bg-indigo-100 rounded-3xl">
-            <Fingerprint className="w-8 h-8 text-indigo-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Institutional ID</h3>
-            <code className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg font-mono font-bold mt-2 inline-block italic border border-indigo-100">
-              {schoolId ? `KLAX-${schoolId.split('-')[0].toUpperCase()}` : 'LOADING...'}
-            </code>
-          </div>
-          <p className="text-xs text-slate-400 font-medium max-w-[200px]">
-            Official institution reference for government and regulatory verification.
-          </p>
-        </div>
-
-        <div className="glass-panel p-8 rounded-[2rem] flex flex-col justify-center items-center text-center space-y-4">
-          <div className="p-4 bg-emerald-100 rounded-3xl">
-            <Building2 className="w-8 h-8 text-emerald-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Affiliation</h3>
-            <p className="text-sm text-slate-600 font-bold mt-2">Nigerian Ministry of Education</p>
-          </div>
-          <p className="text-xs text-slate-400 font-medium max-w-[200px]">
-            Certified and integrated with regional educational standards.
-          </p>
-        </div>
       </div>
     </div>
   );
