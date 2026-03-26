@@ -73,7 +73,14 @@ export default function TenantManagementPage() {
   };
 
   const openPortal = (subdomain: string) => {
-    const rootDomain = window.location.host; // Expecting localhost:3000 in dev
+    let rootDomain = window.location.host; 
+    
+    // Mission Logic: Strip the WWW prefix if it exists to prevent double-subdomains
+    // (e.g., glorydays.www.solabacademy.com.ng -> glorydays.solabacademy.com.ng)
+    if (rootDomain.startsWith('www.')) {
+      rootDomain = rootDomain.slice(4);
+    }
+    
     const protocol = window.location.protocol;
     const url = `${protocol}//${subdomain}.${rootDomain}/login`;
     window.open(url, '_blank');
