@@ -195,7 +195,7 @@ export default function GeneralSettings() {
                 <Label htmlFor="school-name" className="text-xs font-black uppercase tracking-widest text-slate-400">School Name</Label>
                 <div className="relative">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input id="school-name" {...form.register('name')} className="pl-14 h-16 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 font-black text-xl text-slate-900" />
+                  <Input id="school-name" {...form.register('name')} className="pl-14 h-14 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 font-medium text-slate-800" />
                 </div>
                 {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
               </div>
