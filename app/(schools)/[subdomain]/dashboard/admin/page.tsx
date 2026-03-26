@@ -48,7 +48,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
 
   const schoolId = user.user_metadata?.school_id;
 
-  // Fetch real counts
+  // Fetch real counts and performance data
   const [teachersCount, studentsCount, classesCount, subjectsCount] = await Promise.all([
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'teacher'),
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'student'),
@@ -56,8 +56,20 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
     (supabase as any).from('subjects').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
   ]);
 
+  // Fetch performance trend from backend
+  let performanceData = [];
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/stats/school/${schoolId}/performance`);
+    const result = await response.json();
+    if (result.success) {
+      performanceData = result.data;
+    }
+  } catch (error) {
+    console.error('Failed to fetch performance data:', error);
+  }
+
   const stats = [
-    { label: "Faculty", value: String(teachersCount.count ?? 0), icon: Users, color: "from-blue-500 to-indigo-600" },
+    { label: "Teachers", value: String(teachersCount.count ?? 0), icon: Users, color: "from-blue-500 to-indigo-600" },
     { label: "Students", value: String(studentsCount.count ?? 0), icon: GraduationCap, color: "from-emerald-500 to-teal-600" },
     { label: "Classes", value: String(classesCount.count ?? 0), icon: School, color: "from-amber-500 to-orange-600" },
     { label: "Subjects", value: String(subjectsCount.count ?? 0), icon: BookOpen, color: "from-purple-500 to-violet-600" },
@@ -80,7 +92,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
             Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl font-medium">
-             Everything is on track. {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} faculty members are active across {classesCount.count ?? 0} departments today.
+             Everything is on track. {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} teachers are active across {classesCount.count ?? 0} class levels today.
           </p>
         </div>
         
@@ -109,15 +121,15 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
                 <p className="text-sm text-muted-foreground mt-1">Institutional cumulative growth & trends</p>
               </div>
               <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-                +12.5% vs Last Term
+                Live Analytics
               </Badge>
             </div>
-            <PerformanceChart />
+            <PerformanceChart data={performanceData} />
           </div>
         </div>
 
         {/* SMALL BENTO CELLS: Core Stats with Glowing Gradients */}
-        <div className="grid grid-cols-2 md:col-span-2 lg:col-span-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:col-span-2 lg:col-span-2 gap-6">
           {stats.map((stat) => (
             <div key={stat.label} className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-white/5 overflow-hidden">
                <div className={`size-12 rounded-2xl bg-gradient-to-br ${stat.color} p-3 mb-4 shadow-lg group-hover:scale-110 transition-transform`}>

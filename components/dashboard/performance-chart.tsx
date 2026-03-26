@@ -11,18 +11,20 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 
-const data = [
-  { month: 'Jan', performance: 65 },
-  { month: 'Feb', performance: 59 },
-  { month: 'Mar', performance: 80 },
-  { month: 'Apr', performance: 81 },
-  { month: 'May', performance: 56 },
-  { month: 'Jun', performance: 55 },
-  { month: 'Jul', performance: 40 },
-  { month: 'Aug', performance: 85 },
+interface PerformanceChartProps {
+  data?: { month: string; performance: number }[];
+}
+
+const defaultData = [
+  { month: 'Jan', performance: 0 },
+  { month: 'Feb', performance: 0 },
+  { month: 'Mar', performance: 0 },
+  { month: 'Apr', performance: 0 },
+  { month: 'May', performance: 0 },
+  { month: 'Jun', performance: 0 },
 ];
 
-export function PerformanceChart() {
+export function PerformanceChart({ data = defaultData }: PerformanceChartProps) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
