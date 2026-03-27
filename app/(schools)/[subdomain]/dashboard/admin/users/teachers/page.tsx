@@ -50,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function TeachersPage() {
   const { tenant } = useTenant();
