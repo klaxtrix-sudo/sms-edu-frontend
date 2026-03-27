@@ -94,11 +94,12 @@ export async function createTeacher(data: CreateUserData) {
     const { data: { user }, error: authError } = await adminSupabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
       user_metadata: {
         full_name: fullName,
         role: 'teacher',
-        school_id: schoolId
+        school_id: schoolId,
+        must_change_password: true
       }
     });
 
