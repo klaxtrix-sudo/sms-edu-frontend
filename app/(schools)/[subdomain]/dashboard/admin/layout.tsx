@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
+import { ProductTour } from '@/components/dashboard/product-tour';
+import { createClient } from '@/lib/supabase/client';
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
@@ -15,6 +17,32 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { tenant, isLoading } = useTenant();
+  const [profile, setProfile] = React.useState<any>(null);
+  const [isProfileLoading, setIsProfileLoading] = React.useState(true);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setProfile(data);
+      } else if (process.env.NODE_ENV === 'development') {
+        // Mock profile for Dev PoC
+        setProfile({
+          id: 'a0000000-0000-0000-0000-000000000000',
+          onboarding_completed: false
+        });
+      }
+      setIsProfileLoading(false);
+    }
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     if (!isLoading && tenant && !tenant.isSetupCompleted && !pathname.includes('/setup')) {
@@ -57,6 +85,9 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen">
+      {profile && !profile.onboarding_completed && !isProfileLoading && (
+        <ProductTour userId={profile.id} />
+      )}
       <Sidebar items={adminNavItems} role="Admin" />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />

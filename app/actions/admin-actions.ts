@@ -179,3 +179,19 @@ export async function saveResults(resultsData: any[]) {
 }
 
 
+export async function completeOnboarding(userId: string) {
+  const adminSupabase = createAdminClient();
+
+  try {
+    const { error } = await (adminSupabase as any)
+      .from('profiles')
+      .update({ onboarding_completed: true })
+      .eq('id', userId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to complete onboarding" };
+  }
+}

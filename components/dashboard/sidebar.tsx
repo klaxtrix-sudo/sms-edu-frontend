@@ -95,6 +95,7 @@ export function Sidebar({ items, role }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              id={`sidebar-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               className={cn(
                 "flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-all group",
                 isActive 
