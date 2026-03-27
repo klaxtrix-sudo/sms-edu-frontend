@@ -1,7 +1,7 @@
 import { LandingHeader } from '@/components/landing/landing-header';
-import { LandingHero, LandingFeatures } from '@/components/landing/landing-page';
+import { LandingHero, LandingFeatures, LandingSolutions, LandingContact } from '@/components/landing/landing-page';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Globe, Zap } from 'lucide-react';
+import { ArrowRight, Globe, School } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RootPage() {
@@ -12,6 +12,8 @@ export default function RootPage() {
       <LandingHero />
       
       <LandingFeatures />
+      
+      <LandingSolutions />
 
       {/* Trust Section / Stats / Bento */}
       <section className="py-24 container px-4 mx-auto">
@@ -40,11 +42,13 @@ export default function RootPage() {
          </div>
       </section>
 
+      <LandingContact />
+      
       {/* Footer */}
       <footer className="py-12 border-t border-border/50 bg-background/50 backdrop-blur-sm">
          <div className="container px-4 mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-               <Zap className="w-5 h-5 text-primary" />
+               <School className="w-5 h-5 text-primary" />
                <span className="font-heading font-bold text-lg">Klaxtrix</span>
             </div>
             <p className="text-sm text-muted-foreground">

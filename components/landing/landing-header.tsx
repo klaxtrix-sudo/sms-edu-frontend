@@ -20,9 +20,9 @@ export function LandingHeader() {
 
   const navLinks = [
     { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' },
     { name: 'Solutions', href: '#solutions' },
-    { name: 'Resources', href: '#resources' },
+    { name: 'Contact', href: '#contact' },
+    { name: 'Resources', href: '/resources' },
   ];
 
   return (

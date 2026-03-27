@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-import { ArrowRight, CheckCircle2, Globe, Shield, School } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, MapPin } from 'lucide-react';
 import Image from 'next/image';
 
 export function LandingHero() {
@@ -235,7 +235,7 @@ export function LandingFeatures() {
   ];
 
   return (
-    <section className="py-24 bg-muted/30">
+    <section id="features" className="py-24 bg-muted/30">
        <div className="container px-4 mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
              {features.map((feature, i) => (
@@ -247,6 +247,155 @@ export function LandingFeatures() {
                    <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
                 </div>
              ))}
+          </div>
+       </div>
+    </section>
+  );
+}
+
+export function LandingSolutions() {
+  const solutions = [
+    {
+      title: "K-12 Education",
+      description: "Comprehensive management for primary and secondary schools. From attendance tracking to report card generation.",
+      icon: BookOpen,
+      color: "text-blue-500",
+      features: ["Attendance", "Gradebook", "Parent Portal"]
+    },
+    {
+      title: "Higher Education",
+      description: "Scalable solutions for colleges and universities. Manage complex course registrations and departmental analytics.",
+      icon: GraduationCap,
+      color: "text-indigo-500",
+      features: ["LMS Integration", "Course Mgt", "Financials"]
+    },
+    {
+      title: "Vocational Training",
+      description: "Flexible tools for short courses and skill acquisition centers. Track certifications and practical assessments.",
+      icon: Laptop,
+      color: "text-emerald-500",
+      features: ["Certification", "Skills Tracking", "Scheduling"]
+    }
+  ];
+
+  return (
+    <section id="solutions" className="py-24 bg-background">
+       <div className="container px-4 mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+             <h2 className="text-4xl font-heading font-bold mb-4 tracking-tight">Tailored Solutions for Every Institution</h2>
+             <p className="text-lg text-muted-foreground leading-relaxed">
+                Whether you're a small primary school or a large university, Klaxtrix adapts to your unique institutional workflows.
+             </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+             {solutions.map((sol, i) => (
+                <div key={i} className="group p-1 rounded-[2.5rem] bg-gradient-to-br from-border/50 to-transparent hover:from-primary/20 transition-all duration-500">
+                   <div className="h-full p-8 rounded-[2.25rem] bg-background border border-border/50 flex flex-col">
+                      <div className={`w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                         <sol.icon className={`w-7 h-7 ${sol.color}`} />
+                      </div>
+                      <h3 className="text-2xl font-heading font-bold mb-4">{sol.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed mb-8 flex-1">{sol.description}</p>
+                      
+                      <div className="space-y-3">
+                         {sol.features.map(f => (
+                            <div key={f} className="flex items-center gap-2 text-sm font-medium text-foreground/80">
+                               <CheckCircle2 className="w-4 h-4 text-primary" />
+                               {f}
+                            </div>
+                         ))}
+                      </div>
+                   </div>
+                </div>
+             ))}
+          </div>
+       </div>
+    </section>
+  );
+}
+
+export function LandingContact() {
+  return (
+    <section id="contact" className="py-24 bg-muted/30">
+       <div className="container px-4 mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+             
+             {/* Left Column: Info */}
+             <div className="space-y-10">
+                <div className="max-w-md">
+                   <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 tracking-tight">Let's Pioneer <br /> Academic Excellence.</h2>
+                   <p className="text-lg text-muted-foreground leading-relaxed">
+                      Transforming an institution is a big step. Our specialized team is ready to help you navigate the future of school management.
+                   </p>
+                </div>
+                
+                <div className="space-y-6">
+                   <div className="flex items-center gap-5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                         <MessageSquare className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Email Us</div>
+                         <div className="text-lg font-semibold">institutions@klaxtrix.com</div>
+                      </div>
+                   </div>
+                   
+                   <div className="flex items-center gap-5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                         <PhoneCall className="w-6 h-6 text-purple-500" />
+                      </div>
+                      <div>
+                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Support Line</div>
+                         <div className="text-lg font-semibold">+234 812 345 6789</div>
+                      </div>
+                   </div>
+                   
+                   <div className="flex items-center gap-5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                         <MapPin className="w-6 h-6 text-emerald-500" />
+                      </div>
+                      <div>
+                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Main HQ</div>
+                         <div className="text-lg font-semibold">Victoria Island, Lagos, Nigeria</div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+             
+             {/* Right Column: Form */}
+             <div className="relative">
+                <div className="absolute inset-0 bg-primary/10 blur-[100px] -z-10 rounded-full" />
+                <div className="p-8 md:p-12 rounded-[2.5rem] bg-background border border-border/50 shadow-2xl shadow-primary/5">
+                   <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                      <div className="grid md:grid-cols-2 gap-6">
+                         <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase px-1">Institution Name</label>
+                            <input type="text" placeholder="Glory Days Academy" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all" />
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase px-1">Contact Email</label>
+                            <input type="email" placeholder="admin@school.com" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all" />
+                         </div>
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-xs font-bold text-slate-500 uppercase px-1">Subject</label>
+                         <select className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer">
+                            <option>Institutional Demo Request</option>
+                            <option>Technical Partnership</option>
+                            <option>Migration Support</option>
+                         </select>
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-xs font-bold text-slate-500 uppercase px-1">Message</label>
+                         <textarea rows={4} placeholder="How can we help your institution?" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none" />
+                      </div>
+                      <Button className="w-full py-7 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                         Send Message
+                      </Button>
+                   </form>
+                </div>
+             </div>
+             
           </div>
        </div>
     </section>
