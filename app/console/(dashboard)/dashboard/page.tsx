@@ -147,7 +147,7 @@ export default function ConsoleDashboard() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-4xl font-heading font-bold tracking-tight text-white">Operations Hub</h1>
+          <h1 className="text-2xl md:text-4xl font-heading font-bold tracking-tight text-white">Operations Hub</h1>
           <p className="text-slate-400 text-lg">Centralized oversight of the Klaxtrix global institutional network.</p>
         </div>
         <div className="flex items-center gap-3">

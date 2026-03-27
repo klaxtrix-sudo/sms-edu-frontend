@@ -19,6 +19,7 @@ export default function AdminLayout({
   const { tenant, isLoading } = useTenant();
   const [profile, setProfile] = React.useState<any>(null);
   const [isProfileLoading, setIsProfileLoading] = React.useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -86,14 +87,23 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen relative overflow-hidden">
       {profile && !profile.onboarding_completed && !isProfileLoading && (
         <ProductTour userId={profile.id} />
       )}
-      <Sidebar items={adminNavItems} role="Admin" />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-8 lg:p-12 bg-background">
+      
+      {/* Mobile Sidebar Overlay/Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar items={adminNavItems} role="Admin" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <DashboardHeader onMenuClick={() => setIsSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 bg-background custom-scrollbar">
           {children}
         </main>
       </div>

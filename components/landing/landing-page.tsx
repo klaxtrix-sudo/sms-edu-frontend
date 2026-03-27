@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 export function LandingHero() {
   return (
-    <section className="relative pt-20 pb-24 overflow-hidden bg-background">
+    <section className="relative pt-12 md:pt-20 pb-24 overflow-hidden bg-background">
       {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-50 pointer-events-none" />
       
@@ -17,11 +17,11 @@ export function LandingHero() {
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
 
           
-          <h1 className="text-5xl md:text-7xl font-heading font-bold tracking-tight mb-8 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent leading-[1.1]">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-heading font-bold tracking-tight mb-6 md:mb-8 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent leading-[1.2] md:leading-[1.1]">
             Klaxtrix: The Future of School Mgmt.
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
+          <p className="text-base md:text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
             A modern, high-fidelity platform for managing operations, academics, and communication with unparalleled ease. Built for visionary institutions.
           </p>
           
@@ -279,10 +279,10 @@ export function LandingSolutions() {
   ];
 
   return (
-    <section id="solutions" className="py-24 bg-background">
+    <section id="solutions" className="py-12 md:py-24 bg-background">
        <div className="container px-4 mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-             <h2 className="text-4xl font-heading font-bold mb-4 tracking-tight">Tailored Solutions for Every Institution</h2>
+          <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
+             <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 tracking-tight">Tailored Solutions for Every Institution</h2>
              <p className="text-lg text-muted-foreground leading-relaxed">
                 From the first steps in nursery to the graduation halls of secondary school, Klaxtrix provides the perfect foundation.
              </p>
@@ -316,14 +316,14 @@ export function LandingSolutions() {
 
 export function LandingContact() {
   return (
-    <section id="contact" className="py-24 bg-muted/30">
+    <section id="contact" className="py-12 md:py-24 bg-muted/30">
        <div className="container px-4 mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 md:gap-16 items-center">
              
              {/* Left Column: Info */}
-             <div className="space-y-10">
+             <div className="space-y-8 md:space-y-10">
                 <div className="max-w-md">
-                   <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 tracking-tight">Let's Pioneer <br /> Academic Excellence.</h2>
+                   <h2 className="text-3xl md:text-5xl font-heading font-bold mb-6 tracking-tight">Let's Pioneer <br className="hidden md:block" /> Academic Excellence.</h2>
                    <p className="text-lg text-muted-foreground leading-relaxed">
                       Transforming an institution is a big step. Our specialized team is ready to help you navigate the future of school management.
                    </p>
@@ -365,7 +365,7 @@ export function LandingContact() {
              {/* Right Column: Form */}
              <div className="relative">
                 <div className="absolute inset-0 bg-primary/10 blur-[100px] -z-10 rounded-full" />
-                <div className="p-8 md:p-12 rounded-[2.5rem] bg-background border border-border/50 shadow-2xl shadow-primary/5">
+                <div className="p-6 md:p-12 rounded-3xl md:rounded-[2.5rem] bg-background border border-border/50 shadow-2xl shadow-primary/5">
                    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                       <div className="grid md:grid-cols-2 gap-6">
                          <div className="space-y-2">

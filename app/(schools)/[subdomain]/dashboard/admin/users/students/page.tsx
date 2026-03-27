@@ -104,20 +104,22 @@ export default function StudentsPage() {
       </div>
 
       <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="relative w-full max-w-sm">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search by name or admission no..." 
-              className="pl-9"
+              placeholder="Search students..." 
+              className="pl-9 h-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-10 flex-1 sm:flex-none">
+              <Filter className="mr-2 h-4 w-4" />
+              Filter
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (

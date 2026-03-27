@@ -86,9 +86,9 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
     <div className="min-h-screen pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Hero Header */}
-      <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 group">
+      <header className="relative overflow-hidden glass-panel rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 group">
         <div className="relative z-10 space-y-2">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
             Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl font-medium">
@@ -96,10 +96,10 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
           </p>
         </div>
         
-        <div className="relative z-10 glass-panel rounded-2xl p-6 border-white/10 flex flex-col items-center justify-center min-w-[200px] hover:scale-105 transition-transform duration-500 bg-white/5">
+        <div className="relative z-10 glass-panel rounded-2xl p-6 border-white/10 flex flex-col items-center justify-center w-full md:min-w-[200px] hover:scale-105 transition-transform duration-500 bg-white/5">
           <Calendar className="size-8 text-primary mb-2" />
           <span className="text-sm font-bold text-primary uppercase tracking-tighter">Today's Pulse</span>
-          <span className="text-lg font-bold">{today}</span>
+          <span className="text-base md:text-lg font-bold text-center">{today}</span>
         </div>
 
         {/* Decorative background glow */}
