@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, MapPin } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, MapPin, Baby } from 'lucide-react';
 import Image from 'next/image';
 
 export function LandingHero() {
@@ -227,7 +227,7 @@ export function LandingFeatures() {
       color: "text-purple-500",
     },
     {
-      title: "Bento Branded Portals",
+      title: "Custom Branded Portals",
       description: "Stunning, high-fidelity interfaces for students, parents, and teachers. Perfectly optimized for clarity and engagement.",
       icon: School,
       color: "text-yellow-500",
@@ -256,25 +256,25 @@ export function LandingFeatures() {
 export function LandingSolutions() {
   const solutions = [
     {
-      title: "K-12 Education",
-      description: "Comprehensive management for primary and secondary schools. From attendance tracking to report card generation.",
+      title: "Nursery Education",
+      description: "Gentle, focused management for early childhood centers. Track developmental milestones and maintain close parent communication.",
+      icon: Baby,
+      color: "text-rose-500",
+      features: ["Milestones", "Daily Reports", "Parent Chat"]
+    },
+    {
+      title: "Primary Education",
+      description: "Comprehensive tools for foundational learning. Manage attendance, simplify grading, and track student growth with ease.",
       icon: BookOpen,
       color: "text-blue-500",
-      features: ["Attendance", "Gradebook", "Parent Portal"]
+      features: ["Attendance", "Simple Grading", "Assessments"]
     },
     {
-      title: "Higher Education",
-      description: "Scalable solutions for colleges and universities. Manage complex course registrations and departmental analytics.",
-      icon: GraduationCap,
+      title: "Secondary Education",
+      description: "Advanced management for high schools. Streamline subject selection, exam processing, and detailed academic performance.",
+      icon: School,
       color: "text-indigo-500",
-      features: ["LMS Integration", "Course Mgt", "Financials"]
-    },
-    {
-      title: "Vocational Training",
-      description: "Flexible tools for short courses and skill acquisition centers. Track certifications and practical assessments.",
-      icon: Laptop,
-      color: "text-emerald-500",
-      features: ["Certification", "Skills Tracking", "Scheduling"]
+      features: ["Exam Center", "Subject Mgt", "Performance"]
     }
   ];
 
@@ -284,7 +284,7 @@ export function LandingSolutions() {
           <div className="text-center max-w-3xl mx-auto mb-16">
              <h2 className="text-4xl font-heading font-bold mb-4 tracking-tight">Tailored Solutions for Every Institution</h2>
              <p className="text-lg text-muted-foreground leading-relaxed">
-                Whether you're a small primary school or a large university, Klaxtrix adapts to your unique institutional workflows.
+                From the first steps in nursery to the graduation halls of secondary school, Klaxtrix provides the perfect foundation.
              </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
