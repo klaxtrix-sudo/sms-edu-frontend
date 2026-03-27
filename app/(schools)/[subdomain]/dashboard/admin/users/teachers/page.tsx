@@ -61,7 +61,8 @@ export default function TeachersPage() {
 
   // Form State
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     phone: '',
@@ -89,14 +90,17 @@ export default function TeachersPage() {
 
     setIsSubmitting(true);
     const result = await createTeacher({
-      ...formData,
+      fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone,
       schoolId: tenant.id
     });
 
     if (result.success) {
       toast.success("Teacher account protocols initialized.");
       setIsAddModalOpen(false);
-      setFormData({ fullName: '', email: '', password: '', phone: '' });
+      setFormData({ firstName: '', lastName: '', email: '', password: '', phone: '' });
       fetchTeachers();
     } else {
       toast.error(result.error);
@@ -124,13 +128,13 @@ export default function TeachersPage() {
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-glow">Professional Faculty</h1>
+          <h1 className="text-3xl font-black tracking-tighter text-glow">Professional Teachers</h1>
           <p className="text-muted-foreground mt-1">Manage teaching staff and institutional access levels.</p>
         </div>
 
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 px-6 h-12 rounded-xl gradient-brand shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+            <Button className="gap-2 px-6 h-12 rounded-xl gradient-brand shadow-lg shadow-primary/20 hover:scale-105 transition-transform text-white">
               <UserPlus className="size-5" />
               Add Teacher
             </Button>
@@ -138,24 +142,38 @@ export default function TeachersPage() {
           <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-2 border-primary/20 bg-white">
             <form onSubmit={handleAddTeacher}>
               <DialogHeader className="p-6 pb-0">
-                <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Register New Faculty</DialogTitle>
+                <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Register New Teacher</DialogTitle>
                 <DialogDescription className="text-slate-500">
                   Configure login credentials and personal records for the new teacher.
                 </DialogDescription>
               </DialogHeader>
               
               <div className="max-h-[60vh] overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Full Name</Label>
-                  <Input 
-                    id="fullName" 
-                    placeholder="Enter full name" 
-                    required 
-                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
-                    value={formData.fullName}
-                    onChange={e => setFormData({...formData, fullName: e.target.value})}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">First Name</Label>
+                    <Input 
+                      id="firstName" 
+                      placeholder="Jane" 
+                      required 
+                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                      value={formData.firstName}
+                      onChange={e => setFormData({...formData, firstName: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Last Name</Label>
+                    <Input 
+                      id="lastName" 
+                      placeholder="Doe" 
+                      required 
+                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                      value={formData.lastName}
+                      onChange={e => setFormData({...formData, lastName: e.target.value})}
+                    />
+                  </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Login Email</Label>
                   <Input 
@@ -205,7 +223,7 @@ export default function TeachersPage() {
                   disabled={isSubmitting}
                   className="w-full h-12 rounded-xl gradient-brand font-bold text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
                 >
-                  {isSubmitting ? "Initializing Account..." : "Confirm Faculty Addition"}
+                  {isSubmitting ? "Initializing Account..." : "Confirm Teacher Addition"}
                 </Button>
               </DialogFooter>
             </form>
