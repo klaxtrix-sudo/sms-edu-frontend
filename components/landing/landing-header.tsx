@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X, School } from 'lucide-react';
 
 export function LandingHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,7 +35,7 @@ export function LandingHeader() {
       <div className="container px-4 mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-             <Zap className="w-6 h-6 text-white fill-white" />
+             <School className="w-6 h-6 text-white fill-white" />
           </div>
           <span className="text-2xl font-heading font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Klaxtrix

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-import { ArrowRight, CheckCircle2, Globe, Shield, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe, Shield, School } from 'lucide-react';
 import Image from 'next/image';
 
 export function LandingHero() {
@@ -36,29 +36,175 @@ export function LandingHero() {
             </Button>
           </div>
           
-          {/* Dashboard Preview / Mockup */}
-          <div className="relative w-full aspect-video rounded-3xl border border-border/50 bg-muted/20 shadow-2xl overflow-hidden group">
-             <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-secondary/5" />
-             <div className="absolute top-0 left-0 w-full p-4 border-b border-border/10 bg-background/50 backdrop-blur-md flex items-center justify-between">
-                <div className="flex gap-2">
-                   <div className="w-3 h-3 rounded-full bg-red-400" />
-                   <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                   <div className="w-3 h-3 rounded-full bg-green-400" />
+          {/* Dashboard Preview Mockup — mirrors actual admin UI */}
+          <div className="relative w-full aspect-video rounded-3xl border border-border/50 shadow-2xl overflow-hidden bg-slate-100">
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-blue-400/5" />
+
+            {/* Browser chrome */}
+            <div className="absolute top-0 left-0 w-full h-8 border-b border-slate-200 bg-white flex items-center px-3 gap-2 z-10">
+              <div className="w-2 h-2 rounded-full bg-red-400" />
+              <div className="w-2 h-2 rounded-full bg-yellow-400" />
+              <div className="w-2 h-2 rounded-full bg-green-400" />
+              <div className="flex-1 flex justify-center">
+                <div className="text-[9px] text-slate-400 font-medium flex items-center gap-1 bg-slate-100 rounded-full px-3 py-0.5">
+                  <Globe className="w-2 h-2" />
+                  school.klaxtrix.com/dashboard/
                 </div>
-                <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
-                   <Globe className="w-3 h-3" />
-                   monidams.klaxtrix.com.ng
+              </div>
+            </div>
+
+            {/* Dashboard layout */}
+            <div className="absolute inset-0 top-8 flex">
+
+              {/* Sidebar — white, matches actual */}
+              <div className="w-[18%] bg-white border-r border-slate-100 h-full flex flex-col py-3 shrink-0">
+                {/* Logo */}
+                <div className="flex items-center gap-2 px-3 mb-1">
+                  <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <School className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-extrabold text-slate-900 leading-none">Klaxtrix</div>
+                    <div className="text-[6px] text-slate-400 uppercase tracking-widest">Admin Portal</div>
+                  </div>
                 </div>
-                <div className="w-8 h-4" />
-             </div>
-             
-             {/* Replace with actual dashboard screenshot or premium graphic */}
-             <div className="flex items-center justify-center h-full pt-12">
-                 <div className="text-center">
-                    <Zap className="w-16 h-16 text-primary/40 mx-auto mb-4 animate-pulse" />
-                    <p className="text-sm font-medium text-muted-foreground">High-Fidelity Dashboard Experience</p>
-                 </div>
-             </div>
+
+                <div className="mt-2 flex flex-col gap-0.5 px-2">
+                  {/* Active item */}
+                  <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-600 text-white">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                    <span className="text-[8px] font-semibold">Overview</span>
+                  </div>
+                  {['Teachers','Classes & Subjects','Academic Timetable','Students','Staff','Attendance Intel','Executive Analytics','Global Communications','MCQ Exams','Academic Results','Fee Management','Settings'].map(item => (
+                    <div key={item} className="flex items-center gap-2 px-2 py-0.5 rounded-md text-slate-500">
+                      <div className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />
+                      <span className="text-[7px] truncate">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-auto px-4 pb-2">
+                  <div className="text-[7px] text-slate-400">Sign Out</div>
+                </div>
+              </div>
+
+              {/* Main content */}
+              <div className="flex-1 bg-slate-50/80 overflow-hidden p-3 flex flex-col gap-2">
+
+                {/* Welcome Banner */}
+                <div className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-slate-100 shadow-sm">
+                  <div>
+                    <div className="text-[11px] font-extrabold text-slate-800">
+                      Welcome, <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">School Academy</span>
+                    </div>
+                    <div className="text-[7px] text-slate-400 mt-0.5">Everything is on track. 1,284 students and 87 teachers are active across 6 class levels today.</div>
+                  </div>
+                  <div className="shrink-0 border border-slate-100 rounded-xl px-3 py-2 text-right shadow-sm bg-slate-50">
+                    <div className="text-[6px] text-blue-500 font-bold uppercase tracking-widest mb-0.5">Today's Pulse</div>
+                    <div className="text-[8px] font-bold text-slate-700">Friday, March 27, 2026</div>
+                  </div>
+                </div>
+
+                {/* Bento grid */}
+                <div className="grid grid-cols-3 gap-2 flex-1 min-h-0">
+
+                  {/* Academic Performance — large left */}
+                  <div className="col-span-2 bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex flex-col">
+                    <div className="flex items-center justify-between mb-1">
+                      <div>
+                        <div className="text-[9px] font-bold text-slate-800 flex items-center gap-1">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-slate-400" />
+                          Academic Performance
+                        </div>
+                        <div className="text-[6px] text-slate-400">Institutional cumulative growth &amp; trends</div>
+                      </div>
+                      <div className="bg-green-100 text-green-700 text-[6px] font-bold rounded-full px-2 py-0.5">Live Analytics</div>
+                    </div>
+                    {/* SVG Line + Area Chart */}
+                    <div className="flex-1 relative px-1 pt-1 pb-0">
+                      <svg viewBox="0 0 220 80" className="w-full h-full" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        {/* Horizontal grid lines */}
+                        {[10,25,40,55,70].map(y => (
+                          <line key={y} x1="0" y1={y} x2="220" y2={y} stroke="#e2e8f0" strokeWidth="0.5" />
+                        ))}
+                        {/* Area fill */}
+                        <path
+                          d="M0,62 C18,58 36,50 55,44 C73,38 91,48 110,36 C128,24 146,30 165,18 C183,6 201,12 220,8 L220,80 L0,80 Z"
+                          fill="url(#areaGrad)"
+                        />
+                        {/* Line */}
+                        <path
+                          d="M0,62 C18,58 36,50 55,44 C73,38 91,48 110,36 C128,24 146,30 165,18 C183,6 201,12 220,8"
+                          fill="none"
+                          stroke="#3b82f6"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        {/* Data points */}
+                        {[[0,62],[55,44],[110,36],[165,18],[220,8]].map(([x,y],i) => (
+                          <circle key={i} cx={x} cy={y} r="2" fill="#3b82f6" stroke="white" strokeWidth="1" />
+                        ))}
+                        {/* Secondary line (previous year) */}
+                        <path
+                          d="M0,72 C18,70 36,66 55,62 C73,58 91,64 110,58 C128,52 146,56 165,50 C183,44 201,46 220,42"
+                          fill="none"
+                          stroke="#cbd5e1"
+                          strokeWidth="1"
+                          strokeDasharray="3,2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      {/* Y-axis labels */}
+                      <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-1 pr-1">
+                        {['100%','75%','50%','25%'].map(l => (
+                          <div key={l} className="text-[4.5px] text-slate-300 leading-none">{l}</div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex justify-between px-2 mt-0.5">
+                      {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'].map(m => (
+                        <div key={m} className="text-[5px] text-slate-300">{m}</div>
+                      ))}
+                    </div>
+                    {/* Legend */}
+                    <div className="flex items-center gap-3 px-2 mt-1">
+                      <div className="flex items-center gap-1">
+                        <div className="w-4 h-0.5 bg-blue-500 rounded" />
+                        <span className="text-[5.5px] text-slate-400">This Year</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-4 h-0.5 bg-slate-300 rounded" style={{backgroundImage: 'repeating-linear-gradient(to right, #cbd5e1 0, #cbd5e1 3px, transparent 3px, transparent 5px)'}} />
+                        <span className="text-[5.5px] text-slate-400">Last Year</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4 stat cards stacked 2×2 */}
+                  <div className="col-span-1 grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'TEACHERS', value: '87', bg: 'bg-blue-600', icon: '👨‍🏫' },
+                      { label: 'STUDENTS', value: '1,284', bg: 'bg-green-600', icon: '🎓' },
+                      { label: 'CLASSES', value: '24', bg: 'bg-orange-500', icon: '🏫' },
+                      { label: 'SUBJECTS', value: '62', bg: 'bg-purple-600', icon: '📚' },
+                    ].map(card => (
+                      <div key={card.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center py-2 gap-1">
+                        <div className={`${card.bg} w-6 h-6 rounded-xl flex items-center justify-center text-[10px]`}>{card.icon}</div>
+                        <div className="text-[6px] font-black text-slate-400 uppercase tracking-widest">{card.label}</div>
+                        <div className="text-[13px] font-extrabold text-slate-800 leading-none">{card.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -83,7 +229,7 @@ export function LandingFeatures() {
     {
       title: "Bento Branded Portals",
       description: "Stunning, high-fidelity interfaces for students, parents, and teachers. Perfectly optimized for clarity and engagement.",
-      icon: Zap,
+      icon: School,
       color: "text-yellow-500",
     }
   ];
