@@ -135,56 +135,57 @@ export default function TeachersPage() {
               Add Teacher
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] overflow-hidden border-primary/20 glass-panel">
+          <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-2 border-primary/20 bg-white">
             <form onSubmit={handleAddTeacher}>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold tracking-tight">Register New Faculty</DialogTitle>
-                <DialogDescription>
+              <DialogHeader className="p-6 pb-0">
+                <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Register New Faculty</DialogTitle>
+                <DialogDescription className="text-slate-500">
                   Configure login credentials and personal records for the new teacher.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-6 py-6">
+              
+              <div className="max-h-[60vh] overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-xs font-black uppercase tracking-widest text-primary/70">Full Name</Label>
+                  <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Full Name</Label>
                   <Input 
                     id="fullName" 
                     placeholder="Enter full name" 
                     required 
-                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                     value={formData.fullName}
                     onChange={e => setFormData({...formData, fullName: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-primary/70">Login Email</Label>
+                  <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Login Email</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="teacher@school.com" 
                     required 
-                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-primary/70">Initial Password</Label>
+                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Initial Password</Label>
                   <Input 
                     id="password" 
                     type="password" 
                     placeholder="••••••••" 
                     required 
-                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                     value={formData.password}
                     onChange={e => setFormData({...formData, password: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-primary/70">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Phone Number</Label>
                   <Input 
                     id="phone" 
                     placeholder="+234..." 
-                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                     value={formData.phone}
                     onChange={e => setFormData({...formData, phone: e.target.value})}
                   />
@@ -192,16 +193,17 @@ export default function TeachersPage() {
 
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
                   <AlertCircle className="size-5 text-primary shrink-0 mt-0.5" />
-                  <div className="text-[11px] leading-relaxed text-muted-foreground">
+                  <div className="text-[11px] leading-relaxed text-slate-600">
                     <span className="font-bold text-primary italic">Note:</span> Subject and Class assignments can be configured from the <Link href="/dashboard/admin/academics" className="text-primary hover:underline font-bold">Academics Portal</Link> or the teacher's individual profile once subjects are established.
                   </div>
                 </div>
               </div>
-              <DialogFooter>
+
+              <DialogFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
                 <Button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-xl gradient-brand font-bold"
+                  className="w-full h-12 rounded-xl gradient-brand font-bold text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
                 >
                   {isSubmitting ? "Initializing Account..." : "Confirm Faculty Addition"}
                 </Button>
