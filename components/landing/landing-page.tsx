@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { ArrowRight, CheckCircle2, Globe, Shield, Zap } from 'lucide-react';
 import Image from 'next/image';
 
@@ -15,13 +15,9 @@ export function LandingHero() {
       
       <div className="container relative px-4 mx-auto">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-          <Badge variant="outline" className="mb-6 py-1 px-4 border-primary/20 bg-primary/5 text-primary animate-in fade-in slide-in-from-bottom-3 duration-1000">
-            <Zap className="w-3.5 h-3.5 mr-2" />
-            Executive Edition SaaS
-          </Badge>
+
           
           <h1 className="text-5xl md:text-7xl font-heading font-bold tracking-tight mb-8 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent leading-[1.1]">
-            Elevate Your Institution's Efficiency. <br className="hidden md:block" />
             Klaxtrix: The Future of School Mgmt.
           </h1>
           
