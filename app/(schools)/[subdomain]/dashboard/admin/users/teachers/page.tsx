@@ -1,176 +1,340 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import React, { useState, useEffect } from 'react';
+import { useTenant } from '@/components/providers/tenant-provider';
 import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+  getTeachers, 
+  createTeacher, 
+  toggleTeacherStatus 
+} from '@/app/actions/admin-actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { 
+  Users, 
   UserPlus, 
   Search, 
-  MoreHorizontal, 
   Mail, 
-  Phone,
-  Loader2
-} from "lucide-react";
-import { AddTeacherModal } from "@/components/admin/add-teacher-modal";
-import { toast } from "sonner";
+  Phone, 
+  MoreHorizontal, 
+  Power,
+  RotateCcw,
+  AlertCircle,
+  ExternalLink
+} from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from 'next/link';
 
 export default function TeachersPage() {
+  const { tenant } = useTenant();
   const [teachers, setTeachers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [schoolId, setSchoolId] = useState<string | null>(null);
-  const supabase = createClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    phone: '',
+  });
 
   const fetchTeachers = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("school_id")
-        .eq("id", user.id)
-        .single() as any;
-
-      if (profile?.school_id) {
-        setSchoolId(profile.school_id as string);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("school_id", profile.school_id as string)
-          .eq("role", "teacher")
-          .order("full_name");
-
-        if (error) throw error;
-        setTeachers(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching teachers:", error);
-      toast.error("Failed to load teachers list");
-    } finally {
-      setLoading(false);
+    if (!tenant?.id) return;
+    setIsLoading(true);
+    const result = await getTeachers(tenant.id);
+    if (result.success) {
+      setTeachers(result.data || []);
+    } else {
+      toast.error(result.error || "Failed to load teachers");
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
     fetchTeachers();
-  }, []);
+  }, [tenant?.id]);
+
+  const handleAddTeacher = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenant?.id) return;
+
+    setIsSubmitting(true);
+    const result = await createTeacher({
+      ...formData,
+      schoolId: tenant.id
+    });
+
+    if (result.success) {
+      toast.success("Teacher account protocols initialized.");
+      setIsAddModalOpen(false);
+      setFormData({ fullName: '', email: '', password: '', phone: '' });
+      fetchTeachers();
+    } else {
+      toast.error(result.error);
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+    const result = await toggleTeacherStatus(userId, !currentStatus);
+    if (result.success) {
+      toast.success(`Teacher access ${!currentStatus ? 'restored' : 'suspended'}.`);
+      fetchTeachers();
+    } else {
+      toast.error(result.error);
+    }
+  };
 
   const filteredTeachers = teachers.filter(t => 
-    t.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.phone?.includes(searchQuery)
+    t.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Teachers</h1>
-          <p className="text-muted-foreground mt-1">Manage teaching staff and access levels.</p>
+          <h1 className="text-3xl font-black tracking-tighter text-glow">Professional Faculty</h1>
+          <p className="text-muted-foreground mt-1">Manage teaching staff and institutional access levels.</p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Teacher
-        </Button>
+
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 px-6 h-12 rounded-xl gradient-brand shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+              <UserPlus className="size-5" />
+              Add Teacher
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] overflow-hidden border-primary/20 glass-panel">
+            <form onSubmit={handleAddTeacher}>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold tracking-tight">Register New Faculty</DialogTitle>
+                <DialogDescription>
+                  Configure login credentials and personal records for the new teacher.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-6 py-6">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-xs font-black uppercase tracking-widest text-primary/70">Full Name</Label>
+                  <Input 
+                    id="fullName" 
+                    placeholder="Enter full name" 
+                    required 
+                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    value={formData.fullName}
+                    onChange={e => setFormData({...formData, fullName: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-primary/70">Login Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="teacher@school.com" 
+                    required 
+                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    value={formData.email}
+                    onChange={e => setFormData({...formData, email: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-primary/70">Initial Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    required 
+                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    value={formData.password}
+                    onChange={e => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-primary/70">Phone Number</Label>
+                  <Input 
+                    id="phone" 
+                    placeholder="+234..." 
+                    className="bg-background/50 border-primary/10 h-12 rounded-xl"
+                    value={formData.phone}
+                    onChange={e => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
+                  <AlertCircle className="size-5 text-primary shrink-0 mt-0.5" />
+                  <div className="text-[11px] leading-relaxed text-muted-foreground">
+                    <span className="font-bold text-primary italic">Note:</span> Subject and Class assignments can be configured from the <Link href="/dashboard/admin/academics" className="text-primary hover:underline font-bold">Academics Portal</Link> or the teacher's individual profile once subjects are established.
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full h-12 rounded-xl gradient-brand font-bold"
+                >
+                  {isSubmitting ? "Initializing Account..." : "Confirm Faculty Addition"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardHeader>
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search by name or phone..." 
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Loading teacher directory...</p>
-            </div>
-          ) : filteredTeachers.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No teachers found.</p>
-            </div>
-          ) : (
-            <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact Info</TableHead>
-                    <TableHead>Joined Date</TableHead>
-                    <TableHead className="w-[80px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTeachers.map((teacher) => (
-                    <TableRow key={teacher.id} className="hover:bg-accent/50 transition-colors">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                            {teacher.full_name.charAt(0)}
-                          </div>
-                          {teacher.full_name}
+      {/* Controls Area */}
+      <div className="flex items-center gap-4 bg-card p-4 rounded-2xl border border-primary/5 shadow-sm">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search by name or email..." 
+            className="pl-10 h-11 bg-background/50 border-primary/10 rounded-xl"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl">
+          <Users className="size-4 text-primary" />
+          <span className="text-sm font-bold text-primary">{filteredTeachers.length} Total</span>
+        </div>
+      </div>
+
+      {/* Table Area */}
+      <div className="bg-card rounded-2xl border border-primary/5 shadow-xl overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow className="hover:bg-transparent border-primary/5">
+              <TableHead className="font-bold uppercase tracking-widest text-[10px] py-6 px-8">Teacher Details</TableHead>
+              <TableHead className="font-bold uppercase tracking-widest text-[10px]">Contact Info</TableHead>
+              <TableHead className="font-bold uppercase tracking-widest text-[10px]">Status</TableHead>
+              <TableHead className="font-bold uppercase tracking-widest text-[10px]">Joined</TableHead>
+              <TableHead className="text-right px-8"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="animate-pulse border-primary/5">
+                  <TableCell className="py-6 px-8"><div className="h-4 w-32 bg-muted rounded"></div></TableCell>
+                  <TableCell><div className="h-4 w-40 bg-muted rounded"></div></TableCell>
+                  <TableCell><div className="h-6 w-16 bg-muted rounded-full"></div></TableCell>
+                  <TableCell><div className="h-4 w-24 bg-muted rounded"></div></TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              ))
+            ) : filteredTeachers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-64 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Users className="size-12 text-muted/20" />
+                    <p className="text-muted-foreground font-medium italic">No faculty members found matching your search.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredTeachers.map((teacher) => (
+                <TableRow key={teacher.id} className="hover:bg-primary/[0.02] transition-colors border-primary/5 group/row">
+                  <TableCell className="py-6 px-8">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary group-hover/row:scale-110 transition-transform">
+                        {teacher.full_name?.substring(0, 1) || 'T'}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm tracking-tight">{teacher.full_name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Teacher ID: {teacher.id.substring(0, 8)}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Mail className="size-3" />
+                        {teacher.email}
+                      </div>
+                      {teacher.phone && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                          <Phone className="size-3" />
+                          {teacher.phone}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {/* Note: email is in auth.users, not profiles in our schema, 
-                              but we can add it to profiles or fetch it. 
-                              For now, showing phone. */}
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Phone className="size-3" />
-                            {teacher.phone || "No phone"}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(teacher.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon">
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={teacher.is_active ? "default" : "secondary"} className={cn(
+                      "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                      teacher.is_active ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20" : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20"
+                    )}>
+                      {teacher.is_active ? "Active" : "Suspended"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {new Date(teacher.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right px-8">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/10">
                           <MoreHorizontal className="size-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {schoolId && (
-        <AddTeacherModal 
-          isOpen={isAddModalOpen} 
-          onClose={() => setIsAddModalOpen(false)} 
-          onSuccess={fetchTeachers}
-          schoolId={schoolId}
-        />
-      )}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 border-primary/20 glass-panel">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Faculty Management</DropdownMenuLabel>
+                        <DropdownMenuSeparator className="bg-primary/10" />
+                        <DropdownMenuItem className="gap-2 text-xs font-medium cursor-pointer">
+                          <ExternalLink className="size-3.5" /> View Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2 text-xs font-medium cursor-pointer">
+                          <RotateCcw className="size-3.5" /> Reset Password
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-primary/10" />
+                        <DropdownMenuItem 
+                          className={cn(
+                            "gap-2 text-xs font-bold cursor-pointer",
+                            teacher.is_active ? "text-red-500 focus:text-red-500 focus:bg-red-500/10" : "text-green-500 focus:text-green-500 focus:bg-green-500/10"
+                          )}
+                          onClick={() => handleToggleStatus(teacher.id, teacher.is_active)}
+                        >
+                          <Power className="size-3.5" /> 
+                          {teacher.is_active ? "Suspend Access" : "Restore Access"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

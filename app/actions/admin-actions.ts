@@ -11,6 +11,62 @@ interface CreateUserData {
   schoolId: string;
 }
 
+export async function toggleTeacherStatus(userId: string, isActive: boolean) {
+  const adminSupabase = createAdminClient();
+
+  try {
+    const { error } = await (adminSupabase as any)
+      .from('profiles')
+      .update({ is_active: isActive })
+      .eq('id', userId);
+
+    if (error) throw error;
+    revalidatePath("/dashboard/admin/users/teachers");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to toggle status" };
+  }
+}
+
+export async function updateTeacher(userId: string, data: any) {
+  const adminSupabase = createAdminClient();
+
+  try {
+    const { error } = await (adminSupabase as any)
+      .from('profiles')
+      .update({
+        full_name: data.fullName,
+        phone: data.phone,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) throw error;
+    revalidatePath("/dashboard/admin/users/teachers");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Failed to update teacher" };
+  }
+}
+
+export async function getTeachers(schoolId: string) {
+  const adminSupabase = createAdminClient();
+
+  try {
+    const { data, error } = await (adminSupabase as any)
+      .from('profiles')
+      .select('*')
+      .eq('role', 'teacher')
+      .eq('school_id', schoolId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    return { error: error.message || "Failed to fetch teachers" };
+  }
+}
+
 export async function createTeacher(data: CreateUserData) {
   const adminSupabase = createAdminClient();
 
