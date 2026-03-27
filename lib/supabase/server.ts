@@ -20,3 +20,27 @@ export function createServerClient(supabaseUrl?: string, supabaseAnonKey?: strin
     }
   );
 }
+
+/**
+ * Creates a Supabase server client for tenant-specific databases.
+ * Uses 'any' typing because tenant DBs have a different schema than the master.
+ * Always requires explicit URL and anon key (from tenant credentials).
+ */
+export function createTenantServerClient(supabaseUrl: string, supabaseAnonKey: string) {
+  const cookieStore = cookies();
+  return createClient<any>(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value; },
+        set(name: string, value: string, options: CookieOptions) {
+          try { cookieStore.set({ name, value, ...options }); } catch {}
+        },
+        remove(name: string, options: CookieOptions) {
+          try { cookieStore.set({ name, value: '', ...options }); } catch {}
+        },
+      },
+    }
+  );
+}

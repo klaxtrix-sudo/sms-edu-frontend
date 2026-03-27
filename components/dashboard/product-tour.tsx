@@ -83,6 +83,10 @@ export function ProductTour({ userId }: { userId: string }) {
 
   const handleFinish = async () => {
     setIsVisible(false);
+    // Persist locally for Dev/Fallback
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('klaxtrix_onboarding_dismissed', 'true');
+    }
     await completeOnboarding(userId);
   };
 
