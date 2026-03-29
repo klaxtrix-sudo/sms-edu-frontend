@@ -14,11 +14,15 @@ export async function resendOnboardingOTP(email: string) {
   
   try {
     // 1. Get user's school_id from profile
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) throw new Error("User session not found.");
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('school_id, full_name')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id)
-      .single();
+      .eq('id', userId)
+      .single() as { data: { school_id: string | null; full_name: string } | null };
 
     if (!profile?.school_id) throw new Error("Could not identify institution.");
 
@@ -28,7 +32,7 @@ export async function resendOnboardingOTP(email: string) {
       .select('config_value')
       .eq('school_id', profile.school_id)
       .eq('config_key', 'resend_settings')
-      .single();
+      .single() as { data: { config_value: string } | null };
 
     if (configData) {
       const config = JSON.parse(configData.config_value) as ResendConfig;
