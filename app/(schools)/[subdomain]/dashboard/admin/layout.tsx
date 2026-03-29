@@ -33,14 +33,6 @@ export default function AdminLayout({
           .eq('id', user.id)
           .single();
         setProfile(data);
-      } else if (process.env.NODE_ENV === 'development') {
-        // Mock profile for Dev PoC
-        // Check localStorage to stop annoying repeats in Dev
-        const isDismissed = typeof window !== 'undefined' && localStorage.getItem('klaxtrix_onboarding_dismissed') === 'true';
-        setProfile({
-          id: 'a0000000-0000-0000-0000-000000000000',
-          onboarding_completed: isDismissed
-        });
       }
       setIsProfileLoading(false);
     }

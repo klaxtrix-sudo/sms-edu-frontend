@@ -34,5 +34,5 @@ export async function updateSession(
   );
 
   await supabase.auth.getUser();
-  return response;
+  return { supabase, response };
 }

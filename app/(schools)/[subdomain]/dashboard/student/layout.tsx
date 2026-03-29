@@ -1,11 +1,19 @@
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { createServerClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function StudentLayout({
+export default async function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
   const studentNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/student", icon: "LayoutDashboard" },
     { label: "My Timetable", href: "/dashboard/student/timetable", icon: "CalendarDays" },

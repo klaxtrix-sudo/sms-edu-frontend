@@ -40,19 +40,35 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 1. Initial response
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
+  // 2. Tenant Rewriting (if applicable)
   if (isTenantSpace && subdomain) {
     response = NextResponse.rewrite(
       new URL(`/${subdomain}${url.pathname === '/' ? '' : url.pathname}`, request.url)
     );
   }
 
-  return await updateSession(request, supabaseUrl, supabaseAnonKey, response);
+  // 3. Update Session (Cookie management)
+  const { supabase, response: updatedResponse } = await updateSession(request, supabaseUrl, supabaseAnonKey, response);
+
+  // 4. Security Guard - Protect Dashboard and Console routes
+  const isDashboardPath = url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/console');
+  if (isDashboardPath) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log(`[Security Shield] Unauthenticated access attempt to ${url.pathname}. Redirecting to /login.`);
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return updatedResponse;
 }
 
 export const config = {
