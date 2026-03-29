@@ -125,12 +125,16 @@ export async function createTeacher(data: CreateUserData) {
 
     if (user) {
       // 3. Create/Update profile in TENANT project
-      // Note: A DB trigger in the tenant project usually creates the profile on auth.user creation,
-      // but we update it with phone and ensure it's synced.
+      // The DB trigger creates the profile on auth.user creation but only has
+      // basic fields. We upsert here to fill in phone, email and status.
       const { error: tenantProfileError } = await (tenantSupabase as any)
         .from('profiles')
-        .update({ phone })
-        .eq('id', user.id);
+        .upsert({
+          id: user.id,
+          phone,
+          email,
+          is_active: true,
+        });
 
       if (tenantProfileError) console.error("Tenant Profile Sync Error:", tenantProfileError.message);
 
