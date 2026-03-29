@@ -17,8 +17,8 @@ export function LandingHero() {
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
 
           
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-heading font-bold tracking-tight mb-6 md:mb-8 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent leading-[1.2] md:leading-[1.1]">
-            Klaxtrix: The Future of School Mgmt.
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-heading font-bold tracking-tight mb-6 md:mb-8 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent leading-[1.2] md:leading-[1.1] pb-2">
+            Klaxtrix: The Future of School Management
           </h1>
           
           <p className="text-base md:text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
