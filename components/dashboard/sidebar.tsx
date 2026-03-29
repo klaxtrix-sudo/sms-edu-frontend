@@ -23,8 +23,8 @@ import {
   Megaphone,
   X,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { NotificationDrawer } from "./notification-drawer";
 import { Button } from "@/components/ui/button";
 
@@ -45,6 +45,8 @@ const iconMap = {
   Megaphone,
 };
 
+import { signOutAction } from "@/app/actions/auth-actions";
+
 export interface SidebarItem {
   label: string;
   href: string;
@@ -60,13 +62,16 @@ export interface SidebarProps {
 
 export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const supabase = createClient();
   const router = useRouter();
+  const params = useParams();
+  const subdomain = params?.subdomain as string;
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-    router.push("/login");
+    await signOutAction(subdomain);
+    // Hard reload — guarantees browser applies cleared-cookie response headers
+    // BEFORE the next request hits the server. router.push() would soft-navigate
+    // and race against the cookie update, causing a 404 or session persistence.
+    window.location.href = '/login';
   };
 
   return (

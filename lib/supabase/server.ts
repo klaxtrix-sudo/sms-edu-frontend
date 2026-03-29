@@ -14,7 +14,7 @@ export function createServerClient(supabaseUrl?: string, supabaseAnonKey?: strin
           try { cookieStore.set({ name, value, ...options }); } catch {}
         },
         remove(name: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value: '', ...options }); } catch {}
+          try { cookieStore.set({ name, value: '', ...options, maxAge: 0 }); } catch {}
         },
       },
     }
@@ -38,7 +38,7 @@ export function createTenantServerClient(supabaseUrl: string, supabaseAnonKey: s
           try { cookieStore.set({ name, value, ...options }); } catch {}
         },
         remove(name: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value: '', ...options }); } catch {}
+          try { cookieStore.set({ name, value: '', ...options, maxAge: 0 }); } catch {}
         },
       },
     }

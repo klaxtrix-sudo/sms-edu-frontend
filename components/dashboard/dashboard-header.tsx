@@ -2,8 +2,6 @@
 
 import React from 'react';
 import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { useTenant } from '@/components/providers/tenant-provider';
 import {
   DropdownMenu,
@@ -16,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, Moon, Sun, Monitor, Menu } from 'lucide-react';
+import { signOutAction } from '@/app/actions/auth-actions';
 
 interface DashboardHeaderProps {
   onMenuClick?: () => void;
@@ -24,13 +23,13 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { tenant } = useTenant();
-  const supabase = createClient();
-  const router = useRouter();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-    router.push('/login');
+    await signOutAction(tenant?.subdomain || '');
+    // Hard reload — must use window.location.href, not router.push().
+    // router.push() is a soft navigation (RSC fetch) and races against
+    // cookie updates, causing 404 or session persistence on the login page.
+    window.location.href = '/login';
   };
 
   // Safe fallback if tenant is somehow null during SSR/hydration
