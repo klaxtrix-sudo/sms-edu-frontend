@@ -73,11 +73,13 @@ export async function updateTeacher(userId: string, data: any, subdomain?: strin
   return { success: true };
 }
 
-export async function getTeachers(schoolId: string) {
-  const adminSupabase = createAdminClient();
-
+export async function getTeachers(schoolId: string, subdomain?: string) {
   try {
-    const { data, error } = await (adminSupabase as any)
+    const supabase = subdomain 
+      ? await createTenantAdminClient(subdomain) 
+      : createAdminClient();
+
+    const { data, error } = await (supabase as any)
       .from('profiles')
       .select('*')
       .eq('role', 'teacher')
@@ -87,7 +89,8 @@ export async function getTeachers(schoolId: string) {
     if (error) throw error;
     return { success: true, data };
   } catch (error: any) {
-    return { error: error.message || "Failed to fetch teachers" };
+    console.error("[Admin Actions] getTeachers Error:", error.message);
+    return { error: error.message || "Failed to fetch teachers from records." };
   }
 }
 
@@ -145,7 +148,10 @@ export async function createTeacher(data: CreateUserData) {
           is_active: true
         });
 
-      if (masterProfileError) console.error("Master Hub Sync Error:", masterProfileError.message);
+      if (masterProfileError) {
+        console.warn("[Admin Actions] Master Hub Sync Warning:", masterProfileError.message);
+        // We don't fail the whole action if the Hub sync fails, but we log it.
+      }
     }
 
     revalidatePath("/dashboard/admin/users/teachers");

@@ -19,6 +19,8 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Allow cross-origin requests from *.localhost subdomains (tenant portals in dev)
+  allowedDevOrigins: ['*.localhost:3000', '*.localhost'],
   experimental: {
     serverComponentsExternalPackages: [],
   },

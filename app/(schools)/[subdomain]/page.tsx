@@ -11,11 +11,18 @@ interface PageProps {
 export default async function SubdomainRootPage({ params }: PageProps) {
   const { subdomain } = params;
 
+  // Guard: some static asset requests (favicon.ico, etc.) can be routed
+  // through the [subdomain] catcher. Reject them silently.
+  const SYSTEM_PATHS = ['favicon.ico', 'manifest.json', 'robots.txt', 'sitemap.xml'];
+  if (SYSTEM_PATHS.includes(subdomain) || subdomain.includes('.')) {
+    return notFound();
+  }
+
   // Resolve tenant-specific keys server-side
   const tenantKeys = await resolveTenantKeys(subdomain);
   
   if (!tenantKeys) {
-    console.error(`[CRITICAL] Could not resolve keys for subdomain: ${subdomain}`);
+    console.warn(`[Tenant Router] No tenant found for subdomain: "${subdomain}". Returning 404.`);
     return notFound();
   }
 

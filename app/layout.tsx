@@ -9,12 +9,14 @@ const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
   display: 'swap',
+  preload: false,
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta',
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -45,6 +47,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#3b82f6" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
       </head>
       <body className={`${outfit.variable} ${plusJakartaSans.variable} font-sans antialiased text-foreground bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
