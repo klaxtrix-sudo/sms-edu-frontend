@@ -1,4 +1,4 @@
-import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
+import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 import { LoginForm } from './login-form';
 import { NodeOfflineView } from './node-offline-view';
 

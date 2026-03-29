@@ -2,7 +2,7 @@
 
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { resolveTenantKeys } from "@/lib/supabase/tenant-server";
+import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
 
 /**
  * Server action to handle sign-out.

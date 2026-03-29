@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { 
   getTeachers, 
@@ -54,6 +55,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export default function TeachersPage() {
+  const { subdomain } = useParams();
   const { tenant } = useTenant();
   const [teachers, setTeachers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,7 +102,8 @@ export default function TeachersPage() {
       email: formData.email,
       password: formData.password,
       phone: formData.phone,
-      schoolId: tenant.id
+      schoolId: tenant.id,
+      subdomain: subdomain as string
     });
 
     if (result.success) {
@@ -115,7 +118,7 @@ export default function TeachersPage() {
   };
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
-    const result = await toggleTeacherStatus(userId, !currentStatus);
+    const result = await toggleTeacherStatus(userId, !currentStatus, subdomain as string);
     if (result.success) {
       toast.success(`Teacher access ${!currentStatus ? 'restored' : 'suspended'}.`);
       fetchTeachers();
@@ -141,7 +144,7 @@ export default function TeachersPage() {
     }
 
     setIsResetting(true);
-    const result = await resetUserPassword(selectedTeacher.id, newPassword);
+    const result = await resetUserPassword(selectedTeacher.id, newPassword, subdomain as string);
     if (result.success) {
       toast.success(`Password for ${selectedTeacher.full_name} has been updated.`);
       setIsResetModalOpen(false);

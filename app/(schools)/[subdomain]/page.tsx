@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
-import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
+import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 
 interface PageProps {
   params: {

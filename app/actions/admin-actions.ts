@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createTenantAdminClient } from "@/lib/supabase/tenant-admin";
 import { revalidatePath } from "next/cache";
 
 interface CreateUserData {
@@ -9,44 +10,67 @@ interface CreateUserData {
   fullName: string;
   phone: string;
   schoolId: string;
+  subdomain: string;
 }
 
-export async function toggleTeacherStatus(userId: string, isActive: boolean) {
-  const adminSupabase = createAdminClient();
+export async function toggleTeacherStatus(userId: string, isActive: boolean, subdomain?: string) {
+  const masterSupabase = createAdminClient();
+  const { error: masterError } = await (masterSupabase as any)
+    .from('profiles')
+    .update({ is_active: isActive })
+    .eq('id', userId);
 
-  try {
-    const { error } = await (adminSupabase as any)
-      .from('profiles')
-      .update({ is_active: isActive })
-      .eq('id', userId);
+  if (masterError) return { error: masterError.message };
 
-    if (error) throw error;
-    revalidatePath("/dashboard/admin/users/teachers");
-    return { success: true };
-  } catch (error: any) {
-    return { error: error.message || "Failed to toggle status" };
+  // If subdomain provided, also update tenant project
+  if (subdomain) {
+    try {
+      const tenantSupabase = await createTenantAdminClient(subdomain);
+      await (tenantSupabase as any)
+        .from('profiles')
+        .update({ is_active: isActive })
+        .eq('id', userId); // Assumes ID parity
+    } catch (e) {
+      console.warn(`[Admin Actions] Failed to sync status toggle to tenant ${subdomain}:`, e);
+    }
   }
+
+  revalidatePath("/dashboard/admin/users/teachers");
+  return { success: true };
 }
 
-export async function updateTeacher(userId: string, data: any) {
-  const adminSupabase = createAdminClient();
+export async function updateTeacher(userId: string, data: any, subdomain?: string) {
+  const masterSupabase = createAdminClient();
 
-  try {
-    const { error } = await (adminSupabase as any)
-      .from('profiles')
-      .update({
-        full_name: data.fullName,
-        phone: data.phone,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId);
+  const { error: masterError } = await (masterSupabase as any)
+    .from('profiles')
+    .update({
+      full_name: data.fullName,
+      phone: data.phone,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId);
 
-    if (error) throw error;
-    revalidatePath("/dashboard/admin/users/teachers");
-    return { success: true };
-  } catch (error: any) {
-    return { error: error.message || "Failed to update teacher" };
+  if (masterError) return { error: masterError.message };
+
+  if (subdomain) {
+    try {
+      const tenantSupabase = await createTenantAdminClient(subdomain);
+      await (tenantSupabase as any)
+        .from('profiles')
+        .update({
+          full_name: data.fullName,
+          phone: data.phone,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+    } catch (e) {
+      console.warn(`[Admin Actions] Failed to sync update to tenant ${subdomain}:`, e);
+    }
   }
+
+  revalidatePath("/dashboard/admin/users/teachers");
+  return { success: true };
 }
 
 export async function getTeachers(schoolId: string) {
@@ -68,33 +92,24 @@ export async function getTeachers(schoolId: string) {
 }
 
 export async function createTeacher(data: CreateUserData) {
-  const adminSupabase = createAdminClient();
-
-  try {
-    // 1. Get the current admin's school ID
-    const { data: { user: adminUser } } = await adminSupabase.auth.getUser(); // This won't work easily in a server action without session?
-    // Actually, we should pass the schoolId from the client or fetch it.
-    // However, createAdminClient uses service role, it can't "getUser" from session.
-    // We should use a session cookie or pass it.
-  } catch (e) {}
-
-  // To keep it simple and secure for now, let's fetch the admin's profile first
-  // But wait, server actions CAN access cookies to get the current user session.
-  
-  // Revised approach:
   const { 
     email, 
     password, 
     fullName, 
     phone,
-    schoolId
+    schoolId,
+    subdomain
   } = data;
 
   try {
-    const { data: { user }, error: authError } = await adminSupabase.auth.admin.createUser({
+    // 1. Initialize Tenant Admin Client
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+
+    // 2. Create Auth User in TENANT project
+    const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: false,
+      email_confirm: true, // Auto-confirm for immediate login
       user_metadata: {
         full_name: fullName,
         role: 'teacher',
@@ -103,25 +118,44 @@ export async function createTeacher(data: CreateUserData) {
       }
     });
 
-    if (authError) return { error: authError.message };
+    if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
-    // Update profile with phone (since trigger might not handle it all)
     if (user) {
-      await (adminSupabase as any)
+      // 3. Create/Update profile in TENANT project
+      // Note: A DB trigger in the tenant project usually creates the profile on auth.user creation,
+      // but we update it with phone and ensure it's synced.
+      const { error: tenantProfileError } = await (tenantSupabase as any)
         .from('profiles')
         .update({ phone })
         .eq('id', user.id);
+
+      if (tenantProfileError) console.error("Tenant Profile Sync Error:", tenantProfileError.message);
+
+      // 4. "Double Write" to MASTER project for centralized reporting
+      const masterSupabase = createAdminClient();
+      const { error: masterProfileError } = await (masterSupabase as any)
+        .from('profiles')
+        .upsert({
+          id: user.id, // Use the SAME ID for cross-reference
+          school_id: schoolId,
+          email,
+          full_name: fullName,
+          phone,
+          role: 'teacher',
+          is_active: true
+        });
+
+      if (masterProfileError) console.error("Master Hub Sync Error:", masterProfileError.message);
     }
 
     revalidatePath("/dashboard/admin/users/teachers");
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "An unexpected error occurred" };
+    return { error: error.message || "An unexpected error occurred during teacher provisioning" };
   }
 }
 
 export async function createStudent(data: any) {
-  const adminSupabase = createAdminClient();
   const { 
     email, 
     password, 
@@ -129,12 +163,18 @@ export async function createStudent(data: any) {
     admissionNo,
     classId,
     gender,
-    schoolId
+    schoolId,
+    subdomain
   } = data;
 
+  if (!subdomain) return { error: "Subdomain is required for student provisioning." };
+
   try {
-    // 1. Create Auth User
-    const { data: { user }, error: authError } = await adminSupabase.auth.admin.createUser({
+    // 1. Initialize Tenant Admin Client
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+
+    // 2. Create Auth User in TENANT project
+    const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -145,11 +185,11 @@ export async function createStudent(data: any) {
       }
     });
 
-    if (authError) return { error: authError.message };
+    if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
-    // 2. Create Student Record (Profile is created by DB trigger)
     if (user) {
-      const { error: studentError } = await (adminSupabase as any)
+      // 3. Create Student Record in TENANT project
+      const { error: studentError } = await (tenantSupabase as any)
         .from('students')
         .insert({
           user_id: user.id,
@@ -159,16 +199,26 @@ export async function createStudent(data: any) {
           gender: gender
         });
 
-      if (studentError) {
-        // Cleanup auth user on failure?
-        return { error: studentError.message };
-      }
+      if (studentError) return { error: `Tenant Data Error: ${studentError.message}` };
+
+      // 4. "Double Write" profile to MASTER project
+      const masterSupabase = createAdminClient();
+      await (masterSupabase as any)
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          school_id: schoolId,
+          email,
+          full_name: fullName,
+          role: 'student',
+          is_active: true
+        });
     }
 
     revalidatePath("/dashboard/admin/users/students");
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "An unexpected error occurred" };
+    return { error: error.message || "An unexpected error occurred during student provisioning" };
   }
 }
 
@@ -252,11 +302,12 @@ export async function completeOnboarding(userId: string) {
     return { error: error.message || "Failed to complete onboarding" };
   }
 }
-export async function resetUserPassword(userId: string, newPassword: string) {
-  const adminSupabase = createAdminClient();
+export async function resetUserPassword(userId: string, newPassword: string, subdomain?: string) {
+  if (!subdomain) return { error: "Subdomain is required for security credential updates." };
 
   try {
-    const { error: authError } = await adminSupabase.auth.admin.updateUserById(
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error: authError } = await tenantSupabase.auth.admin.updateUserById(
       userId,
       { password: newPassword }
     );

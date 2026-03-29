@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
-import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
+import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 
-// The resolveTenantKeys logic has been moved to @/lib/supabase/tenant-server.ts 
-// for shared use between middleware and server components.
+// The resolveTenantKeys logic has been moved to @/lib/supabase/tenant-resolver.ts 
+// for safe shared use between middleware and server components.
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;

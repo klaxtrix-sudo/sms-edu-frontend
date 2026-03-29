@@ -43,9 +43,10 @@ interface AddStudentModalProps {
   onClose: () => void;
   onSuccess: () => void;
   schoolId: string;
+  subdomain: string;
 }
 
-export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId }: AddStudentModalProps) {
+export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomain }: AddStudentModalProps) {
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
   const supabase = createClient();
@@ -82,6 +83,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId }: AddStu
       const result = await createStudent({
         ...values,
         schoolId,
+        subdomain,
       });
 
       if (result.error) {

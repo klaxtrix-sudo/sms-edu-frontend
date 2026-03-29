@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
-import { resolveTenantKeys } from '@/lib/supabase/tenant-server';
+import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 
 export default async function AdminDashboard({ params }: { params: { subdomain: string } }) {
   const { subdomain } = params;

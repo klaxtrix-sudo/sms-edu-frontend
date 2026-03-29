@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { 
   Card, 
@@ -31,6 +32,7 @@ import { AddStudentModal } from "@/components/admin/add-student-modal";
 import { toast } from "sonner";
 
 export default function StudentsPage() {
+  const { subdomain } = useParams();
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -185,6 +187,7 @@ export default function StudentsPage() {
           onClose={() => setIsAddModalOpen(false)} 
           onSuccess={fetchData}
           schoolId={schoolId}
+          subdomain={subdomain as string}
         />
       )}
     </div>
