@@ -33,9 +33,10 @@ interface AddTeacherModalProps {
   onClose: () => void;
   onSuccess: () => void;
   schoolId: string;
+  subdomain: string;
 }
 
-export function AddTeacherModal({ isOpen, onClose, onSuccess, schoolId }: AddTeacherModalProps) {
+export function AddTeacherModal({ isOpen, onClose, onSuccess, schoolId, subdomain }: AddTeacherModalProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<TeacherFormValues>({
@@ -57,6 +58,7 @@ export function AddTeacherModal({ isOpen, onClose, onSuccess, schoolId }: AddTea
         fullName: values.fullName,
         phone: values.phone,
         schoolId,
+        subdomain,
       });
 
       if (result.error) {
