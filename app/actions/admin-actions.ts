@@ -252,3 +252,19 @@ export async function completeOnboarding(userId: string) {
     return { error: error.message || "Failed to complete onboarding" };
   }
 }
+export async function resetUserPassword(userId: string, newPassword: string) {
+  const adminSupabase = createAdminClient();
+
+  try {
+    const { error: authError } = await adminSupabase.auth.admin.updateUserById(
+      userId,
+      { password: newPassword }
+    );
+
+    if (authError) return { error: authError.message };
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred" };
+  }
+}

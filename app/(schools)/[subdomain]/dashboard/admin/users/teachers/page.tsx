@@ -5,7 +5,8 @@ import { useTenant } from '@/components/providers/tenant-provider';
 import { 
   getTeachers, 
   createTeacher, 
-  toggleTeacherStatus 
+  toggleTeacherStatus,
+  resetUserPassword
 } from '@/app/actions/admin-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +60,10 @@ export default function TeachersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -117,6 +122,34 @@ export default function TeachersPage() {
     } else {
       toast.error(result.error);
     }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTeacher) return;
+
+    // Minimum length/complexity check
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
+      return;
+    }
+    const hasNumber = /\d/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+    if (!hasNumber || !hasSpecial) {
+      toast.error("Password must contain at least one number and one special character.");
+      return;
+    }
+
+    setIsResetting(true);
+    const result = await resetUserPassword(selectedTeacher.id, newPassword);
+    if (result.success) {
+      toast.success(`Password for ${selectedTeacher.full_name} has been updated.`);
+      setIsResetModalOpen(false);
+      setNewPassword('');
+    } else {
+      toast.error(result.error);
+    }
+    setIsResetting(false);
   };
 
   const filteredTeachers = teachers.filter(t => 
@@ -230,6 +263,48 @@ export default function TeachersPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Password Reset Dialog */}
+        <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
+          <DialogContent className="sm:max-w-[400px] border-2 border-primary/20 bg-white p-0 overflow-hidden">
+            <form onSubmit={handleResetPassword}>
+              <DialogHeader className="p-6 pb-0">
+                <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">Reset Password</DialogTitle>
+                <DialogDescription>
+                  Updating access credentials for <span className="font-bold text-primary">{selectedTeacher?.full_name}</span>.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" title="At least 8 chars, 1 number, 1 special char" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">New Secure Password</Label>
+                  <Input 
+                    id="newPassword" 
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                  />
+                  <p className="text-[10px] text-slate-400 leading-tight">
+                    Must be <span className="text-slate-600 font-medium">8+ characters</span> with at least <span className="text-slate-600 font-medium">one number</span> and <span className="text-slate-600 font-medium">one special character</span>.
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
+                <Button 
+                  type="submit" 
+                  disabled={isResetting}
+                  className="w-full h-12 rounded-xl gradient-brand font-bold text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+                >
+                  {isResetting ? "Updating..." : "Update Password"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Controls Area */}
@@ -333,7 +408,13 @@ export default function TeachersPage() {
                         <DropdownMenuItem className="gap-2 text-xs font-medium cursor-pointer">
                           <ExternalLink className="size-3.5" /> View Profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 text-xs font-medium cursor-pointer">
+                        <DropdownMenuItem 
+                          className="gap-2 text-xs font-medium cursor-pointer"
+                          onClick={() => {
+                            setSelectedTeacher(teacher);
+                            setIsResetModalOpen(true);
+                          }}
+                        >
                           <RotateCcw className="size-3.5" /> Reset Password
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-primary/10" />
