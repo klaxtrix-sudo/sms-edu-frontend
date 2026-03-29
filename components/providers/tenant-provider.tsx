@@ -82,6 +82,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           if (JSON.stringify(prev) === JSON.stringify(newTenant)) return prev;
           return newTenant;
         });
+
+        // Set a lightweight cookie so server actions can determine the tenant.
+        // This is NOT sensitive — subdomain is already public in the URL.
+        document.cookie = `x-tenant-subdomain=${subdomain}; path=/; SameSite=Lax`;
       } catch (err) {
         setError('Failed to load school configuration');
         console.error(err);

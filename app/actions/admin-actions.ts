@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+
 import { createTenantAdminClient } from "@/lib/supabase/tenant-admin";
 import { revalidatePath } from "next/cache";
 
@@ -13,73 +13,50 @@ interface CreateUserData {
   subdomain: string;
 }
 
-export async function toggleTeacherStatus(userId: string, isActive: boolean, subdomain?: string) {
-  const masterSupabase = createAdminClient();
-  const { error: masterError } = await (masterSupabase as any)
-    .from('profiles')
-    .update({ is_active: isActive })
-    .eq('id', userId);
-
-  if (masterError) return { error: masterError.message };
-
-  // If subdomain provided, also update tenant project
-  if (subdomain) {
-    try {
-      const tenantSupabase = await createTenantAdminClient(subdomain);
-      await (tenantSupabase as any)
-        .from('profiles')
-        .update({ is_active: isActive })
-        .eq('id', userId); // Assumes ID parity
-    } catch (e) {
-      console.warn(`[Admin Actions] Failed to sync status toggle to tenant ${subdomain}:`, e);
-    }
-  }
-
-  revalidatePath("/dashboard/admin/users/teachers");
-  return { success: true };
-}
-
-export async function updateTeacher(userId: string, data: any, subdomain?: string) {
-  const masterSupabase = createAdminClient();
-
-  const { error: masterError } = await (masterSupabase as any)
-    .from('profiles')
-    .update({
-      full_name: data.fullName,
-      phone: data.phone,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', userId);
-
-  if (masterError) return { error: masterError.message };
-
-  if (subdomain) {
-    try {
-      const tenantSupabase = await createTenantAdminClient(subdomain);
-      await (tenantSupabase as any)
-        .from('profiles')
-        .update({
-          full_name: data.fullName,
-          phone: data.phone,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-    } catch (e) {
-      console.warn(`[Admin Actions] Failed to sync update to tenant ${subdomain}:`, e);
-    }
-  }
-
-  revalidatePath("/dashboard/admin/users/teachers");
-  return { success: true };
-}
-
-export async function getTeachers(schoolId: string, subdomain?: string) {
+export async function toggleTeacherStatus(userId: string, isActive: boolean, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to update teacher status.' };
   try {
-    const supabase = subdomain 
-      ? await createTenantAdminClient(subdomain) 
-      : createAdminClient();
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
+      .from('profiles')
+      .update({ is_active: isActive })
+      .eq('id', userId);
 
-    const { data, error } = await (supabase as any)
+    if (error) return { error: error.message };
+
+    revalidatePath('/dashboard/admin/users/teachers');
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to update teacher status.' };
+  }
+}
+
+export async function updateTeacher(userId: string, data: any, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to update teacher.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
+      .from('profiles')
+      .update({
+        full_name: data.fullName,
+        phone: data.phone,
+      })
+      .eq('id', userId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath('/dashboard/admin/users/teachers');
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to update teacher.' };
+  }
+}
+
+export async function getTeachers(schoolId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to fetch teachers.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { data, error } = await (tenantSupabase as any)
       .from('profiles')
       .select('*')
       .eq('role', 'teacher')
@@ -89,8 +66,8 @@ export async function getTeachers(schoolId: string, subdomain?: string) {
     if (error) throw error;
     return { success: true, data };
   } catch (error: any) {
-    console.error("[Admin Actions] getTeachers Error:", error.message);
-    return { error: error.message || "Failed to fetch teachers from records." };
+    console.error('[Admin Actions] getTeachers Error:', error.message);
+    return { error: error.message || 'Failed to fetch teachers.' };
   }
 }
 
@@ -117,44 +94,34 @@ export async function createTeacher(data: CreateUserData) {
         full_name: fullName,
         role: 'teacher',
         school_id: schoolId,
-        must_change_password: true
+        must_change_password: true,
+        // Tracks whether the teacher has gone through the onboarding OTP gate.
+        // Using a dedicated flag (not email_confirmed_at) because we auto-confirm
+        // the auth email at creation for immediate login capability.
+        email_onboarding_verified: false,
       }
     });
 
     if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
     if (user) {
-      // 3. Create/Update profile in TENANT project
-      // The DB trigger creates the profile on auth.user creation but only has
-      // basic fields. We upsert here to fill in phone, email and status.
+      // 3. Upsert profile in TENANT project — tenant is the single source of truth.
+      // The DB trigger creates a basic profile on auth.user creation; we fill in
+      // the remaining fields (phone, email, status) here.
       const { error: tenantProfileError } = await (tenantSupabase as any)
         .from('profiles')
         .upsert({
           id: user.id,
-          phone,
+          school_id: schoolId,
+          full_name: fullName,
           email,
+          phone,
+          role: 'teacher',
           is_active: true,
         });
 
-      if (tenantProfileError) console.error("Tenant Profile Sync Error:", tenantProfileError.message);
-
-      // 4. "Double Write" to MASTER project for centralized reporting
-      const masterSupabase = createAdminClient();
-      const { error: masterProfileError } = await (masterSupabase as any)
-        .from('profiles')
-        .upsert({
-          id: user.id, // Use the SAME ID for cross-reference
-          school_id: schoolId,
-          email,
-          full_name: fullName,
-          phone,
-          role: 'teacher',
-          is_active: true
-        });
-
-      if (masterProfileError) {
-        console.warn("[Admin Actions] Master Hub Sync Warning:", masterProfileError.message);
-        // We don't fail the whole action if the Hub sync fails, but we log it.
+      if (tenantProfileError) {
+        console.error('[Admin Actions] Tenant Profile Error:', tenantProfileError.message);
       }
     }
 
@@ -198,7 +165,7 @@ export async function createStudent(data: any) {
     if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
     if (user) {
-      // 3. Create Student Record in TENANT project
+      // 3. Create Student record in TENANT project
       const { error: studentError } = await (tenantSupabase as any)
         .from('students')
         .insert({
@@ -211,18 +178,21 @@ export async function createStudent(data: any) {
 
       if (studentError) return { error: `Tenant Data Error: ${studentError.message}` };
 
-      // 4. "Double Write" profile to MASTER project
-      const masterSupabase = createAdminClient();
-      await (masterSupabase as any)
+      // 4. Upsert profile in TENANT project — tenant is the single source of truth.
+      const { error: profileError } = await (tenantSupabase as any)
         .from('profiles')
         .upsert({
           id: user.id,
           school_id: schoolId,
-          email,
           full_name: fullName,
+          email,
           role: 'student',
-          is_active: true
+          is_active: true,
         });
+
+      if (profileError) {
+        console.error('[Admin Actions] Tenant Student Profile Error:', profileError.message);
+      }
     }
 
     revalidatePath("/dashboard/admin/users/students");
@@ -233,74 +203,78 @@ export async function createStudent(data: any) {
 }
 
 export async function createClass(data: any) {
-  const adminSupabase = createAdminClient();
-  const { name, teacherId, schoolId } = data;
+  const { name, teacherId, schoolId, subdomain } = data;
+  if (!subdomain) return { error: 'Subdomain is required to create a class.' };
 
   try {
-    const { error } = await (adminSupabase as any)
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
       .from('classes')
       .insert({
         name,
-        teacher_id: teacherId || null,
-        school_id: schoolId
+        class_teacher_id: teacherId || null,
+        school_id: schoolId,
       });
 
     if (error) throw error;
 
-    revalidatePath("/dashboard/admin/academics");
+    revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to create class" };
+    return { error: error.message || 'Failed to create class' };
   }
 }
 
 export async function createSubject(data: any) {
-  const adminSupabase = createAdminClient();
-  const { name, code, schoolId } = data;
+  const { name, code, schoolId, subdomain } = data;
+  if (!subdomain) return { error: 'Subdomain is required to create a subject.' };
 
   try {
-    const { error } = await (adminSupabase as any)
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
       .from('subjects')
       .insert({
         name,
         code: code.toUpperCase(),
-        school_id: schoolId
+        school_id: schoolId,
       });
 
     if (error) throw error;
 
-    revalidatePath("/dashboard/admin/academics");
+    revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to create subject" };
+    return { error: error.message || 'Failed to create subject' };
   }
 }
 
-export async function saveResults(resultsData: any[]) {
-  const adminSupabase = createAdminClient();
+export async function saveResults(resultsData: any[], subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to save results.' };
 
   try {
-    const { error } = await (adminSupabase as any)
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
       .from('results')
-      .upsert(resultsData, { 
-        onConflict: 'student_id,subject_id,academic_year,term' 
+      .upsert(resultsData, {
+        onConflict: 'student_id,subject_id,academic_year,term',
       });
 
     if (error) throw error;
 
-    revalidatePath("/dashboard/admin/academics/results");
+    revalidatePath('/dashboard/admin/academics/results');
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to save results" };
+    return { error: error.message || 'Failed to save results' };
   }
 }
 
 
-export async function completeOnboarding(userId: string) {
-  const adminSupabase = createAdminClient();
+export async function completeOnboarding(userId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
 
   try {
-    const { error } = await (adminSupabase as any)
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
       .from('profiles')
       .update({ onboarding_completed: true })
       .eq('id', userId);
@@ -309,7 +283,7 @@ export async function completeOnboarding(userId: string) {
 
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "Failed to complete onboarding" };
+    return { error: error.message || 'Failed to complete onboarding' };
   }
 }
 export async function resetUserPassword(userId: string, newPassword: string, subdomain?: string) {

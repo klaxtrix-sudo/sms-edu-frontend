@@ -49,13 +49,22 @@ export function LoginForm() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
       setLoading(false);
       return;
     }
-    router.push('/');
+
+    // Redirect to the correct role dashboard
+    const role = authData.user?.user_metadata?.role ?? 'student';
+    const roleRoutes: Record<string, string> = {
+      admin: '/dashboard/admin',
+      teacher: '/dashboard/teacher',
+      student: '/dashboard/student',
+      parent: '/dashboard/parent',
+    };
+    router.push(roleRoutes[role] ?? '/dashboard/student');
   };
 
   return (

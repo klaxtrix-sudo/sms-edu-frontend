@@ -1,20 +1,36 @@
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { createServerClient } from "@/lib/supabase/server";
+import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
 import OnboardingGate from "@/components/dashboard/onboarding-gate";
 import { redirect } from "next/navigation";
 
-const createClient = createServerClient;
-
 export default async function TeacherLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: { subdomain: string };
 }) {
-  const supabase = createClient();
+  const { subdomain } = params;
+
+  // Resolve tenant-specific keys — the teacher JWT was issued by this tenant project,
+  // so we MUST verify the session against the same project, not the master.
+  const tenantKeys = await resolveTenantKeys(subdomain);
+  if (!tenantKeys) {
+    redirect("/login");
+  }
+
+  const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
+    redirect("/login");
+  }
+
+  // Only teachers (and admins viewing as teacher) should access this layout.
+  const role = user.user_metadata?.role;
+  if (role !== "teacher" && role !== "admin") {
     redirect("/login");
   }
 
