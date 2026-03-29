@@ -57,7 +57,26 @@ export async function middleware(request: NextRequest) {
   // 3. Update Session (Cookie management)
   const { supabase, response: updatedResponse } = await updateSession(request, supabaseUrl, supabaseAnonKey, response);
 
-  // 4. Security Guard - Protect Dashboard and Console routes
+  // 4. Authenticated Redirection - Automatically send logged-in users away from /login
+  if (url.pathname === '/login') {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // Fetch user role to determine the correct dashboard
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      const role = profile?.role || 'student';
+      console.log(`[Auto-Navigator] Authenticated session for ${user.email} (${role}) detected. Redirecting to dashboard.`);
+      
+      // Redirect to the appropriate role-based dashboard
+      return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
+    }
+  }
+
+  // 5. Security Guard - Protect Dashboard and Console routes
   const isDashboardPath = url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/console');
   if (isDashboardPath) {
     const { data: { user } } = await supabase.auth.getUser();
