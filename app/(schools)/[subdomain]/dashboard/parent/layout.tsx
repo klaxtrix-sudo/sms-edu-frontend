@@ -20,8 +20,15 @@ export default function ParentLayout({
       <Sidebar items={parentNavItems} role="Parent" />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-8 lg:p-12 bg-background">
-          {children}
+        <main className="flex-1 overflow-y-auto bg-background flex flex-col min-h-0">
+          <div className="flex-1 p-8 lg:p-12">
+            {children}
+          </div>
+          <footer className="py-4 text-center select-none">
+            <p className="text-[11px] text-muted-foreground/40 leading-relaxed">
+              © {new Date().getFullYear()} Klaxtrix SMS &mdash; School Management System. All rights reserved.
+            </p>
+          </footer>
         </main>
       </div>
     </div>

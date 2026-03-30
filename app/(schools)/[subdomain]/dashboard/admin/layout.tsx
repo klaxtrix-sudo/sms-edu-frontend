@@ -95,8 +95,15 @@ export default function AdminLayout({
       <Sidebar items={adminNavItems} role="Admin" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <DashboardHeader onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 bg-background custom-scrollbar">
-          {children}
+        <main className="flex-1 overflow-y-auto bg-background custom-scrollbar flex flex-col min-h-0">
+          <div className="flex-1 p-4 md:p-8 lg:p-12">
+            {children}
+          </div>
+          <footer className="py-4 text-center select-none">
+            <p className="text-[11px] text-muted-foreground/40 leading-relaxed">
+              © {new Date().getFullYear()} Klaxtrix SMS &mdash; School Management System. All rights reserved.
+            </p>
+          </footer>
         </main>
       </div>
     </div>
