@@ -133,7 +133,7 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-3">
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 px-3 py-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
@@ -141,6 +141,15 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
           <LogOut className="size-5" />
           <span className="font-medium">Sign Out</span>
         </button>
+
+        {/* Copyright notice */}
+        <p className="text-[10px] text-muted-foreground/50 text-center leading-relaxed px-1 select-none">
+          © {new Date().getFullYear()} Klaxtrix SMS
+          <br />
+          School Management System
+          <br />
+          All rights reserved.
+        </p>
       </div>
     </aside>
   );
