@@ -9,14 +9,13 @@ import Image from 'next/image';
 
 export function LandingHero() {
   return (
-    <section className="relative pt-12 md:pt-20 pb-24 overflow-hidden bg-background">
+    <section className="relative pt-20 md:pt-20 pb-24 overflow-hidden bg-background">
       {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-50 pointer-events-none" />
       
       <div className="container relative px-4 mx-auto">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
 
-          
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-heading font-bold tracking-tight mb-6 md:mb-8 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent leading-[1.2] md:leading-[1.1] pb-2">
             Klaxtrix: The Future of School Management
           </h1>
@@ -36,8 +35,8 @@ export function LandingHero() {
             </Button>
           </div>
           
-          {/* Dashboard Preview Mockup — mirrors actual admin UI */}
-          <div className="relative w-full aspect-video rounded-3xl border border-border/50 shadow-2xl overflow-hidden bg-slate-100">
+          {/* ── DESKTOP MOCKUP (md and above) ─────────────────────────────── */}
+          <div className="relative w-full aspect-video rounded-3xl border border-border/50 shadow-2xl overflow-hidden bg-slate-100 hidden md:block">
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-blue-400/5" />
 
             {/* Browser chrome */}
@@ -55,10 +54,8 @@ export function LandingHero() {
 
             {/* Dashboard layout */}
             <div className="absolute inset-0 top-8 flex">
-
-              {/* Sidebar — white, matches actual */}
+              {/* Sidebar */}
               <div className="w-[18%] bg-white border-r border-slate-100 h-full flex flex-col py-3 shrink-0">
-                {/* Logo */}
                 <div className="flex items-center gap-2 px-3 mb-1">
                   <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
                     <School className="w-3.5 h-3.5 text-white" />
@@ -68,9 +65,7 @@ export function LandingHero() {
                     <div className="text-[6px] text-slate-400 uppercase tracking-widest">Admin Portal</div>
                   </div>
                 </div>
-
                 <div className="mt-2 flex flex-col gap-0.5 px-2">
-                  {/* Active item */}
                   <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-600 text-white">
                     <div className="w-1.5 h-1.5 rounded-full bg-white/70" />
                     <span className="text-[8px] font-semibold">Overview</span>
@@ -82,7 +77,6 @@ export function LandingHero() {
                     </div>
                   ))}
                 </div>
-
                 <div className="mt-auto px-4 pb-2">
                   <div className="text-[7px] text-slate-400">Sign Out</div>
                 </div>
@@ -90,8 +84,6 @@ export function LandingHero() {
 
               {/* Main content */}
               <div className="flex-1 bg-slate-50/80 overflow-hidden p-3 flex flex-col gap-2">
-
-                {/* Welcome Banner */}
                 <div className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-slate-100 shadow-sm">
                   <div>
                     <div className="text-[11px] font-extrabold text-slate-800">
@@ -104,11 +96,7 @@ export function LandingHero() {
                     <div className="text-[8px] font-bold text-slate-700">Friday, March 27, 2026</div>
                   </div>
                 </div>
-
-                {/* Bento grid */}
                 <div className="grid grid-cols-3 gap-2 flex-1 min-h-0">
-
-                  {/* Academic Performance — large left */}
                   <div className="col-span-2 bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex flex-col">
                     <div className="flex items-center justify-between mb-1">
                       <div>
@@ -120,48 +108,24 @@ export function LandingHero() {
                       </div>
                       <div className="bg-green-100 text-green-700 text-[6px] font-bold rounded-full px-2 py-0.5">Live Analytics</div>
                     </div>
-                    {/* SVG Line + Area Chart */}
                     <div className="flex-1 relative px-1 pt-1 pb-0">
                       <svg viewBox="0 0 220 80" className="w-full h-full" preserveAspectRatio="none">
                         <defs>
-                          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                          <linearGradient id="areaGradD" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
                             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
                           </linearGradient>
                         </defs>
-                        {/* Horizontal grid lines */}
                         {[10,25,40,55,70].map(y => (
                           <line key={y} x1="0" y1={y} x2="220" y2={y} stroke="#e2e8f0" strokeWidth="0.5" />
                         ))}
-                        {/* Area fill */}
-                        <path
-                          d="M0,62 C18,58 36,50 55,44 C73,38 91,48 110,36 C128,24 146,30 165,18 C183,6 201,12 220,8 L220,80 L0,80 Z"
-                          fill="url(#areaGrad)"
-                        />
-                        {/* Line */}
-                        <path
-                          d="M0,62 C18,58 36,50 55,44 C73,38 91,48 110,36 C128,24 146,30 165,18 C183,6 201,12 220,8"
-                          fill="none"
-                          stroke="#3b82f6"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        {/* Data points */}
+                        <path d="M0,62 C18,58 36,50 55,44 C73,38 91,48 110,36 C128,24 146,30 165,18 C183,6 201,12 220,8 L220,80 L0,80 Z" fill="url(#areaGradD)" />
+                        <path d="M0,62 C18,58 36,50 55,44 C73,38 91,48 110,36 C128,24 146,30 165,18 C183,6 201,12 220,8" fill="none" stroke="#3b82f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                         {[[0,62],[55,44],[110,36],[165,18],[220,8]].map(([x,y],i) => (
                           <circle key={i} cx={x} cy={y} r="2" fill="#3b82f6" stroke="white" strokeWidth="1" />
                         ))}
-                        {/* Secondary line (previous year) */}
-                        <path
-                          d="M0,72 C18,70 36,66 55,62 C73,58 91,64 110,58 C128,52 146,56 165,50 C183,44 201,46 220,42"
-                          fill="none"
-                          stroke="#cbd5e1"
-                          strokeWidth="1"
-                          strokeDasharray="3,2"
-                          strokeLinecap="round"
-                        />
+                        <path d="M0,72 C18,70 36,66 55,62 C73,58 91,64 110,58 C128,52 146,56 165,50 C183,44 201,46 220,42" fill="none" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="3,2" strokeLinecap="round" />
                       </svg>
-                      {/* Y-axis labels */}
                       <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-1 pr-1">
                         {['100%','75%','50%','25%'].map(l => (
                           <div key={l} className="text-[4.5px] text-slate-300 leading-none">{l}</div>
@@ -173,20 +137,17 @@ export function LandingHero() {
                         <div key={m} className="text-[5px] text-slate-300">{m}</div>
                       ))}
                     </div>
-                    {/* Legend */}
                     <div className="flex items-center gap-3 px-2 mt-1">
                       <div className="flex items-center gap-1">
                         <div className="w-4 h-0.5 bg-blue-500 rounded" />
                         <span className="text-[5.5px] text-slate-400">This Year</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-4 h-0.5 bg-slate-300 rounded" style={{backgroundImage: 'repeating-linear-gradient(to right, #cbd5e1 0, #cbd5e1 3px, transparent 3px, transparent 5px)'}} />
+                        <div className="w-4 h-0.5 bg-slate-300 rounded" />
                         <span className="text-[5.5px] text-slate-400">Last Year</span>
                       </div>
                     </div>
                   </div>
-
-                  {/* 4 stat cards stacked 2×2 */}
                   <div className="col-span-1 grid grid-cols-2 gap-2">
                     {[
                       { label: 'TEACHERS', value: '87', bg: 'bg-blue-600', icon: '👨‍🏫' },
@@ -201,11 +162,98 @@ export function LandingHero() {
                       </div>
                     ))}
                   </div>
-
                 </div>
               </div>
             </div>
           </div>
+
+          {/* ── MOBILE MOCKUP (below md) ───────────────────────────────────── */}
+          <div className="relative flex justify-center md:hidden w-full">
+            {/* Phone shell */}
+            <div className="relative w-[240px] rounded-[2.5rem] border-[6px] border-slate-800 shadow-2xl bg-slate-800 overflow-hidden">
+              {/* Notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-slate-800 rounded-b-2xl z-20" />
+              {/* Screen */}
+              <div className="bg-slate-50 rounded-[2rem] overflow-hidden relative" style={{minHeight: '420px'}}>
+                
+                {/* Mobile header bar */}
+                <div className="bg-white border-b border-slate-100 flex items-center justify-between px-4 py-3 pt-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-blue-600 rounded-xl flex items-center justify-center">
+                      <School className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-[8px] font-extrabold text-slate-900 leading-none">Klaxtrix</div>
+                      <div className="text-[5px] text-slate-400 uppercase tracking-widest">Admin Portal</div>
+                    </div>
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[9px] font-black">SA</div>
+                </div>
+
+                {/* Mobile dashboard body */}
+                <div className="p-3 flex flex-col gap-3">
+
+                  {/* Welcome card */}
+                  <div className="bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl p-4 text-white shadow-lg shadow-blue-500/30">
+                    <div className="text-[8px] font-bold opacity-70 uppercase tracking-widest mb-1">Welcome back</div>
+                    <div className="text-[13px] font-extrabold leading-tight">School Academy</div>
+                    <div className="text-[7px] opacity-80 mt-1">1,284 students · 87 teachers · 6 levels</div>
+                    <div className="mt-3 bg-white/20 rounded-xl px-3 py-1.5 inline-flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-[7px] font-bold">Friday, Mar 27, 2026</span>
+                    </div>
+                  </div>
+
+                  {/* Quick stat row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'Teachers', value: '87', icon: '👨‍🏫', bg: 'bg-blue-50', text: 'text-blue-700' },
+                      { label: 'Students', value: '1,284', icon: '🎓', bg: 'bg-green-50', text: 'text-green-700' },
+                    ].map(c => (
+                      <div key={c.label} className={`${c.bg} rounded-2xl p-3 flex items-center gap-2`}>
+                        <span className="text-base">{c.icon}</span>
+                        <div>
+                          <div className={`text-[14px] font-extrabold ${c.text} leading-none`}>{c.value}</div>
+                          <div className="text-[7px] text-slate-500 mt-0.5">{c.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Performance mini-card */}
+                  <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[9px] font-bold text-slate-800">Academic Performance</div>
+                      <div className="bg-green-100 text-green-700 text-[6px] font-bold rounded-full px-2 py-0.5">Live</div>
+                    </div>
+                    <svg viewBox="0 0 200 50" className="w-full h-10" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="areaGradM" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,40 C30,35 60,28 100,20 C140,12 170,8 200,5 L200,50 L0,50 Z" fill="url(#areaGradM)" />
+                      <path d="M0,40 C30,35 60,28 100,20 C140,12 170,8 200,5" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  {/* Nav items */}
+                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    {['Classes & Subjects', 'Attendance Intel', 'Academic Results'].map((item, i) => (
+                      <div key={item} className={`flex items-center gap-3 px-4 py-2.5 ${i < 2 ? 'border-b border-slate-50' : ''}`}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                        <span className="text-[8px] font-semibold text-slate-600">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Glow behind the phone */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-primary/20 blur-[60px] rounded-full -z-10" />
+          </div>
+
         </div>
       </div>
     </section>
