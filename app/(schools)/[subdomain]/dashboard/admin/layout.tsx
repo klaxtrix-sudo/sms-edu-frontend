@@ -23,13 +23,15 @@ export default function AdminLayout({
 
   useEffect(() => {
     async function fetchProfile() {
-      const supabase = createClient();
+      if (!tenant?.supabaseUrl || !tenant?.supabaseAnonKey) return;
+      // Use tenant-specific Supabase client so we read from the correct project
+      const supabase = createClient(tenant.supabaseUrl, tenant.supabaseAnonKey);
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
         const { data } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, onboarding_completed')
           .eq('id', user.id)
           .single();
         setProfile(data);
@@ -37,7 +39,7 @@ export default function AdminLayout({
       setIsProfileLoading(false);
     }
     fetchProfile();
-  }, []);
+  }, [tenant]);
 
   useEffect(() => {
     if (!isLoading && tenant && !tenant.isSetupCompleted && !pathname.includes('/setup')) {
@@ -80,8 +82,8 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen relative overflow-hidden">
-      {profile && !profile.onboarding_completed && !isProfileLoading && (
-        <ProductTour userId={profile.id} />
+      {profile && !profile.onboarding_completed && !isProfileLoading && tenant?.subdomain && (
+        <ProductTour userId={profile.id} subdomain={tenant.subdomain} />
       )}
       
       {/* Mobile Sidebar Overlay/Backdrop */}

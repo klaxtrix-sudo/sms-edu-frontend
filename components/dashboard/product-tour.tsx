@@ -47,7 +47,7 @@ const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-export function ProductTour({ userId }: { userId: string }) {
+export function ProductTour({ userId, subdomain }: { userId: string; subdomain: string }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isVisible, setIsVisible] = useState(true);
@@ -83,49 +83,81 @@ export function ProductTour({ userId }: { userId: string }) {
 
   const handleFinish = async () => {
     setIsVisible(false);
-    // Persist locally for Dev/Fallback
+    // Persist locally immediately so the tour never re-appears in the same session
     if (typeof window !== 'undefined') {
-      localStorage.setItem('klaxtrix_onboarding_dismissed', 'true');
+      localStorage.setItem(`klaxtrix_tour_done_${userId}`, 'true');
     }
-    await completeOnboarding(userId);
+    await completeOnboarding(userId, subdomain);
   };
 
-  if (!isVisible || !targetRect) return null;
+  // Skip immediately if already dismissed in this browser (localStorage fast-path)
+  const alreadyDone = typeof window !== 'undefined'
+    && !!localStorage.getItem(`klaxtrix_tour_done_${userId}`);
+
+  if (!isVisible || !targetRect || alreadyDone) return null;
 
   const step = TOUR_STEPS[currentStep];
 
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
+    <div className="fixed inset-0 z-[9999] pointer-events-none">
       {/* Dimmed Overlay with Hole */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/60 pointer-events-auto"
+        className="absolute inset-0 bg-black/60 pointer-events-auto backdrop-blur-[1px]"
         style={{
           clipPath: `polygon(
             0% 0%, 0% 100%, 
-            ${targetRect.left - 5}px 100%, 
-            ${targetRect.left - 5}px ${targetRect.top - 5}px, 
-            ${targetRect.right + 5}px ${targetRect.top - 5}px, 
-            ${targetRect.right + 5}px ${targetRect.bottom + 5}px, 
-            ${targetRect.left - 5}px ${targetRect.bottom + 5}px, 
-            ${targetRect.left - 5}px 100%, 
+            ${targetRect.left - 4}px 100%, 
+            ${targetRect.left - 4}px ${targetRect.top - 4}px, 
+            ${targetRect.right + 4}px ${targetRect.top - 4}px, 
+            ${targetRect.right + 4}px ${targetRect.bottom + 4}px, 
+            ${targetRect.left - 4}px ${targetRect.bottom + 4}px, 
+            ${targetRect.left - 4}px 100%, 
             100% 100%, 100% 0%
           )`
         }}
         onClick={handleFinish}
       />
 
+      {/* Animated Focus Ring */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.2 }}
+        animate={{ 
+          opacity: 1, 
+          scale: 1,
+          left: targetRect.left - 8,
+          top: targetRect.top - 8,
+          width: targetRect.width + 16,
+          height: targetRect.height + 16
+        }}
+        className="absolute border-2 border-primary rounded-xl z-[10000] pointer-events-none shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+      >
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0, 0.3]
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-[-4px] border-4 border-primary/30 rounded-[14px]" 
+        />
+      </motion.div>
+
       {/* Tooltip Card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentStep}
-          initial={{ opacity: 0, scale: 0.9, x: targetRect.right + 20, y: targetRect.top }}
-          animate={{ opacity: 1, scale: 1, x: targetRect.right + 20, y: targetRect.top }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ type: "spring", damping: 20, stiffness: 200 }}
-          className="absolute w-80 pointer-events-auto p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-primary/20 bg-white rounded-2xl"
+          initial={{ opacity: 0, y: 10, x: targetRect.right + 24 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0, 
+            x: targetRect.right + 24,
+            top: Math.min(targetRect.top, typeof window !== 'undefined' ? window.innerHeight - 300 : targetRect.top)
+          }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="absolute w-80 pointer-events-auto p-6 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-200 bg-white rounded-2xl z-[10001]"
         >
           <div className="space-y-5">
             <div className="flex items-center justify-between">
