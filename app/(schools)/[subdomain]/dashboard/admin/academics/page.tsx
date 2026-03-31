@@ -108,21 +108,13 @@ export default function AcademicsPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Header */}
-      <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-10 group bg-white/5 border-white/10">
-        <div className="relative z-10 space-y-2">
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider mb-2">
-            Curriculum Alpha
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
-            Academics <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500">Framework</span>
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-xl font-medium">
-            Architecting the future of education. Manage your school's classes, subjects, and core academic structure below.
-          </p>
-        </div>
-        
-        {/* Decorative background glow */}
-        <div className="absolute -top-24 -right-24 size-64 bg-emerald-500/20 blur-[100px] rounded-full group-hover:bg-emerald-500/30 transition-colors" />
+      <header className="relative space-y-2 px-2">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 drop-shadow-sm">
+          Manage Classes <span className="text-primary">and Subjects</span>
+        </h1>
+        <p className="text-slate-500 font-medium tracking-tight max-w-2xl text-base">
+          Manage your school's classes, subjects, and core academic structure below.
+        </p>
       </header>
 
       {/* Bento Stat Grid */}
