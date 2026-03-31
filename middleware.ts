@@ -61,14 +61,10 @@ export async function middleware(request: NextRequest) {
   if (url.pathname === '/login') {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      // Fetch user role to determine the correct dashboard
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      // Prioritize role from metadata (set during user creation) for instant redirection.
+      // If missing, default to student dashboard.
+      const role = user.user_metadata?.role || 'student';
       
-      const role = profile?.role || 'student';
       console.log(`[Auto-Navigator] Authenticated session for ${user.email} (${role}) detected. Redirecting to dashboard.`);
       
       // Redirect to the appropriate role-based dashboard

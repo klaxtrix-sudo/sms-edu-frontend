@@ -64,7 +64,9 @@ export function LoginForm() {
       student: '/dashboard/student',
       parent: '/dashboard/parent',
     };
-    router.push(roleRoutes[role] ?? '/dashboard/student');
+    
+    // Use hard redirect to guarantee cookies are committed before dashboard initialization
+    window.location.href = roleRoutes[role] ?? '/dashboard/student';
   };
 
   return (

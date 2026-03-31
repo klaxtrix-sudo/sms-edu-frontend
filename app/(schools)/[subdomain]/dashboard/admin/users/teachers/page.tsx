@@ -40,7 +40,9 @@ import {
   Power,
   RotateCcw,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -65,6 +67,9 @@ export default function TeachersPage() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   // Form State
@@ -143,12 +148,20 @@ export default function TeachersPage() {
       return;
     }
 
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
     setIsResetting(true);
     const result = await resetUserPassword(selectedTeacher.id, newPassword, subdomain as string);
     if (result.success) {
       toast.success(`Password for ${selectedTeacher.full_name} has been updated.`);
       setIsResetModalOpen(false);
       setNewPassword('');
+      setConfirmPassword('');
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     } else {
       toast.error(result.error);
     }
@@ -278,21 +291,52 @@ export default function TeachersPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="newPassword" title="At least 8 chars, 1 number, 1 special char" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">New Secure Password</Label>
-                  <Input 
-                    id="newPassword" 
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="newPassword" 
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      required
+                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors pr-12"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                    >
+                      {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
                   <p className="text-[10px] text-slate-400 leading-tight">
                     Must be <span className="text-slate-600 font-medium">8+ characters</span> with at least <span className="text-slate-600 font-medium">one number</span> and <span className="text-slate-600 font-medium">one special character</span>.
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Confirm New Password</Label>
+                  <div className="relative">
+                    <Input 
+                      id="confirmPassword" 
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      required
+                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors pr-12"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                    >
+                      {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
