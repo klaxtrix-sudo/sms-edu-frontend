@@ -82,7 +82,7 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
               </div>
               <div>
                 <DialogTitle className="text-2xl font-black tracking-tight text-glow">Teacher Profile</DialogTitle>
-                <DialogDescription className="font-medium">Comprehensive view of institutional records and access.</DialogDescription>
+                <DialogDescription className="font-medium">Comprehensive view of teacher records and access.</DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -98,11 +98,17 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
                 <div className="flex-1 text-center md:text-left space-y-2">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                     <h3 className="font-black text-2xl tracking-tight leading-none">{teacher.full_name}</h3>
-                    <Badge variant={teacher.is_active ? "default" : "secondary"} className={cn(
-                      "w-fit mx-auto md:mx-0 rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest",
-                      teacher.is_active ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"
-                    )}>
-                      {teacher.is_active ? "Active" : "Suspended"}
+                    <Badge 
+                      variant={teacher.is_archived ? "outline" : (teacher.is_active ? (teacher.onboarding_completed ? "default" : "secondary") : "secondary")} 
+                      className={cn(
+                        "w-fit mx-auto md:mx-0 rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest",
+                        teacher.is_archived ? "bg-slate-500/10 text-slate-500 border-slate-500/20" : 
+                        (teacher.is_active ? 
+                          (teacher.onboarding_completed ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-indigo-500/10 text-indigo-500 border-indigo-500/20") 
+                          : "bg-red-500/10 text-red-500 border-red-500/20")
+                      )}
+                    >
+                      {teacher.is_archived ? "Archived" : (teacher.is_active ? (teacher.onboarding_completed ? "Active" : "Pending Setup") : "Suspended")}
                     </Badge>
                   </div>
                   

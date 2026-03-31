@@ -240,6 +240,12 @@ export async function finalizeTeacherAccount(password: string) {
       },
     });
 
+    // 3. Update profile to mark onboarding as complete
+    await (adminClient as any)
+      .from('profiles')
+      .update({ onboarding_completed: true })
+      .eq('id', user.id);
+
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {

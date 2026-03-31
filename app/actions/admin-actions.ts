@@ -31,6 +31,72 @@ export async function toggleTeacherStatus(userId: string, isActive: boolean, sub
   }
 }
 
+export async function archiveTeacher(userId: string, subdomain: string) {
+  console.log(`[Admin Actions] Archiving teacher ${userId} in subdomain ${subdomain}`);
+  if (!subdomain) return { error: 'Subdomain is required to archive teacher.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    
+    // 1. Update Profile Status
+    console.log(`[Admin Actions] Updating profile status for ${userId}...`);
+    const { error: profileError } = await (tenantSupabase as any)
+      .from('profiles')
+      .update({ 
+        is_archived: true,
+        is_active: false 
+      })
+      .eq('id', userId);
+
+    if (profileError) {
+      console.error(`[Admin Actions] Profile update error:`, profileError);
+      return { error: `Profile update failed: ${profileError.message}` };
+    }
+
+    // 2. Disconnect from Classes
+    console.log(`[Admin Actions] Disconnecting ${userId} from classes...`);
+    const { error: classError } = await (tenantSupabase as any)
+      .from('classes')
+      .update({ class_teacher_id: null })
+      .eq('class_teacher_id', userId);
+
+    if (classError) {
+      console.error(`[Admin Actions] Class disconnection error:`, classError);
+      // We don't block the whole process if this fails, but it's important to provide feedback
+    }
+
+    console.log(`[Admin Actions] Successfully archived teacher ${userId}`);
+    revalidatePath('/dashboard/admin/users/teachers');
+    revalidatePath('/dashboard/admin/academics');
+    
+    return { success: true };
+  } catch (e: any) {
+    console.error(`[Admin Actions] Catch error archiving teacher:`, e);
+    return { error: e.message || 'Failed to archive teacher.' };
+  }
+}
+
+export async function unarchiveTeacher(userId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to unarchive teacher.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    
+    const { error } = await (tenantSupabase as any)
+      .from('profiles')
+      .update({ 
+        is_archived: false,
+        is_active: true // Reactivate by default when unarchiving
+      })
+      .eq('id', userId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath('/dashboard/admin/users/teachers');
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to unarchive teacher.' };
+  }
+}
+
 export async function updateTeacher(userId: string, data: any, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to update teacher.' };
   try {

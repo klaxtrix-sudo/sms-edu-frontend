@@ -20,9 +20,12 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   // Allow cross-origin requests from *.localhost subdomains (tenant portals in dev)
-  allowedDevOrigins: ['*.localhost:3000', '*.localhost'],
+  allowedDevOrigins: ['*.localhost:3000', 'localhost:3000', '*.localhost'],
   experimental: {
     serverComponentsExternalPackages: [],
+    serverActions: {
+      allowedOrigins: ['*.localhost:3000', 'localhost:3000', '*.localhost'],
+    },
   },
   // Keep compiled pages alive longer in dev to prevent 404 on first hit after cache clear
   onDemandEntries: {

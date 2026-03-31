@@ -7,7 +7,9 @@ import {
   getTeachers, 
   createTeacher, 
   toggleTeacherStatus,
-  resetUserPassword
+  resetUserPassword,
+  archiveTeacher,
+  unarchiveTeacher
 } from '@/app/actions/admin-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +45,10 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
-  ShieldCheck
+  ShieldCheck,
+  Archive,
+  ArchiveRestore,
+  UserX
 } from 'lucide-react';
 import { TeacherProfileModal } from "@/components/admin/teacher-profile-modal";
 import { toast } from 'sonner';
@@ -75,6 +80,7 @@ export default function TeachersPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [viewingTeacherProfile, setViewingTeacherProfile] = useState<any>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -136,6 +142,37 @@ export default function TeachersPage() {
     }
   };
 
+  const handleArchiveTeacher = async (userId: string) => {
+    console.log(`[TeachersPage] Initiating archive for teacher: ${userId}`);
+    if (!confirm("Are you sure you want to archive this teacher? They will be removed from all class assignments.")) return;
+    
+    try {
+      const result = await archiveTeacher(userId, subdomain as string);
+      console.log(`[TeachersPage] Archive result:`, result);
+      
+      if (result.success) {
+        toast.success("Teacher archived and assignments cleared.");
+        fetchTeachers();
+      } else {
+        console.error(`[TeachersPage] Archive failed:`, result.error);
+        toast.error(result.error);
+      }
+    } catch (err: any) {
+      console.error(`[TeachersPage] Catch error archiving teacher:`, err);
+      toast.error(err.message || "An unexpected error occurred during archiving.");
+    }
+  };
+
+  const handleUnarchiveTeacher = async (userId: string) => {
+    const result = await unarchiveTeacher(userId, subdomain as string);
+    if (result.success) {
+      toast.success("Teacher account restored to active status.");
+      fetchTeachers();
+    } else {
+      toast.error(result.error);
+    }
+  };
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTeacher) return;
@@ -172,10 +209,12 @@ export default function TeachersPage() {
     setIsResetting(false);
   };
 
-  const filteredTeachers = teachers.filter(t => 
-    t.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = t.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         t.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTab = activeTab === 'active' ? !t.is_archived : t.is_archived;
+    return matchesSearch && matchesTab;
+  });
 
   return (
     <div className="space-y-8">
@@ -371,7 +410,30 @@ export default function TeachersPage() {
         </div>
         <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-xl">
           <Users className="size-4 text-primary" />
-          <span className="text-sm font-bold text-primary">{filteredTeachers.length} Total</span>
+          <span className="text-xs font-bold text-primary">
+            {filteredTeachers.length} {activeTab === 'active' ? (filteredTeachers.some(t => !t.onboarding_completed) ? 'Total' : 'Active') : 'Archived'}
+          </span>
+        </div>
+        
+        <div className="flex bg-muted/50 p-1 rounded-xl border border-primary/5">
+          <button 
+            onClick={() => setActiveTab('active')}
+            className={cn(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all",
+              activeTab === 'active' ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Active Teachers
+          </button>
+          <button 
+            onClick={() => setActiveTab('archived')}
+            className={cn(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all",
+              activeTab === 'archived' ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Archived
+          </button>
         </div>
       </div>
 
@@ -403,7 +465,7 @@ export default function TeachersPage() {
                 <TableCell colSpan={5} className="h-64 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <Users className="size-12 text-muted/20" />
-                    <p className="text-muted-foreground font-medium italic">No faculty members found matching your search.</p>
+                    <p className="text-muted-foreground font-medium italic">No teachers found matching your search.</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -436,11 +498,17 @@ export default function TeachersPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={teacher.is_active ? "default" : "secondary"} className={cn(
-                      "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                      teacher.is_active ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20" : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20"
-                    )}>
-                      {teacher.is_active ? "Active" : "Suspended"}
+                    <Badge 
+                      variant={teacher.is_archived ? "outline" : (teacher.is_active ? (teacher.onboarding_completed ? "default" : "secondary") : "secondary")} 
+                      className={cn(
+                        "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                        teacher.is_archived ? "bg-slate-500/10 text-slate-500 border-slate-500/20" : 
+                        (teacher.is_active ? 
+                          (teacher.onboarding_completed ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20" : "bg-indigo-500/10 text-indigo-500 border-indigo-500/20") 
+                          : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20")
+                      )}
+                    >
+                      {teacher.is_archived ? "Archived" : (teacher.is_active ? (teacher.onboarding_completed ? "Active" : "Pending Setup") : "Suspended")}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
@@ -454,7 +522,7 @@ export default function TeachersPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 border-primary/20 glass-panel">
-                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Faculty Management</DropdownMenuLabel>
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Teacher Management</DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-primary/10" />
                         <DropdownMenuItem 
                           className="gap-2 text-xs font-medium cursor-pointer"
@@ -485,6 +553,22 @@ export default function TeachersPage() {
                           <Power className="size-3.5" /> 
                           {teacher.is_active ? "Suspend Access" : "Restore Access"}
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-primary/10" />
+                        {teacher.is_archived ? (
+                          <DropdownMenuItem 
+                            className="gap-2 text-xs font-bold text-emerald-600 focus:text-emerald-600 focus:bg-emerald-600/10 cursor-pointer"
+                            onClick={() => handleUnarchiveTeacher(teacher.id)}
+                          >
+                            <ArchiveRestore className="size-3.5" /> Restore Account
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem 
+                            className="gap-2 text-xs font-bold text-slate-600 focus:text-slate-600 focus:bg-slate-600/10 cursor-pointer"
+                            onClick={() => handleArchiveTeacher(teacher.id)}
+                          >
+                            <Archive className="size-3.5" /> Archive Teacher
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
