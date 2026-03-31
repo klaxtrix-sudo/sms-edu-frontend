@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { createServerClient } from "@/lib/supabase/server";
 import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
 import OnboardingGate from "@/components/dashboard/onboarding-gate";
+import { UserStatusGuard } from "@/components/dashboard/user-status-guard";
 import { redirect } from "next/navigation";
 
 export default async function TeacherLayout({
@@ -28,6 +29,17 @@ export default async function TeacherLayout({
     redirect("/login");
   }
 
+  // Fetch the profile to check for account suspension
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_active")
+    .eq("id", user.id)
+    .single() as { data: { is_active: boolean } | null };
+
+  if (profile && !profile.is_active) {
+    redirect("/dashboard/suspended");
+  }
+
   // Only teachers (and admins viewing as teacher) should access this layout.
   const role = user.user_metadata?.role;
   if (role !== "teacher" && role !== "admin") {
@@ -45,6 +57,7 @@ export default async function TeacherLayout({
 
   return (
     <OnboardingGate user={user}>
+      <UserStatusGuard userId={user.id} />
       <div className="flex min-h-screen">
         <Sidebar items={teacherNavItems} role="Teacher" />
         <div className="flex-1 flex flex-col min-w-0">

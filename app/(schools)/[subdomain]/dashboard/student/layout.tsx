@@ -1,6 +1,7 @@
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { createServerClient } from "@/lib/supabase/server";
+import { UserStatusGuard } from "@/components/dashboard/user-status-guard";
 import { redirect } from "next/navigation";
 
 export default async function StudentLayout({
@@ -14,6 +15,17 @@ export default async function StudentLayout({
   if (!user) {
     redirect("/login");
   }
+
+  // Fetch the profile to check for account suspension
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_active")
+    .eq("id", user.id)
+    .single() as { data: { is_active: boolean } | null };
+
+  if (profile && !profile.is_active) {
+    redirect("/dashboard/suspended");
+  }
   const studentNavItems: readonly SidebarItem[] = [
     { label: "Overview", href: "/dashboard/student", icon: "LayoutDashboard" },
     { label: "My Timetable", href: "/dashboard/student/timetable", icon: "CalendarDays" },
@@ -26,6 +38,7 @@ export default async function StudentLayout({
 
   return (
     <div className="flex min-h-screen">
+      <UserStatusGuard userId={user.id} />
       <Sidebar items={studentNavItems} role="Student" />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader />
