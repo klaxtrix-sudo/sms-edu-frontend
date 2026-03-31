@@ -54,7 +54,7 @@ export default async function TeacherLayout({
               {children}
             </div>
             <footer className="py-4 text-center select-none">
-              <p className="text-[11px] text-muted-foreground/40 leading-relaxed">
+              <p className="text-[11px] text-foreground/70 leading-relaxed">
                 © {new Date().getFullYear()} Klaxtrix SMS &mdash; School Management System. All rights reserved.
               </p>
             </footer>
