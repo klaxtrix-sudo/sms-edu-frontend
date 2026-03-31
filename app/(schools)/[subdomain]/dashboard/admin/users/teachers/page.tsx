@@ -42,8 +42,10 @@ import {
   AlertCircle,
   ExternalLink,
   Eye,
-  EyeOff
+  EyeOff,
+  ShieldCheck
 } from 'lucide-react';
+import { TeacherProfileModal } from "@/components/admin/teacher-profile-modal";
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -71,6 +73,8 @@ export default function TeachersPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [viewingTeacherProfile, setViewingTeacherProfile] = useState<any>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -452,7 +456,13 @@ export default function TeachersPage() {
                       <DropdownMenuContent align="end" className="w-48 border-primary/20 glass-panel">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Faculty Management</DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-primary/10" />
-                        <DropdownMenuItem className="gap-2 text-xs font-medium cursor-pointer">
+                        <DropdownMenuItem 
+                          className="gap-2 text-xs font-medium cursor-pointer"
+                          onClick={() => {
+                            setViewingTeacherProfile(teacher);
+                            setIsProfileModalOpen(true);
+                          }}
+                        >
                           <ExternalLink className="size-3.5" /> View Profile
                         </DropdownMenuItem>
                         <DropdownMenuItem 
@@ -484,6 +494,16 @@ export default function TeachersPage() {
           </TableBody>
         </Table>
       </div>
+      {viewingTeacherProfile && (
+        <TeacherProfileModal 
+          isOpen={isProfileModalOpen}
+          onClose={() => {
+            setIsProfileModalOpen(false);
+            setViewingTeacherProfile(null);
+          }}
+          teacher={viewingTeacherProfile}
+        />
+      )}
     </div>
   );
 }
