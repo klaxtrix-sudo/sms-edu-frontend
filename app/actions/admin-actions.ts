@@ -127,13 +127,56 @@ export async function getTeachers(schoolId: string, subdomain: string) {
       .select('*')
       .eq('role', 'teacher')
       .eq('school_id', schoolId)
-      .order('created_at', { ascending: false });
+      .eq('is_archived', false) // Only get active teachers for assignment
+      .order('full_name');
 
     if (error) throw error;
     return { success: true, data };
   } catch (error: any) {
     console.error('[Admin Actions] getTeachers Error:', error.message);
     return { error: error.message || 'Failed to fetch teachers.' };
+  }
+}
+
+export async function getClasses(schoolId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to fetch classes.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { data, error } = await (tenantSupabase as any)
+      .from('classes')
+      .select(`
+        id,
+        name,
+        profiles:class_teacher_id (
+          full_name
+        )
+      `)
+      .eq('school_id', schoolId)
+      .order('name');
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('[Admin Actions] getClasses Error:', error.message);
+    return { error: error.message || 'Failed to fetch classes.' };
+  }
+}
+
+export async function getSubjects(schoolId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to fetch subjects.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { data, error } = await (tenantSupabase as any)
+      .from('subjects')
+      .select('*')
+      .eq('school_id', schoolId)
+      .order('name');
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('[Admin Actions] getSubjects Error:', error.message);
+    return { error: error.message || 'Failed to fetch subjects.' };
   }
 }
 

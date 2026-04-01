@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { createTenantClient } from "@/lib/supabase/client";
 import { 
   Card, 
@@ -31,58 +33,35 @@ import {
 } from "lucide-react";
 import { AddClassModal } from "@/components/admin/add-class-modal";
 import { AddSubjectModal } from "@/components/admin/add-subject-modal";
-import { toast } from "sonner";
+import { getClasses, getSubjects } from "@/app/actions/admin-actions";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function AcademicsPage() {
+  const { subdomain } = useParams();
+  const { tenant } = useTenant();
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [schoolId, setSchoolId] = useState<string | null>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const supabase = createTenantClient();
 
   const fetchData = async () => {
+    if (!tenant?.id) return;
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const [classesRes, subjectsRes] = await Promise.all([
+        getClasses(tenant.id, subdomain as string),
+        getSubjects(tenant.id, subdomain as string)
+      ]);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("school_id")
-        .eq("id", user.id)
-        .single() as any;
+      if (classesRes.error) throw new Error(classesRes.error);
+      if (subjectsRes.error) throw new Error(subjectsRes.error);
 
-      if (profile?.school_id) {
-        setSchoolId(profile.school_id as string);
-
-        const [classesRes, subjectsRes] = await Promise.all([
-          (supabase as any)
-            .from("classes")
-            .select(`
-              id,
-              name,
-              profiles:teacher_id (
-                full_name
-              )
-            `)
-            .eq("school_id", profile.school_id)
-            .order("name"),
-          (supabase as any)
-            .from("subjects")
-            .select("*")
-            .eq("school_id", profile.school_id)
-            .order("name")
-        ]);
-
-        if (classesRes.error) throw classesRes.error;
-        if (subjectsRes.error) throw subjectsRes.error;
-
-        setClasses(classesRes.data || []);
-        setSubjects(subjectsRes.data || []);
-      }
+      setClasses(classesRes.data || []);
+      setSubjects(subjectsRes.data || []);
     } catch (error) {
       console.error("Error fetching academics data:", error);
       toast.error("Failed to load academic records");
@@ -92,8 +71,10 @@ export default function AcademicsPage() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (tenant?.id) {
+      fetchData();
+    }
+  }, [tenant?.id]);
 
   if (loading) {
     return (
@@ -108,102 +89,112 @@ export default function AcademicsPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Header */}
-      <header className="relative space-y-2 px-2">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 drop-shadow-sm">
-          Manage Classes <span className="text-primary">and Subjects</span>
-        </h1>
-        <p className="text-slate-500 font-medium tracking-tight max-w-2xl text-base">
-          Manage your school's classes, subjects, and core academic structure below.
-        </p>
+      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter text-slate-900 text-glow">
+            Manage Classes and Subjects
+          </h1>
+          <p className="text-muted-foreground mt-2 font-medium tracking-tight text-lg">
+            Architect and manage your institution's core academic structure.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => setIsClassModalOpen(true)} 
+            className="gradient-brand px-6 h-12 rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-transform text-white font-bold"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Add Class
+          </Button>
+        </div>
       </header>
 
       {/* Bento Stat Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-white/5 overflow-hidden">
-          <div className="size-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+        <div className="bg-white rounded-[2rem] p-7 group hover:translate-y-[-4px] transition-all duration-300 border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden relative">
+          <div className="size-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-4 mb-4 shadow-lg group-hover:scale-110 transition-transform relative z-10">
             <Users className="size-full text-white" />
           </div>
-          <div className="space-y-1">
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Active Classes</span>
-            <div className="text-3xl font-black">{classes.length}</div>
+          <div className="space-y-1 relative z-10">
+            <span className="text-[10px] font-black text-primary/70 uppercase tracking-[0.2em]">Active Classes</span>
+            <div className="text-4xl font-black tracking-tighter text-slate-900">{classes.length}</div>
           </div>
+          <div className="absolute -right-6 -bottom-6 size-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
         </div>
 
-        <div className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-white/5 overflow-hidden">
-          <div className="size-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3 mb-4 shadow-lg group-hover:scale-110 transition-transform">
+        <div className="bg-white rounded-[2rem] p-7 group hover:translate-y-[-4px] transition-all duration-300 border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden relative">
+          <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 mb-4 shadow-lg group-hover:scale-110 transition-transform relative z-10">
             <BookOpen className="size-full text-white" />
           </div>
-          <div className="space-y-1">
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Core Subjects</span>
-            <div className="text-3xl font-black">{subjects.length}</div>
+          <div className="space-y-1 relative z-10">
+            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Core Subjects</span>
+            <div className="text-4xl font-black tracking-tighter text-slate-900">{subjects.length}</div>
           </div>
+          <div className="absolute -right-6 -bottom-6 size-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
         </div>
 
-        <div className="lg:col-span-2 glass-panel rounded-[1.8rem] p-6 flex items-center justify-between border border-white/5 bg-white/5 group hover:bg-white/10 transition-colors cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 p-3 shadow-lg">
+        <div className="lg:col-span-2 bg-white rounded-[2rem] p-8 flex items-center justify-between border border-slate-200 shadow-xl shadow-slate-200/50 group hover:shadow-2xl transition-all relative overflow-hidden">
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="size-16 rounded-2xl bg-gradient-to-br from-orange-400 directly to-pink-500 p-4 shadow-lg shadow-orange-200">
               <Award className="size-full text-white" />
             </div>
             <div>
-              <h4 className="font-bold text-lg">Curriculum Audit</h4>
-              <p className="text-xs text-muted-foreground font-medium">Verify standard compliance</p>
+              <h4 className="font-black text-xl tracking-tighter text-slate-900 mb-1">Curriculum Audit</h4>
+              <p className="text-[11px] text-muted-foreground uppercase font-black tracking-[0.1em]">Verify Institutional Compliance</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/20">
-            <Plus className="size-5" />
+          <Button variant="ghost" size="icon" className="size-12 rounded-full hover:bg-orange-50 text-orange-500 relative z-10">
+            <Plus className="size-6" />
           </Button>
+          <div className="absolute -right-12 -top-12 size-48 bg-orange-500/5 rounded-full blur-3xl" />
         </div>
       </div>
 
       <Tabs defaultValue="classes" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-[400px] h-14 bg-white/5 border-white/10 p-1 rounded-2xl">
-          <TabsTrigger value="classes" className="rounded-xl data-[state=active]:bg-white/10 data-[state=active]:text-primary font-bold">Class Directory</TabsTrigger>
-          <TabsTrigger value="subjects" className="rounded-xl data-[state=active]:bg-white/10 data-[state=active]:text-primary font-bold">Subject Master</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px] h-14 bg-slate-100/50 border border-slate-200 p-1.5 rounded-2xl">
+          <TabsTrigger value="classes" className="rounded-xl font-bold tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Class Directory</TabsTrigger>
+          <TabsTrigger value="subjects" className="rounded-xl font-bold tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-emerald-600 transition-all">Subject Master</TabsTrigger>
         </TabsList>
 
         <TabsContent value="classes" className="mt-8">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 space-y-6">
             <div className="flex justify-between items-center px-2">
-              <h2 className="text-2xl font-black flex items-center gap-3">
+              <h2 className="text-2xl font-black flex items-center gap-3 text-slate-900">
                 <Users className="size-6 text-primary" />
                 Class Directory
               </h2>
-              <Button 
-                onClick={() => setIsClassModalOpen(true)} 
-                className="gradient-brand px-6 h-11 rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Class
-              </Button>
             </div>
             
-            <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/5">
+            <div className="rounded-2xl border border-slate-100 overflow-hidden bg-white">
               <Table>
-                <TableHeader className="bg-white/10">
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Class Name</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Assigned Faculty</TableHead>
-                    <TableHead className="text-right font-bold py-5 text-foreground h-auto pr-8">Actions</TableHead>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="border-slate-100 hover:bg-transparent">
+                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pl-8">Class Name</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5">Assigned Faculty</TableHead>
+                    <TableHead className="text-right text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pr-8">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {classes.length === 0 ? (
-                    <TableRow className="border-white/5">
-                      <TableCell colSpan={3} className="text-center py-20 text-muted-foreground font-medium italic">
+                    <TableRow className="border-slate-50">
+                      <TableCell colSpan={3} className="text-center py-24 text-muted-foreground font-medium italic">
                         No active classes found. Architect your first class to begin.
                       </TableCell>
                     </TableRow>
                   ) : (
                     classes.map((cls) => (
-                      <TableRow key={cls.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                        <TableCell className="font-bold text-lg py-5 pl-6 group-hover:text-primary transition-colors">{cls.name}</TableCell>
-                        <TableCell className="font-medium text-muted-foreground">
+                      <TableRow key={cls.id} className="border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                        <TableCell className="font-black text-xl py-6 pl-8 text-slate-900 group-hover:text-primary transition-colors">{cls.name}</TableCell>
+                        <TableCell className="font-bold">
                           {cls.profiles?.full_name ? (
-                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                              {cls.profiles.full_name}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                                {cls.profiles.full_name.charAt(0)}
+                              </div>
+                              <span className="text-slate-700">{cls.profiles.full_name}</span>
+                            </div>
                           ) : (
-                            <span className="opacity-40 italic">Not Assigned</span>
+                            <span className="text-slate-400 text-sm font-medium italic">Unassigned</span>
                           )}
                         </TableCell>
                         <TableCell className="text-right pr-6">
@@ -222,47 +213,47 @@ export default function AcademicsPage() {
         </TabsContent>
 
         <TabsContent value="subjects" className="mt-8">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 space-y-6">
             <div className="flex justify-between items-center px-2">
-              <h2 className="text-2xl font-black flex items-center gap-3">
+              <h2 className="text-2xl font-black flex items-center gap-3 text-slate-900">
                 <BookOpen className="size-6 text-emerald-500" />
                 Subject Master
               </h2>
               <Button 
                 onClick={() => setIsSubjectModalOpen(true)} 
                 variant="outline"
-                className="px-6 h-11 rounded-xl border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:border-emerald-500 transition-all hover:scale-105"
+                className="px-6 h-12 rounded-xl border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500 transition-all hover:scale-105 font-bold shadow-sm"
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 size-5" />
                 Add Subject
               </Button>
             </div>
             
-            <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/5">
+            <div className="rounded-2xl border border-slate-100 overflow-hidden bg-white">
               <Table>
-                <TableHeader className="bg-white/10">
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Subject Code</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Name</TableHead>
-                    <TableHead className="text-right font-bold py-5 text-foreground h-auto pr-8">Actions</TableHead>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="border-slate-100 hover:bg-transparent">
+                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pl-8">Subject Code</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5">Name</TableHead>
+                    <TableHead className="text-right text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pr-8">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {subjects.length === 0 ? (
-                    <TableRow className="border-white/5">
-                      <TableCell colSpan={3} className="text-center py-20 text-muted-foreground font-medium italic">
+                    <TableRow className="border-slate-50">
+                      <TableCell colSpan={3} className="text-center py-24 text-muted-foreground font-medium italic">
                         No subjects found in the curriculum master.
                       </TableCell>
                     </TableRow>
                   ) : (
                     subjects.map((sub) => (
-                      <TableRow key={sub.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                        <TableCell>
-                          <Badge variant="outline" className="font-mono bg-emerald-500/5 text-emerald-500 border-emerald-500/20 font-black tracking-widest px-3">
+                      <TableRow key={sub.id} className="border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                        <TableCell className="pl-8">
+                          <Badge variant="outline" className="font-mono bg-emerald-50 text-emerald-600 border-emerald-200 font-black tracking-widest px-3 py-1 text-xs">
                             {sub.code}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-bold text-lg py-5 group-hover:text-emerald-500 transition-colors">{sub.name}</TableCell>
+                        <TableCell className="font-black text-xl py-6 text-slate-900 group-hover:text-emerald-500 transition-colors">{sub.name}</TableCell>
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 transition-all"><Edit2 className="h-4 w-4" /></Button>
@@ -279,19 +270,19 @@ export default function AcademicsPage() {
         </TabsContent>
       </Tabs>
 
-      {schoolId && (
+      {tenant?.id && (
         <>
           <AddClassModal 
             isOpen={isClassModalOpen} 
             onClose={() => setIsClassModalOpen(false)} 
             onSuccess={fetchData} 
-            schoolId={schoolId}
+            schoolId={tenant.id}
           />
           <AddSubjectModal 
             isOpen={isSubjectModalOpen} 
             onClose={() => setIsSubjectModalOpen(false)} 
             onSuccess={fetchData} 
-            schoolId={schoolId}
+            schoolId={tenant.id}
           />
         </>
       )}

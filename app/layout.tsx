@@ -9,14 +9,14 @@ const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
   display: 'swap',
-  preload: false,
+  weight: ['400', '500', '600', '700', '800', '900'],
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta',
   display: 'swap',
-  preload: false,
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
