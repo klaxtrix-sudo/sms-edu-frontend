@@ -2,31 +2,23 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 
-// The resolveTenantKeys logic has been moved to @/lib/supabase/tenant-resolver.ts 
-// for safe shared use between middleware and server components.
-
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const host = request.headers.get('host');
 
+  // 1. Static asset bypass
   if (url.pathname.includes('.') || url.pathname.startsWith('/_next')) {
     return NextResponse.next();
   }
 
-   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-   const RESERVED_PATHS = ['/login', '/register', '/console', '/api', '/home'];
-   const isReservedPath = RESERVED_PATHS.some(path => url.pathname.startsWith(path));
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+  
+  // 2. Tenant Detection
+  const isTenantSpace = host && host !== rootDomain && host !== `www.${rootDomain}`;
+  const subdomain = isTenantSpace ? host.split(`.${rootDomain}`)[0] : null;
 
-   // A tenant space is any host that is NOT the root domain and NOT 'www'
-   const isTenantSpace = host && host !== rootDomain && host !== `www.${rootDomain}`;
-   const subdomain = isTenantSpace ? host.split(`.${rootDomain}`)[0] : null;
-
-   // If we are on the root domain and hitting a reserved path, don't treat it as a tenant
-   if (!isTenantSpace && isReservedPath) {
-     return NextResponse.next();
-   }
-
-   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // 3. Supabase Key Resolution (Tenant-aware)
+  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (isTenantSpace && subdomain) {
@@ -34,52 +26,50 @@ export async function middleware(request: NextRequest) {
     if (tenantKeys) {
       supabaseUrl = tenantKeys.supabaseUrl;
       supabaseAnonKey = tenantKeys.supabaseAnonKey;
-      console.log(`[Klaxtrix Middleware] Routing to tenant: ${subdomain} (custom Supabase)`);
-    } else {
-      console.warn(`[Klaxtrix Middleware] Tenant "${subdomain}" not found. Using master keys as fallback.`);
     }
   }
 
-  // 1. Initial response
+  // 4. Initial response / Rewrite (Internal mapping)
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
-  // 2. Tenant Rewriting (if applicable)
   if (isTenantSpace && subdomain) {
     response = NextResponse.rewrite(
       new URL(`/${subdomain}${url.pathname === '/' ? '' : url.pathname}`, request.url)
     );
   }
 
-  // 3. Update Session (Cookie management)
+  // 5. Mandatory Session Update (Cookie management)
   const { supabase, response: updatedResponse } = await updateSession(request, supabaseUrl, supabaseAnonKey, response);
 
-  // 4. Authenticated Redirection - Automatically send logged-in users away from /login
-  if (url.pathname === '/login') {
+  // 6. Security Guard: Protect Dashboard and Console routes
+  const isProtectedPath = url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/console');
+  if (isProtectedPath) {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // Prioritize role from metadata (set during user creation) for instant redirection.
-      // If missing, default to student dashboard.
-      const role = user.user_metadata?.role || 'student';
-      
-      console.log(`[Auto-Navigator] Authenticated session for ${user.email} (${role}) detected. Redirecting to dashboard.`);
-      
-      // Redirect to the appropriate role-based dashboard
-      return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
+    if (!user) {
+      console.log(`[Security Guard] Unauthenticated access to ${url.pathname}. Redirecting to /login.`);
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
-  // 5. Security Guard - Protect Dashboard and Console routes
-  const isDashboardPath = url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/console');
-  if (isDashboardPath) {
+  // 7. Auto-Navigation: Authenticated users away from /login
+  if (url.pathname === '/login') {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log(`[Security Shield] Unauthenticated access attempt to ${url.pathname}. Redirecting to /login.`);
-      const loginUrl = new URL('/login', request.url);
-      return NextResponse.redirect(loginUrl);
+    if (user) {
+      const role = user.user_metadata?.role || 'student';
+      const redirectUrl = new URL(`/dashboard/${role}`, request.url);
+      
+      console.log(`[Auto-Navigator] Authenticated session for ${user.email} (${role}). Redirecting to dashboard.`);
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      
+      // Crucial: Copy session cookies to the redirect response
+      // Use set on redirectResponse with values from updatedResponse
+      updatedResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie);
+      });
+      
+      return redirectResponse;
     }
   }
 
