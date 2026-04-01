@@ -34,8 +34,10 @@ import {
 import { AddClassModal } from "@/components/admin/add-class-modal";
 import { AddSubjectModal } from "@/components/admin/add-subject-modal";
 import { getClasses, getSubjects } from "@/app/actions/admin-actions";
+import { EditClassModal } from "@/components/admin/edit-class-modal";
+import { DeleteClassModal } from "@/components/admin/delete-class-modal";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 export default function AcademicsPage() {
@@ -45,7 +47,10 @@ export default function AcademicsPage() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+  const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
+  const [isDeleteClassModalOpen, setIsDeleteClassModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
   const supabase = createTenantClient();
 
   const fetchData = async () => {
@@ -169,8 +174,8 @@ export default function AcademicsPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="border-slate-100 hover:bg-transparent">
-                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pl-8">Class Name</TableHead>
-                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5">Assigned Faculty</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pl-8">Class</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5">Assigned Teacher</TableHead>
                     <TableHead className="text-right text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 py-5 pr-8">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -199,8 +204,35 @@ export default function AcademicsPage() {
                         </TableCell>
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all"><Edit2 className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"><Trash2 className="h-4 w-4" /></Button>
+                            <Button 
+                              onClick={() => {
+                                setSelectedClass({
+                                  id: cls.id,
+                                  name: cls.name,
+                                  teacherId: cls.class_teacher_id
+                                });
+                                setIsEditClassModalOpen(true);
+                              }}
+                              variant="ghost" 
+                              size="icon" 
+                              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              onClick={() => {
+                                setSelectedClass({
+                                  id: cls.id,
+                                  name: cls.name
+                                });
+                                setIsDeleteClassModalOpen(true);
+                              }}
+                              variant="ghost" 
+                              size="icon" 
+                              className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -278,6 +310,22 @@ export default function AcademicsPage() {
             onSuccess={fetchData} 
             schoolId={tenant.id}
           />
+
+          <EditClassModal 
+            isOpen={isEditClassModalOpen} 
+            onClose={() => setIsEditClassModalOpen(false)} 
+            onSuccess={fetchData} 
+            schoolId={tenant.id}
+            initialData={selectedClass || { id: "", name: "" }}
+          />
+
+          <DeleteClassModal 
+            isOpen={isDeleteClassModalOpen} 
+            onClose={() => setIsDeleteClassModalOpen(false)} 
+            onSuccess={fetchData}
+            classData={selectedClass || { id: "", name: "" }}
+          />
+
           <AddSubjectModal 
             isOpen={isSubjectModalOpen} 
             onClose={() => setIsSubjectModalOpen(false)} 

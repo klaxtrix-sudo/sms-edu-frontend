@@ -377,6 +377,67 @@ export async function saveResults(resultsData: any[], subdomain: string) {
   }
 }
 
+export async function updateClass(classId: string, data: any, subdomain: string) {
+  const { name, teacherId } = data;
+  if (!subdomain) return { error: 'Subdomain is required to update a class.' };
+
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
+      .from('classes')
+      .update({
+        name,
+        class_teacher_id: teacherId || null,
+      })
+      .eq('id', classId);
+
+    if (error) throw error;
+
+    revalidatePath('/dashboard/admin/academics');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to update class' };
+  }
+}
+
+export async function deleteClass(classId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to delete a class.' };
+
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
+      .from('classes')
+      .delete()
+      .eq('id', classId);
+
+    if (error) throw error;
+
+    revalidatePath('/dashboard/admin/academics');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to delete class' };
+  }
+}
+
+export async function deleteSubject(subjectId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required to delete a subject.' };
+
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await (tenantSupabase as any)
+      .from('subjects')
+      .delete()
+      .eq('id', subjectId);
+
+    if (error) throw error;
+
+    revalidatePath('/dashboard/admin/academics');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to delete subject' };
+  }
+}
+
 
 export async function completeOnboarding(userId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required.' };
