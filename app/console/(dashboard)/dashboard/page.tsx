@@ -273,7 +273,7 @@ export default function ConsoleDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4 font-mono text-cyan-400 text-xs">
-                          {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'solabacademy.com.ng'}
+                          {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'}
                         </td>
                         <td className="px-6 py-4">
                           <Badge variant="outline" className={cn(

@@ -194,7 +194,7 @@ export default function InfrastructurePage() {
                <p className="text-indigo-400">[{new Date().toLocaleTimeString()}] - SUCCESS: Central Registry link verified (8ms latency).</p>
                <p className="text-slate-600">[{new Date().toLocaleTimeString()}] - INFO: Polling regional school matrix nodes...</p>
                <p className="text-cyan-400">[{new Date().toLocaleTimeString()}] - SUCCESS: Institutional Matrix (MongoDB) handshake complete.</p>
-               <p className="text-slate-600">[{new Date().toLocaleTimeString()}] - INFO: Refreshing cloud certificates for *.solabacademy.com.ng</p>
+               <p className="text-slate-600">[{new Date().toLocaleTimeString()}] - INFO: Refreshing cloud certificates for *.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'}</p>
                <p className="text-slate-600 opacity-50">[{new Date().toLocaleTimeString()}] - DEBUG: Memory footprint within nominal parameters ({health?.resources.memory}).</p>
                <div className="animate-pulse flex items-center gap-2 text-indigo-500">
                   <span className="block w-2 h-4 bg-indigo-500" />

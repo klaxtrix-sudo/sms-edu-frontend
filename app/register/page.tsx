@@ -306,7 +306,7 @@ export default function RegisterPage() {
                       onChange={e => update('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                     />
                     <span className="text-xl font-bold text-muted-foreground">
-                      .{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'solabacademy.com.ng'}
+                      .{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground flex items-center gap-2">

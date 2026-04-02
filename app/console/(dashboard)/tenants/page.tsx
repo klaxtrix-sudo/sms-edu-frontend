@@ -211,7 +211,7 @@ export default function TenantManagementPage() {
                   <td className="px-6 py-6">
                     <div className="flex items-center gap-2 group/link cursor-pointer" onClick={() => copyToClipboard(node.subdomain, 'Subdomain')}>
                        <div className="font-mono text-[11px] text-cyan-400 font-bold bg-cyan-400/5 px-2 py-0.5 rounded border border-cyan-400/10 group-hover/link:bg-cyan-400/10 transition-colors">
-                         {node.subdomain}.klaxtrix.com
+                         {node.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'}
                        </div>
                     </div>
                   </td>

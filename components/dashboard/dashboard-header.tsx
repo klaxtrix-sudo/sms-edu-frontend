@@ -62,7 +62,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             <div className="flex flex-col space-y-1 text-sm">
               <p className="font-medium leading-none truncate">{schoolName}</p>
               <p className="text-xs leading-none text-muted-foreground truncate">
-                {tenant?.subdomain}.solabacademy.com.ng
+                {tenant?.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'}
               </p>
             </div>
           </DropdownMenuLabel>

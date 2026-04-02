@@ -21,7 +21,7 @@ export async function updateSession(
         get(name: string) { return request.cookies.get(name)?.value; },
         set(name: string, value: string, options: CookieOptions) {
           // Cross-subdomain session persistence:
-          // Local dev needs ".localhost", production needs ".solabacademy.com.ng"
+          // Local dev needs ".localhost", production needs the root domain (e.g., ".klaxtrix.site")
           const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
           const cookieDomain = rootDomain.split(':')[0];
           const isLocal = cookieDomain === 'localhost';
