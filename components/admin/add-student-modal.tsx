@@ -29,7 +29,7 @@ import { toast } from "sonner";
 
 const studentSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().optional().or(z.literal("")),
   admissionNo: z.string().min(3, "Admission number is required"),
   classId: z.string().min(1, "Class is required"),
   gender: z.enum(["male", "female"]),
@@ -49,6 +49,9 @@ interface AddStudentModalProps {
 export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomain }: AddStudentModalProps) {
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
+  const [parents, setParents] = useState<any[]>([]);
+  const [parentSuggestions, setParentSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const supabase = createClient();
 
   const form = useForm<StudentFormValues>({
@@ -63,6 +66,8 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
     },
   });
 
+  const emailValue = form.watch("email") || "";
+
   useEffect(() => {
     if (isOpen && schoolId) {
       const fetchClasses = async () => {
@@ -73,9 +78,31 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
           .order("name");
         setClasses(data || []);
       };
+      const fetchParents = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("role", "parent")
+          .eq("school_id", schoolId)
+          .eq("is_active", true);
+        setParents(data || []);
+      };
       fetchClasses();
+      fetchParents();
     }
   }, [isOpen, schoolId, supabase]);
+
+  useEffect(() => {
+    if (emailValue.trim() === "") {
+      setParentSuggestions([]);
+      return;
+    }
+    const filtered = parents.filter(p => 
+      p.email?.toLowerCase().includes(emailValue.toLowerCase()) || 
+      p.full_name?.toLowerCase().includes(emailValue.toLowerCase())
+    );
+    setParentSuggestions(filtered);
+  }, [emailValue, parents]);
 
   const onSubmit = async (values: StudentFormValues) => {
     setLoading(true);
@@ -119,12 +146,52 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
                 <p className="text-xs text-destructive">{form.formState.errors.fullName.message}</p>
               )}
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="email">Parent Email (for login)</Label>
-              <Input id="email" type="email" {...form.register("email")} placeholder="parent@example.com" />
-              <p className="text-[10px] text-muted-foreground italic">Students log in using their parent's email initially.</p>
+            <div className="col-span-2 space-y-2 relative">
+              <Label htmlFor="email">Parent Email (Optional)</Label>
+              <Input 
+                id="email" 
+                placeholder="parent@example.com" 
+                value={form.watch("email") || ""}
+                onChange={(e) => {
+                  form.setValue("email", e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    const val = form.getValues("email")?.trim() || "";
+                    if (val !== "") {
+                      const match = parents.find(p => p.email?.toLowerCase() === val.toLowerCase());
+                      if (!match) {
+                        toast.error("Parent email not registered. Field cleared.", {
+                          description: "Children must be linked to registered parents. Leave blank if parent is not yet registered."
+                        });
+                        form.setValue("email", "");
+                      }
+                    }
+                    setShowSuggestions(false);
+                  }, 250);
+                }}
+              />
+              <p className="text-[10px] text-muted-foreground italic">Students log in using their admission number. Parent link is optional.</p>
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+              )}
+              {showSuggestions && parentSuggestions.length > 0 && (
+                <div className="absolute z-50 w-full bg-popover border border-border rounded-xl shadow-xl max-h-48 overflow-y-auto mt-1">
+                  {parentSuggestions.map((p) => (
+                    <div
+                      key={p.email}
+                      onClick={() => {
+                        form.setValue("email", p.email);
+                        setShowSuggestions(false);
+                      }}
+                      className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-xs flex justify-between items-center"
+                    >
+                      <span className="font-semibold">{p.full_name}</span>
+                      <span className="text-muted-foreground">{p.email}</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
             <div className="space-y-2">

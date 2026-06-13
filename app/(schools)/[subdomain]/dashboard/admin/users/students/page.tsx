@@ -21,23 +21,59 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { 
   UserPlus, 
   Search, 
   MoreHorizontal, 
   GraduationCap,
   Loader2,
-  Filter
+  Key
 } from "lucide-react";
 import { AddStudentModal } from "@/components/admin/add-student-modal";
+import { resetStudentPassword } from "@/app/actions/admin-actions";
 import { toast } from "sonner";
 
 export default function StudentsPage() {
   const { subdomain } = useParams();
   const [students, setStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
+  
+  // Password Reset State
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<{ id: string, name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const studentsPerPage = 20;
+  
   const supabase = createClient();
 
   const fetchData = async () => {
@@ -54,11 +90,20 @@ export default function StudentsPage() {
       if (profile?.school_id) {
         setSchoolId(profile.school_id as string);
         
+        // Fetch classes
+        const { data: classesData } = await supabase
+          .from("classes")
+          .select("id, name")
+          .eq("school_id", profile.school_id)
+          .order("name");
+        setClasses(classesData || []);
+
         // Fetch students with their profile and class info
         const { data, error } = await (supabase as any)
           .from("students")
           .select(`
             id,
+            user_id,
             admission_no,
             gender,
             profiles:user_id (
@@ -66,6 +111,7 @@ export default function StudentsPage() {
               phone
             ),
             classes:class_id (
+              id,
               name
             )
           `)
@@ -87,10 +133,54 @@ export default function StudentsPage() {
     fetchData();
   }, []);
 
-  const filteredStudents = students.filter(s => 
-    s.profiles?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.admission_no.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedClassId]);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent || !newPassword || newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    
+    setResetting(true);
+    try {
+      const result = await resetStudentPassword(
+        selectedStudent.id,
+        newPassword,
+        subdomain as string
+      );
+      
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Password updated successfully for ${selectedStudent.name}`);
+        setIsResetPasswordOpen(false);
+        setNewPassword("");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reset password");
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.profiles?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.admission_no.toLowerCase().includes(searchQuery.toLowerCase());
+      
+    const matchesClass = selectedClassId === "all" || 
+      s.classes?.id === selectedClassId || 
+      (selectedClassId === "unassigned" && !s.classes);
+      
+    return matchesSearch && matchesClass;
+  });
+
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
 
   return (
     <div className="space-y-6">
@@ -116,11 +206,21 @@ export default function StudentsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-10 flex-1 sm:flex-none">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
-            </Button>
+          <div className="flex items-center gap-2 w-full sm:max-w-xs">
+            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+              <SelectTrigger className="h-10 w-full">
+                <SelectValue placeholder="Filter by class" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -146,7 +246,7 @@ export default function StudentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.map((student) => (
+                  {currentStudents.map((student) => (
                     <TableRow key={student.id} className="hover:bg-accent/50 transition-colors">
                       <TableCell className="font-mono text-xs font-semibold">
                         {student.admission_no}
@@ -168,14 +268,61 @@ export default function StudentsPage() {
                         {student.gender || "—"}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-[160px]">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedStudent({ id: student.user_id, name: student.profiles?.full_name || "Student" });
+                                setIsResetPasswordOpen(true);
+                              }}
+                              className="text-cyan-500 hover:text-cyan-600 focus:text-cyan-600 font-semibold cursor-pointer"
+                            >
+                              Reset Password
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              
+              {/* Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between p-4 border-t bg-muted/20">
+                  <div className="text-xs text-muted-foreground font-medium">
+                    Showing {indexOfFirstStudent + 1} to {Math.min(indexOfLastStudent, filteredStudents.length)} of {filteredStudents.length} students
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 rounded-lg"
+                    >
+                      Previous
+                    </Button>
+                    <div className="text-xs font-semibold px-2">
+                      Page {currentPage} of {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="h-8 rounded-lg"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -190,6 +337,46 @@ export default function StudentsPage() {
           subdomain={subdomain as string}
         />
       )}
+
+      {/* Change Password Dialog */}
+      <Dialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleResetPassword}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Key className="w-5 h-5 text-cyan-500" />
+                Change Student Password
+              </DialogTitle>
+              <DialogDescription>
+                Assign a new login password for {selectedStudent?.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+                <p className="text-[10px] text-muted-foreground">Password must be at least 6 characters long.</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsResetPasswordOpen(false)} disabled={resetting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={resetting}>
+                {resetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Password
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

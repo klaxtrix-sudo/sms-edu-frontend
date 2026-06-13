@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +10,7 @@ import { useTenant } from '@/components/providers/tenant-provider';
 import { Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
+  identifier: z.string().min(3, 'Email or Admission Number is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -18,6 +18,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const { subdomain } = useParams() as { subdomain: string };
   const { supabase, isLoading: isTenantLoading, error: tenantError } = useTenant();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const email = values.email.trim();
+    let email = values.identifier.trim();
     const password = values.password.trim();
 
     // TEMPORARY: Admin Login Bypass for "Executive Edition" PoC Review
@@ -47,6 +48,12 @@ export function LoginForm() {
       console.log('PoC Bypass active for admin user');
       router.push('/dashboard/admin');
       return;
+    }
+
+    // STUDENT LOGIN DETECTION: If identifier is an admission number (does not contain @)
+    if (!email.includes('@')) {
+      const cleanedAdmissionNo = email.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      email = `${cleanedAdmissionNo}@${subdomain.toLowerCase()}.klaxtrix.internal`;
     }
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -79,16 +86,16 @@ export function LoginForm() {
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Email or Admission Number</label>
             <input
-              {...register('email')}
-              type="email"
-              autoComplete="email"
+              {...register('identifier')}
+              type="text"
+              autoComplete="username"
               disabled={!!tenantError}
-              placeholder="you@school.edu.ng"
+              placeholder="you@school.edu.ng or STD/2026/001"
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
             />
-            {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
+            {errors.identifier && <p className="text-destructive text-xs mt-1">{errors.identifier.message}</p>}
           </div>
 
           <div>

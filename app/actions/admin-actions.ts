@@ -243,7 +243,7 @@ export async function createTeacher(data: CreateUserData) {
 
 export async function createStudent(data: any) {
   const { 
-    email, 
+    email, // This represents parentEmail from the form
     password, 
     fullName, 
     admissionNo,
@@ -259,22 +259,43 @@ export async function createStudent(data: any) {
     // 1. Initialize Tenant Admin Client
     const tenantSupabase = await createTenantAdminClient(subdomain);
 
-    // 2. Create Auth User in TENANT project
+    // 2. Lookup Parent Profile if email is provided
+    let parentId = null;
+    if (email) {
+      const { data: parentProfile } = await (tenantSupabase as any)
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .eq('role', 'parent')
+        .single();
+      
+      if (parentProfile) {
+        parentId = parentProfile.id;
+      }
+    }
+
+    // 3. Generate deterministic dummy email for student login
+    const cleanedAdmissionNo = admissionNo.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const studentDummyEmail = `${cleanedAdmissionNo}@${subdomain.toLowerCase()}.klaxtrix.internal`;
+
+    // 4. Create Auth User in TENANT project
     const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
-      email,
+      email: studentDummyEmail,
       password,
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
         role: 'student',
-        school_id: schoolId
+        school_id: schoolId,
+        admission_no: admissionNo,
+        parent_email: email || null
       }
     });
 
     if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
     if (user) {
-      // 3. Create Student record in TENANT project
+      // 5. Create Student record in TENANT project (with parent_id link)
       const { error: studentError } = await (tenantSupabase as any)
         .from('students')
         .insert({
@@ -282,19 +303,20 @@ export async function createStudent(data: any) {
           school_id: schoolId,
           class_id: classId,
           admission_no: admissionNo,
-          gender: gender
+          gender: gender,
+          parent_id: parentId
         });
 
       if (studentError) return { error: `Tenant Data Error: ${studentError.message}` };
 
-      // 4. Upsert profile in TENANT project — tenant is the single source of truth.
+      // 6. Upsert profile in TENANT project
       const { error: profileError } = await (tenantSupabase as any)
         .from('profiles')
         .upsert({
           id: user.id,
           school_id: schoolId,
           full_name: fullName,
-          email,
+          email: studentDummyEmail,
           role: 'student',
           is_active: true,
         });
@@ -308,6 +330,21 @@ export async function createStudent(data: any) {
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred during student provisioning" };
+  }
+}
+
+export async function resetStudentPassword(studentUserId: string, newPassword: string, subdomain: string) {
+  if (!subdomain) return { error: "Subdomain is required to reset student password." };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { error } = await tenantSupabase.auth.admin.updateUserById(studentUserId, {
+      password: newPassword
+    });
+
+    if (error) return { error: `Tenant Auth Error: ${error.message}` };
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message || "Failed to reset student password." };
   }
 }
 

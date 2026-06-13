@@ -20,7 +20,16 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   // Allow cross-origin requests from *.localhost subdomains (tenant portals in dev)
-  allowedDevOrigins: ['*.localhost:3000', 'localhost:3000', '*.localhost'],
+  allowedDevOrigins: [
+    'localhost:3000',
+    'glorydays.localhost:3000',
+    'glorydays.localhost',
+    'localhost',
+    '*.localhost:3000',
+    '*.localhost',
+    'http://localhost:3000',
+    'http://glorydays.localhost:3000'
+  ],
   experimental: {
     serverComponentsExternalPackages: [],
     serverActions: {
