@@ -207,9 +207,9 @@ export default function ConsoleLoginPage() {
 
                 {/* Unauthorized Warning banner embedded inside card */}
                 <div className="flex gap-2.5 items-center justify-center p-3.5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400/80">
-                   <Zap className="w-4 h-4 text-red-400 shrink-0" />
+                   <Shield className="w-4 h-4 text-red-400 shrink-0" />
                    <p className="text-[10px] font-bold text-red-200/90 uppercase tracking-wider leading-relaxed text-center">
-                      Unauthorized access is logged and strictly prohibited.
+                      Unauthorized access attempts are logged and monitored.
                    </p>
                 </div>
 
