@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +54,7 @@ export default function TeacherAttendancePage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   useEffect(() => {
     fetchInitialData();

@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
+import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -50,7 +50,7 @@ export function AddFeeStructureModal({ onSuccess }: AddFeeStructureModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
-  const supabase = createClient();
+  const supabase = createTenantClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

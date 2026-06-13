@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { createTenantClient } from "@/lib/supabase/client";
 import { 
   Card, 
@@ -40,6 +41,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export default function AdminResultsPage() {
+  const params = useParams();
+  const subdomain = params.subdomain as string;
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
@@ -202,7 +206,7 @@ export default function AdminResultsPage() {
         remark: results[student.id]?.remark || "Fail"
       }));
 
-      const result = await saveResults(dataToSave);
+      const result = await saveResults(dataToSave, subdomain);
       if (result.error) throw new Error(result.error);
       
       toast.success("Results updated successfully!");
