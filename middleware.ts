@@ -43,8 +43,8 @@ export async function middleware(request: NextRequest) {
   // 5. Mandatory Session Update (Cookie management)
   const { supabase, response: updatedResponse } = await updateSession(request, supabaseUrl, supabaseAnonKey, response);
 
-  // 6. Security Guard: Protect Dashboard and Console routes
-  const isProtectedPath = url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/console');
+  // 6. Security Guard: Protect Dashboard routes (Console routes use custom JWT auth)
+  const isProtectedPath = url.pathname.startsWith('/dashboard');
   if (isProtectedPath) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
