@@ -12,6 +12,13 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { getBackendUrl } from '@/lib/utils';
 import { setConsoleToken, getConsoleToken, verifyConsoleSession } from '@/lib/console-auth';
+import { Space_Grotesk } from 'next/font/google';
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-space-grotesk',
+});
 
 export default function ConsoleLoginPage() {
   const [credentials, setCredentials] = useState({ accessId: '', masterKey: '' });
@@ -79,7 +86,7 @@ export default function ConsoleLoginPage() {
 
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className={`${spaceGrotesk.className} dark min-h-screen bg-[#050505] flex items-center justify-center`}>
          <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Authorizing Session...</span>
@@ -89,95 +96,139 @@ export default function ConsoleLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Ambient Glows */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-500/10 blur-[150px] -z-10 rounded-full animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/5 blur-[120px] -z-10 rounded-full" />
+    <main className={`${spaceGrotesk.className} dark min-h-screen bg-[#050505] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans`}>
+      {/* Faint Cyber Dot Grid */}
+      <div 
+        className="absolute inset-0 opacity-[0.06] pointer-events-none -z-10" 
+        style={{
+          backgroundImage: 'radial-gradient(rgba(6, 182, 212, 0.4) 1px, transparent 0)',
+          backgroundSize: '24px 24px'
+        }}
+      />
       
-      <div className="w-full max-w-md space-y-8 relative z-10">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/5 blur-[150px] -z-10 rounded-full pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] -z-10 rounded-full pointer-events-none animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/5 blur-[120px] -z-10 rounded-full pointer-events-none" />
+      
+      <div className="w-full max-w-md flex flex-col items-center justify-center space-y-6 relative z-10 my-auto">
         <div className="flex flex-col items-center text-center space-y-4">
+           {/* Logo with breathing cyan pulse glow */}
            <motion.div 
              initial={{ scale: 0.8, opacity: 0 }}
-             animate={{ scale: 1, opacity: 1 }}
-             className="w-24 h-24 rounded-[2rem] bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-[0_0_30px_-10px_rgba(6,182,212,0.5)]"
+             animate={{ 
+               scale: 1, 
+               opacity: 1,
+               boxShadow: [
+                 "0 0 20px -5px rgba(6,182,212,0.3)",
+                 "0 0 35px 2px rgba(6,182,212,0.55)",
+                 "0 0 20px -5px rgba(6,182,212,0.3)"
+               ]
+             }}
+             transition={{
+               scale: { duration: 0.4 },
+               opacity: { duration: 0.4 },
+               boxShadow: {
+                 duration: 4,
+                 repeat: Infinity,
+                 ease: "easeInOut"
+               }
+             }}
+             className="w-28 h-28 rounded-[2rem] bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400"
            >
-              <Shield className="w-12 h-12" />
+              <Shield className="w-14 h-14" />
            </motion.div>
-           <div className="space-y-1">
-              <h1 className="text-3xl font-heading font-black tracking-tighter text-white uppercase tracking-[0.05em]">KLAXTRIX</h1>
-              <p className="text-[10px] font-bold text-cyan-500 tracking-[0.4em] uppercase">Admin Login</p>
+           
+           <div className="space-y-2 flex flex-col items-center">
+              <h1 className="text-3xl font-extrabold tracking-widest text-white uppercase font-heading">KLAXTRIX</h1>
+              <p className="text-[10px] font-bold text-cyan-400 tracking-[0.4em] uppercase">Secure Infrastructure Platform</p>
+              
+              {/* Security Status Indicator */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-2">
+                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                 <span className="text-[9px] font-bold tracking-[0.2em] uppercase">SYSTEM STATUS: OPERATIONAL</span>
+              </div>
            </div>
         </div>
 
-        <Card className="p-8 bg-[#0c0c0c]/50 border-slate-800/50 glass-card">
-           <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-2">
-                 <Label htmlFor="accessId" className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Username</Label>
-                 <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                       <Lock className="w-4 h-4" />
-                    </div>
-                    <Input 
-                      id="accessId" 
-                      placeholder="Enter Username" 
-                      className="h-14 bg-slate-900/50 border-slate-800 rounded-2xl pl-12 text-slate-200 focus:border-cyan-500/50 focus:ring-cyan-500/10 transition-all font-semibold"
-                      value={credentials.accessId}
-                      onChange={e => setCredentials({...credentials, accessId: e.target.value})}
-                    />
-                 </div>
-              </div>
+        {/* Card Fade-in Animation */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="w-full"
+        >
+          <Card className="w-full p-8 bg-[#0f172a]/70 backdrop-blur-[20px] border border-cyan-500/15 rounded-3xl shadow-[0_0_50px_-12px_rgba(6,182,212,0.15)] relative overflow-hidden">
+             <form onSubmit={handleLogin} className="space-y-6">
+                <div className="space-y-2">
+                   <Label htmlFor="accessId" className="text-xs font-semibold text-slate-400 uppercase tracking-widest pl-1">Username</Label>
+                   <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                         <Lock className="w-4 h-4" />
+                      </div>
+                      <Input 
+                        id="accessId" 
+                        placeholder="Enter Username" 
+                        className="h-14 bg-[#111827] border-[#334155] rounded-2xl pl-12 text-slate-200 placeholder:text-slate-500 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/15 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none transition-all duration-200 font-medium"
+                        value={credentials.accessId}
+                        onChange={e => setCredentials({...credentials, accessId: e.target.value})}
+                      />
+                   </div>
+                </div>
 
-              <div className="space-y-2">
-                 <Label htmlFor="masterKey" className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Password</Label>
-                 <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                       <Key className="w-4 h-4" />
-                    </div>
-                    <Input 
-                      id="masterKey" 
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••" 
-                      className="h-14 bg-slate-900/50 border-slate-800 rounded-2xl pl-12 pr-12 text-slate-200 focus:border-cyan-500/50 focus:ring-cyan-500/10 transition-all"
-                      value={credentials.masterKey}
-                      onChange={e => setCredentials({...credentials, masterKey: e.target.value})}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-400 transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                 </div>
-              </div>
+                <div className="space-y-2">
+                   <Label htmlFor="masterKey" className="text-xs font-semibold text-slate-400 uppercase tracking-widest pl-1">Password</Label>
+                   <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                         <Key className="w-4 h-4" />
+                      </div>
+                      <Input 
+                        id="masterKey" 
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••" 
+                        className="h-14 bg-[#111827] border-[#334155] rounded-2xl pl-12 pr-12 text-slate-200 placeholder:text-slate-500 focus:border-[#06b6d4] focus:ring-4 focus:ring-[#06b6d4]/15 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none transition-all duration-200 font-medium"
+                        value={credentials.masterKey}
+                        onChange={e => setCredentials({...credentials, masterKey: e.target.value})}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-400 transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                   </div>
+                </div>
 
-              <Button 
-                type="submit"
-                disabled={isAuthenticating}
-                className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-[0_0_25px_-5px_rgba(6,182,212,0.6)] group transition-all"
-              >
-                 {isAuthenticating ? (
-                   <Loader2 className="w-5 h-5 animate-spin" />
-                 ) : (
-                   <span className="flex items-center gap-2 group-hover:gap-4 transition-all">
-                      Login <ArrowRight className="w-5 h-5" />
-                   </span>
-                 )}
-              </Button>
-           </form>
-        </Card>
+                {/* Unauthorized Warning banner embedded inside card */}
+                <div className="flex gap-2.5 items-center justify-center p-3.5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400/80">
+                   <Zap className="w-4 h-4 text-red-400 shrink-0" />
+                   <p className="text-[10px] font-bold text-red-200/90 uppercase tracking-wider leading-relaxed text-center">
+                      Unauthorized access is logged and strictly prohibited.
+                   </p>
+                </div>
 
-        <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 flex gap-4 items-center">
-           <Zap className="w-5 h-5 text-red-400 shrink-0" />
-           <p className="text-[11px] font-bold text-red-200 uppercase tracking-wider leading-relaxed">
-              Unauthorized access is logged and strictly prohibited.
-           </p>
-        </div>
+                <Button 
+                  type="submit"
+                  disabled={isAuthenticating}
+                  className="w-full h-14 bg-gradient-to-r from-[#06b6d4] to-[#0891b2] hover:from-[#0891b2] hover:to-[#06b6d4] text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 hover:shadow-[0_0_25px_rgba(6,182,212,0.45)] group"
+                >
+                   {isAuthenticating ? (
+                     <Loader2 className="w-5 h-5 animate-spin" />
+                   ) : (
+                     <span className="flex items-center justify-center gap-2 w-full">
+                        Login <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                     </span>
+                   )}
+                </Button>
+             </form>
+          </Card>
+        </motion.div>
       </div>
     </main>
   );
