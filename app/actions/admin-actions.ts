@@ -118,17 +118,21 @@ export async function updateTeacher(userId: string, data: any, subdomain: string
   }
 }
 
-export async function getTeachers(schoolId: string, subdomain: string) {
+export async function getTeachers(schoolId: string, subdomain: string, includeArchived: boolean = false) {
   if (!subdomain) return { error: 'Subdomain is required to fetch teachers.' };
   try {
     const tenantSupabase = await createTenantAdminClient(subdomain);
-    const { data, error } = await (tenantSupabase as any)
+    let query = (tenantSupabase as any)
       .from('profiles')
       .select('*')
       .eq('role', 'teacher')
-      .eq('school_id', schoolId)
-      .eq('is_archived', false) // Only get active teachers for assignment
-      .order('full_name');
+      .eq('school_id', schoolId);
+
+    if (!includeArchived) {
+      query = query.eq('is_archived', false);
+    }
+
+    const { data, error } = await query.order('full_name');
 
     if (error) throw error;
     return { success: true, data };

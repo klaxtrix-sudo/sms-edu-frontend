@@ -94,7 +94,7 @@ export default function TeachersPage() {
   const fetchTeachers = async () => {
     if (!tenant?.id) return;
     setIsLoading(true);
-    const result = await getTeachers(tenant.id, subdomain as string);
+    const result = await getTeachers(tenant.id, subdomain as string, true);
     if (result.success) {
       setTeachers(result.data || []);
     } else {
