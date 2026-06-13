@@ -130,106 +130,71 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
           <Plus className="mr-2 size-5" /> Design Classwork
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl">
-        <DialogHeader className="space-y-2">
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl">
+        <DialogHeader className="p-8 pb-0 space-y-2">
           <DialogTitle className="text-4xl font-black tracking-tighter text-primary">New Assignment</DialogTitle>
           <DialogDescription className="text-base font-medium">Outline the tasks, set the deadline, and broadcast to your class.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-            <div className="grid grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="classId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Target Classroom</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner transition-all hover:ring-primary/50">
-                          <SelectValue placeholder="Select Class" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {classes.map((c) => (
-                          <SelectItem key={c.id} value={c.id} className="font-medium focus:bg-primary/10">{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+            <div className="max-h-[55vh] overflow-y-auto px-8 py-4 space-y-6 custom-scrollbar">
+              <div className="grid grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="classId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Target Classroom</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner transition-all hover:ring-primary/50">
+                            <SelectValue placeholder="Select Class" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {classes.map((c) => (
+                            <SelectItem key={c.id} value={c.id} className="font-medium focus:bg-primary/10">{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subjectId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Academic Subject</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner transition-all hover:ring-primary/50">
+                            <SelectValue placeholder="Select Subject" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subjects.map((s) => (
+                            <SelectItem key={s.id} value={s.id} className="font-medium focus:bg-primary/10">{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="subjectId"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Academic Subject</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner transition-all hover:ring-primary/50">
-                          <SelectValue placeholder="Select Subject" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {subjects.map((s) => (
-                          <SelectItem key={s.id} value={s.id} className="font-medium focus:bg-primary/10">{s.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Assignment Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Intro to Quantum Mechanics" {...field} className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Brief & Instructions</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detail the requirements, deliverables, and reading materials..." 
-                      className="min-h-[120px] bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Submission Deadline</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Assignment Title</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary opacity-50" />
-                        <Input type="datetime-local" {...field} className="h-12 pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner" />
-                      </div>
+                      <Input placeholder="e.g. Intro to Quantum Mechanics" {...field} className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,28 +203,65 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
 
               <FormField
                 control={form.control}
-                name="totalPoints"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Point Value</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Brief & Instructions</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Target className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary opacity-50" />
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={e => field.onChange(parseInt(e.target.value))}
-                          className="h-12 pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-black shadow-inner" 
-                        />
-                      </div>
+                      <Textarea 
+                        placeholder="Detail the requirements, deliverables, and reading materials..." 
+                        className="min-h-[120px] bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Submission Deadline</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary opacity-50" />
+                          <Input type="datetime-local" {...field} className="h-12 pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="totalPoints"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Point Value</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Target className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary opacity-50" />
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(parseInt(e.target.value))}
+                            className="h-12 pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-black shadow-inner" 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <DialogFooter className="pt-6">
+            <DialogFooter className="p-8 bg-muted/20 border-t border-border/10">
               <Button 
                 type="submit" 
                 className="w-full h-14 rounded-2xl font-black text-xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-white"
