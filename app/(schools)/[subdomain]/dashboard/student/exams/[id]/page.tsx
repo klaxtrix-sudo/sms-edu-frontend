@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ export default function ExamPortalPage() {
   const params = useParams();
   const examId = params.id as string;
   const router = useRouter();
-  const supabase = createClient();
+  const { supabase, isLoading: isTenantLoading } = useTenant();
 
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState<AttemptData | null>(null);
@@ -56,7 +56,7 @@ export default function ExamPortalPage() {
   const flagCount = useRef(0);
 
   const submitExam = useCallback(async (isAuto = false) => {
-    if (!attempt || isSubmitting || finished) return;
+    if (!supabase || !attempt || isSubmitting || finished) return;
     
     setIsSubmitting(true);
     try {
@@ -90,11 +90,12 @@ export default function ExamPortalPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [attempt, answers, finished, isSubmitting, supabase.auth]);
+  }, [attempt, answers, finished, isSubmitting, supabase]);
 
   // 1. Initialise Attempt
   useEffect(() => {
     async function init() {
+      if (!supabase) return;
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
@@ -123,7 +124,7 @@ export default function ExamPortalPage() {
       }
     }
     init();
-  }, [examId, router, supabase.auth]);
+  }, [examId, router, supabase]);
 
   // 2. Timer Logic
   useEffect(() => {
@@ -146,6 +147,7 @@ export default function ExamPortalPage() {
   // 3. Anti-Cheating (Tab Switch)
   useEffect(() => {
     const handleVisibilityChange = async () => {
+      if (!supabase) return;
       if (document.visibilityState === "hidden") {
         flagCount.current += 1;
         toast.warning(`Warning ${flagCount.current}: Please do not switch tabs! This is recorded as a suspicion level flag.`);
@@ -167,7 +169,7 @@ export default function ExamPortalPage() {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [attempt?.attemptId, supabase.auth]);
+  }, [attempt?.attemptId, supabase]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -179,7 +181,7 @@ export default function ExamPortalPage() {
     setAnswers(prev => ({ ...prev, [questionId]: idx }));
   };
 
-  if (loading) return (
+  if (isTenantLoading || loading) return (
     <div className="h-screen flex items-center justify-center bg-background">
       <div className="text-center animate-pulse">
         <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />

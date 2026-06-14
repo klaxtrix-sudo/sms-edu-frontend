@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { createTenantClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -54,17 +54,18 @@ export default function TeacherAttendancePage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  const supabase = createTenantClient();
+  const { supabase, isLoading: isTenantLoading } = useTenant();
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    if (supabase) fetchInitialData();
+  }, [supabase]);
 
   useEffect(() => {
-    if (selectedClass) fetchStudents();
-  }, [selectedClass, date]);
+    if (supabase && selectedClass) fetchStudents();
+  }, [selectedClass, date, supabase]);
 
   const fetchInitialData = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -88,6 +89,7 @@ export default function TeacherAttendancePage() {
   };
 
   const fetchStudents = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       // 1. Fetch Students
@@ -96,7 +98,7 @@ export default function TeacherAttendancePage() {
         .select(`
           id,
           admission_no,
-          profiles(full_name)
+          profiles:user_id(full_name)
         `)
         .eq("class_id", selectedClass);
 
@@ -145,6 +147,7 @@ export default function TeacherAttendancePage() {
   };
 
   const handleSubmit = async () => {
+    if (!supabase) return;
     setSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -191,7 +194,7 @@ export default function TeacherAttendancePage() {
     return acc;
   }, { present: 0, absent: 0, late: 0, excused: 0 });
 
-  if (loading && classes.length === 0) {
+  if (isTenantLoading || (loading && classes.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="size-12 animate-spin text-primary" />

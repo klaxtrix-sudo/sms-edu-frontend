@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
 import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
+import { getBackendUrl } from '@/lib/utils';
 
 export default async function AdminDashboard({ params }: { params: { subdomain: string } }) {
   const { subdomain } = params;
@@ -59,7 +60,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   // Fetch performance trend from backend
   let performanceData = [];
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/stats/school/${schoolId}/performance`);
+    const response = await fetch(`${getBackendUrl()}/stats/school/${schoolId}/performance`);
     const result = await response.json();
     if (result.success) {
       performanceData = result.data;

@@ -62,7 +62,7 @@ export default function FinanceDashboard() {
         .from("fee_payments")
         .select(`
           *,
-          students(admission_no, profiles(full_name)),
+          students(admission_no, profiles:user_id(full_name)),
           fee_structures(name)
         `)
         .order("created_at", { ascending: false });

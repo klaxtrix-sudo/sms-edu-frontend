@@ -25,7 +25,7 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -33,19 +33,19 @@ import { SubmitAssignmentModal } from "@/components/student/submit-assignment-mo
 import { getBackendUrl } from "@/lib/utils";
 
 export default function StudentAssignmentsPage() {
+  const { supabase, isLoading: isTenantLoading } = useTenant();
   const [assignments, setAssignments] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
-  
-  const supabase = createClient();
 
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    if (supabase) fetchAssignments();
+  }, [supabase]);
 
   const fetchAssignments = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -68,13 +68,6 @@ export default function StudentAssignmentsPage() {
       
       if (result.success) {
         setAssignments(result.data);
-        
-        // 3. Fetch Student Submissions to check status
-        // Create a teacher route or fetch all for assignment IDs
-        // For efficiency, we'll fetch student specific submissions in the details page
-        // But for the list view, we need to know if it's submitted.
-        // Let's assume there's a student submissions endpoint or we fetch all and filter (less ideal)
-        // For now, we'll rely on the details page for status or add a status check.
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to load coursework");
@@ -125,7 +118,7 @@ export default function StudentAssignmentsPage() {
          </div>
       </div>
 
-      {loading ? (
+      {isTenantLoading || loading ? (
         <div className="py-40 flex flex-col items-center gap-4">
            <Loader2 className="size-14 animate-spin text-primary/30" />
            <p className="font-black text-muted-foreground animate-pulse tracking-widest uppercase">Syncing Homework...</p>

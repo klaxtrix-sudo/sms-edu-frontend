@@ -110,9 +110,10 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
         {items.map((item) => {
           const Icon = iconMap[item.icon as keyof typeof iconMap];
           const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+          const rootDomainHost = rootDomain.split(':')[0];
           const isCustomSubdomain = typeof window !== 'undefined' && 
-            window.location.hostname !== rootDomain && 
-            window.location.hostname !== `www.${rootDomain}`;
+            window.location.hostname !== rootDomainHost && 
+            window.location.hostname !== `www.${rootDomainHost}`;
 
           const fullHref = (subdomain && !isCustomSubdomain) ? `/${subdomain}${item.href}` : item.href;
           const isActive = pathname === fullHref || pathname === item.href;

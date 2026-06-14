@@ -25,7 +25,7 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -33,22 +33,23 @@ import { CreateAssignmentModal } from "@/components/teacher/create-assignment-mo
 import { getBackendUrl } from "@/lib/utils";
 
 export default function TeacherAssignmentsPage() {
+  const { supabase, isLoading: isTenantLoading } = useTenant();
   const [assignments, setAssignments] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const supabase = createClient();
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    if (supabase) fetchInitialData();
+  }, [supabase]);
 
   useEffect(() => {
-    fetchAssignments();
-  }, [selectedClass]);
+    if (supabase) fetchAssignments();
+  }, [selectedClass, supabase, classes]);
 
   const fetchInitialData = async () => {
+    if (!supabase) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -65,6 +66,7 @@ export default function TeacherAssignmentsPage() {
   };
 
   const fetchAssignments = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -147,7 +149,7 @@ export default function TeacherAssignmentsPage() {
         </div>
       </div>
 
-      {loading ? (
+      {(isTenantLoading || loading) ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <Loader2 className="size-12 animate-spin text-primary/40" />
           <p className="text-muted-foreground font-bold animate-pulse">Syncing Assignments...</p>

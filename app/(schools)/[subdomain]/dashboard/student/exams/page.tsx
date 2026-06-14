@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/utils";
@@ -37,14 +37,15 @@ interface Attempt {
 }
 
 export default function StudentExamsPage() {
+  const { supabase, isLoading: isTenantLoading } = useTenant();
   const [exams, setExams] = useState<Exam[]>([]);
   const [attempts, setAttempts] = useState<Record<string, Attempt>>({});
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
+      if (!supabase) return;
       setLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -66,9 +67,6 @@ export default function StudentExamsPage() {
           const examData = await examRes.json();
           if (examData.success) {
             setExams(examData.data);
-            
-            // 3. Fetch any existing attempts for these exams
-            // (Optional: fetch in parallel if needed)
           }
         }
       } catch (error) {
@@ -87,7 +85,7 @@ export default function StudentExamsPage() {
     return now >= start && now <= end;
   };
 
-  if (loading) return (
+  if (isTenantLoading || loading) return (
     <div className="h-[60vh] flex items-center justify-center">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>

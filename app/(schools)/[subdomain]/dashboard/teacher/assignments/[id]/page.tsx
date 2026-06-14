@@ -24,7 +24,7 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { GradeSubmissionModal } from "@/components/teacher/grade-submission-modal";
@@ -41,13 +41,14 @@ export default function AssignmentDetailsPage() {
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const [profiles, setProfiles] = useState<any>({});
   
-  const supabase = createClient();
+  const { supabase, isLoading: isTenantLoading } = useTenant();
 
   useEffect(() => {
-    fetchAssignmentDetails();
-  }, [params.id]);
+    if (supabase) fetchAssignmentDetails();
+  }, [params.id, supabase]);
 
   const fetchAssignmentDetails = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -69,6 +70,7 @@ export default function AssignmentDetailsPage() {
   };
 
   const fetchSubmissions = async (token: string) => {
+    if (!supabase) return;
     setSubLoading(true);
     try {
       const res = await fetch(`${getBackendUrl()}/assignments/${params.id}/submissions`, {
@@ -104,7 +106,7 @@ export default function AssignmentDetailsPage() {
     setIsGradeModalOpen(true);
   };
 
-  if (loading) {
+  if (isTenantLoading || loading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <Loader2 className="size-16 animate-spin text-primary/30" />
@@ -258,9 +260,11 @@ export default function AssignmentDetailsPage() {
         onClose={() => setIsGradeModalOpen(false)}
         onSuccess={() => {
            const token = localStorage.getItem('sb-access-token'); // Fallback if no session
-           supabase.auth.getSession().then(({ data: { session }}) => {
-              if (session) fetchSubmissions(session.access_token);
-           });
+           if (supabase) {
+              supabase.auth.getSession().then(({ data: { session }}) => {
+                 if (session) fetchSubmissions(session.access_token);
+              });
+           }
         }}
         maxPoints={assignment.totalPoints}
       />

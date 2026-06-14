@@ -35,6 +35,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { getBackendUrl } from "@/lib/utils";
 
 export default function AdminCommunicationsPage() {
   const [loading, setLoading] = useState(false);
@@ -59,7 +60,7 @@ export default function AdminCommunicationsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/broadcasts`, {
+      const response = await fetch(`${getBackendUrl()}/broadcasts`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
@@ -90,7 +91,7 @@ export default function AdminCommunicationsPage() {
       // For this implementation, we simulate phones for the Termii mock
       const mockPhones = ["+2348000000000", "+2349000000000"];
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/broadcasts`, {
+      const response = await fetch(`${getBackendUrl()}/broadcasts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { 
   Card, 
   CardContent, 
@@ -74,9 +74,10 @@ export default function StudentsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const studentsPerPage = 20;
   
-  const supabase = createClient();
+  const { supabase, isLoading: isTenantLoading } = useTenant();
 
   const fetchData = async () => {
+    if (!supabase) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -130,8 +131,8 @@ export default function StudentsPage() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (supabase) fetchData();
+  }, [supabase]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -224,7 +225,7 @@ export default function StudentsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isTenantLoading || loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Loading student directory...</p>

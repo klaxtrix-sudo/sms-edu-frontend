@@ -1,8 +1,17 @@
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
+import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 
-export default async function TeacherDashboard() {
-  const supabase = createServerClient();
+export default async function TeacherDashboard({
+  params,
+}: {
+  params: { subdomain: string };
+}) {
+  const { subdomain } = params;
+  const tenantKeys = await resolveTenantKeys(subdomain);
+  if (!tenantKeys) redirect('/login');
+
+  const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.user_metadata?.role !== 'teacher') redirect('/login');
 

@@ -24,7 +24,7 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SubmitAssignmentModal } from "@/components/student/submit-assignment-modal";
@@ -37,13 +37,14 @@ export default function StudentAssignmentDetailsPage() {
   const [submission, setSubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const supabase = createClient();
+  const { supabase, isLoading: isTenantLoading } = useTenant();
 
   useEffect(() => {
-    fetchData();
-  }, [params.id]);
+    if (supabase) fetchData();
+  }, [params.id, supabase]);
 
   const fetchData = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -76,7 +77,7 @@ export default function StudentAssignmentDetailsPage() {
     }
   };
 
-  if (loading) {
+  if (isTenantLoading || loading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <Loader2 className="size-16 animate-spin text-primary/30" />

@@ -96,7 +96,7 @@ export default function AdminAttendanceDashboard() {
         .from("attendance")
         .select(`
           *,
-          students(admission_no, profiles(full_name, avatar_url)),
+          students(admission_no, profiles:user_id(full_name, avatar_url)),
           classes(name)
         `)
         .eq("date", date) as any;
