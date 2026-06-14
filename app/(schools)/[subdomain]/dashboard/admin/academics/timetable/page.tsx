@@ -60,9 +60,14 @@ export default function AdminTimetablePage() {
     try {
       const { data } = await supabase.from("classes").select("*");
       setClasses(data || []);
-      if (data && data.length > 0) setSelectedClass(data[0].id);
+      if (data && data.length > 0) {
+        setSelectedClass(data[0].id);
+      } else {
+        setLoading(false);
+      }
     } catch (error) {
       toast.error("Failed to load classes");
+      setLoading(false);
     }
   };
 
@@ -73,7 +78,8 @@ export default function AdminTimetablePage() {
         .from("timetables")
         .select(`
           *,
-          subjects(name, code)
+          subjects(name, code),
+          profiles:teacher_id(full_name)
         `)
         .eq("class_id", selectedClass)
         .order("start_time", { ascending: true });
@@ -188,6 +194,12 @@ function ScheduleCard({ item, onDelete }: any) {
           <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground italic">
             <MapPin className="size-3" />
             {item.room}
+          </div>
+        )}
+        {item.profiles?.full_name && (
+          <div className="text-[10px] font-medium text-muted-foreground/80 border-t border-border/20 pt-1.5 mt-1.5 flex items-center gap-1.5">
+            <span className="font-bold text-primary/70">Teacher:</span>
+            <span className="italic">{item.profiles.full_name}</span>
           </div>
         )}
       </CardContent>

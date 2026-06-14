@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { TimetableView } from "@/components/dashboard/timetable-view";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { Loader2 } from "lucide-react";
 
 export default function StudentTimetablePage() {
+  const { supabase, isLoading: isTenantLoading } = useTenant();
   const [classId, setClassId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     async function fetchStudentClass() {
+      if (!supabase) return;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -25,9 +26,9 @@ export default function StudentTimetablePage() {
       setLoading(false);
     }
     fetchStudentClass();
-  }, []);
+  }, [supabase]);
 
-  if (loading) {
+  if (isTenantLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="size-10 animate-spin text-primary/40" />

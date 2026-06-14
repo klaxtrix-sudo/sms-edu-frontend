@@ -58,6 +58,7 @@ const formSchema = z.object({
   start_time: z.string().min(1, "Start time is required"),
   end_time: z.string().min(1, "End time is required"),
   room: z.string().optional(),
+  teacher_id: z.string().optional(),
 });
 
 interface AddTimetableEntryModalProps {
@@ -69,6 +70,7 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const supabase = createTenantClient();
 
@@ -81,6 +83,7 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
       start_time: "08:00",
       end_time: "09:00",
       room: "",
+      teacher_id: "",
     },
   });
 
@@ -93,12 +96,14 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
 
   const fetchData = async () => {
     try {
-      const [{ data: classData }, { data: subjectData }] = await Promise.all([
+      const [{ data: classData }, { data: subjectData }, { data: teacherData }] = await Promise.all([
         supabase.from("classes").select("*"),
         supabase.from("subjects").select("*"),
+        supabase.from("profiles").select("*").eq("role", "teacher").eq("is_archived", false).order("full_name"),
       ]);
       setClasses(classData || []);
       setSubjects(subjectData || []);
+      setTeachers(teacherData || []);
     } catch (error) {
       toast.error("Failed to load scheduling options");
     }
@@ -123,7 +128,8 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
         .insert({
           ...values,
           day_of_week: parseInt(values.day_of_week),
-          school_id: profile.school_id
+          school_id: profile.school_id,
+          teacher_id: (values.teacher_id === "" || values.teacher_id === "none") ? null : values.teacher_id
         });
 
       if (error) throw error;
@@ -202,28 +208,54 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="day_of_week"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Day of the Week</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
-                        <SelectValue placeholder="Select Day" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {DAYS.map((day) => (
-                        <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="day_of_week"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Day of the Week</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
+                          <SelectValue placeholder="Select Day" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {DAYS.map((day) => (
+                          <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="teacher_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Teacher (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
+                          <SelectValue placeholder="Pick Teacher" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None (No Teacher)</SelectItem>
+                        {teachers.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

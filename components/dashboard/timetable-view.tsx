@@ -9,7 +9,7 @@ import {
   CalendarDays
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -31,13 +31,14 @@ interface TimetableViewProps {
 export function TimetableView({ classId, teacherId, title, description }: TimetableViewProps) {
   const [timetable, setTimetable] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const { supabase } = useTenant();
 
   useEffect(() => {
-    fetchTimetable();
-  }, [classId, teacherId]);
+    if (supabase) fetchTimetable();
+  }, [classId, teacherId, supabase]);
 
   const fetchTimetable = async () => {
+    if (!supabase) return;
     setLoading(true);
     try {
       let query = supabase
@@ -45,28 +46,16 @@ export function TimetableView({ classId, teacherId, title, description }: Timeta
         .select(`
           *,
           subjects(name, code),
-          classes(name)
+          classes(name),
+          profiles:teacher_id(full_name)
         `)
         .order("start_time", { ascending: true });
 
       if (classId) {
         query = query.eq("class_id", classId);
       } else if (teacherId) {
-        // Find classes where this teacher is a class teacher OR teaches subjects (later integration)
-        // For now, only class teacher schedules if teacherId is provided
-        const { data: teacherClasses } = await supabase
-          .from("classes")
-          .select("id")
-          .eq("class_teacher_id", teacherId);
-        
-        const teacherClassIds = (teacherClasses as any[])?.map(c => c.id) || [];
-        if (teacherClassIds.length > 0) {
-          query = query.in("class_id", teacherClassIds);
-        } else {
-          setTimetable([]);
-          setLoading(false);
-          return;
-        }
+        // Retrieve all timetable slots directly assigned to this teacher
+        query = query.eq("teacher_id", teacherId);
       }
 
       const { data, error } = await query;
@@ -132,10 +121,17 @@ export function TimetableView({ classId, teacherId, title, description }: Timeta
                             {item.room}
                           </div>
                         )}
-                        {teacherId && (
+                        {teacherId ? (
                            <div className="text-[10px] font-black text-primary uppercase tracking-tighter pt-1 border-t border-border/30">
                               {item.classes?.name}
                            </div>
+                        ) : (
+                          item.profiles?.full_name && (
+                            <div className="text-[10px] font-medium text-muted-foreground/80 pt-1 border-t border-border/30 flex items-center gap-1.5">
+                              <span className="font-bold text-primary/70">Teacher:</span>
+                              <span className="italic">{item.profiles.full_name}</span>
+                            </div>
+                          )
                         )}
                       </CardContent>
                     </Card>

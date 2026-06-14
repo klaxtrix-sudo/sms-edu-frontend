@@ -114,51 +114,10 @@ export default function AcademicsPage() {
         </div>
       </header>
 
-      {/* Bento Stat Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-[2rem] p-7 group hover:translate-y-[-4px] transition-all duration-300 border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden relative">
-          <div className="size-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-4 mb-4 shadow-lg group-hover:scale-110 transition-transform relative z-10">
-            <Users className="size-full text-white" />
-          </div>
-          <div className="space-y-1 relative z-10">
-            <span className="text-[10px] font-black text-primary/70 uppercase tracking-[0.2em]">Active Classes</span>
-            <div className="text-4xl font-black tracking-tighter text-slate-900">{classes.length}</div>
-          </div>
-          <div className="absolute -right-6 -bottom-6 size-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
-        </div>
-
-        <div className="bg-white rounded-[2rem] p-7 group hover:translate-y-[-4px] transition-all duration-300 border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden relative">
-          <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 mb-4 shadow-lg group-hover:scale-110 transition-transform relative z-10">
-            <BookOpen className="size-full text-white" />
-          </div>
-          <div className="space-y-1 relative z-10">
-            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Core Subjects</span>
-            <div className="text-4xl font-black tracking-tighter text-slate-900">{subjects.length}</div>
-          </div>
-          <div className="absolute -right-6 -bottom-6 size-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
-        </div>
-
-        <div className="lg:col-span-2 bg-white rounded-[2rem] p-8 flex items-center justify-between border border-slate-200 shadow-xl shadow-slate-200/50 group hover:shadow-2xl transition-all relative overflow-hidden">
-          <div className="flex items-center gap-6 relative z-10">
-            <div className="size-16 rounded-2xl bg-gradient-to-br from-orange-400 directly to-pink-500 p-4 shadow-lg shadow-orange-200">
-              <Award className="size-full text-white" />
-            </div>
-            <div>
-              <h4 className="font-black text-xl tracking-tighter text-slate-900 mb-1">Curriculum Audit</h4>
-              <p className="text-[11px] text-muted-foreground uppercase font-black tracking-[0.1em]">Verify Institutional Compliance</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" className="size-12 rounded-full hover:bg-orange-50 text-orange-500 relative z-10">
-            <Plus className="size-6" />
-          </Button>
-          <div className="absolute -right-12 -top-12 size-48 bg-orange-500/5 rounded-full blur-3xl" />
-        </div>
-      </div>
-
       <Tabs defaultValue="classes" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-[400px] h-14 bg-slate-100/50 border border-slate-200 p-1.5 rounded-2xl">
-          <TabsTrigger value="classes" className="rounded-xl font-bold tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Class Directory</TabsTrigger>
-          <TabsTrigger value="subjects" className="rounded-xl font-bold tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-emerald-600 transition-all">Subject Master</TabsTrigger>
+          <TabsTrigger value="classes" className="rounded-xl font-bold tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Class List</TabsTrigger>
+          <TabsTrigger value="subjects" className="rounded-xl font-bold tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-emerald-600 transition-all">Subject List</TabsTrigger>
         </TabsList>
 
         <TabsContent value="classes" className="mt-8">
@@ -166,7 +125,10 @@ export default function AcademicsPage() {
             <div className="flex justify-between items-center px-2">
               <h2 className="text-2xl font-black flex items-center gap-3 text-slate-900">
                 <Users className="size-6 text-primary" />
-                Class Directory
+                Class List
+                <Badge variant="secondary" className="rounded-lg px-2.5 py-0.5 text-xs font-bold bg-primary/10 text-primary border-transparent">
+                  {classes.length} Total
+                </Badge>
               </h2>
             </div>
             
@@ -249,7 +211,10 @@ export default function AcademicsPage() {
             <div className="flex justify-between items-center px-2">
               <h2 className="text-2xl font-black flex items-center gap-3 text-slate-900">
                 <BookOpen className="size-6 text-emerald-500" />
-                Subject Master
+                Subject List
+                <Badge variant="secondary" className="rounded-lg px-2.5 py-0.5 text-xs font-bold bg-emerald-500/10 text-emerald-600 border-transparent">
+                  {subjects.length} Total
+                </Badge>
               </h2>
               <Button 
                 onClick={() => setIsSubjectModalOpen(true)} 
