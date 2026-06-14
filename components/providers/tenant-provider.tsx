@@ -83,6 +83,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           return newTenant;
         });
 
+        // Set global variables for raw createClient/createTenantClient calls
+        if (typeof window !== 'undefined') {
+          (window as any).__tenant_url = data.data.supabaseUrl;
+          (window as any).__tenant_anon_key = data.data.supabaseAnonKey;
+        }
+
         // Set a lightweight cookie so server actions can determine the tenant.
         // This is NOT sensitive — subdomain is already public in the URL.
         document.cookie = `x-tenant-subdomain=${subdomain}; path=/; SameSite=Lax`;
