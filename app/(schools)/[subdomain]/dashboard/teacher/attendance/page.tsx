@@ -125,8 +125,10 @@ export default function TeacherAttendancePage() {
       });
 
       setAttendance(initialAttendance);
-    } catch (error) {
-      toast.error("Error fetching class roster");
+    } catch (error: any) {
+      console.error("[Attendance] Error fetching class roster:", error);
+      const message = error?.message || error?.details || "Error fetching class roster";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
