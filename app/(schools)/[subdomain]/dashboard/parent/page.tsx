@@ -27,13 +27,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, getBackendUrl } from "@/lib/utils";
 import Link from "next/link";
 
 export default function ParentDashboardPage() {
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [parentName, setParentName] = useState("");
+  const [bulletins, setBulletins] = useState<any[]>([]);
   const supabase = createTenantClient();
 
   useEffect(() => {
@@ -62,6 +63,19 @@ export default function ParentDashboardPage() {
 
       if (studentError) throw studentError;
       setChildren(students || []);
+
+      // Fetch Bulletins
+      try {
+        const res = await fetch(`${getBackendUrl()}/broadcasts`, {
+          headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          setBulletins(result.data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch bulletins:", e);
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to load household data");
     } finally {
@@ -150,21 +164,26 @@ export default function ParentDashboardPage() {
                     <Bell className="size-5 text-primary/40 animate-swing" />
                  </div>
                  <div className="space-y-6">
-                    <BulletinItem 
-                      title="Term 2 Examination Schedule" 
-                      date="Mar 20" 
-                      type="academic"
-                    />
-                    <BulletinItem 
-                      title="Parent-Teacher Conference" 
-                      date="Mar 25" 
-                      type="event"
-                    />
-                    <BulletinItem 
-                      title="Mid-Term Break Announcement" 
-                      date="Apr 02" 
-                      type="holiday"
-                    />
+                    {bulletins.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground text-xs font-black uppercase tracking-widest opacity-45">
+                         No Active Bulletins
+                      </div>
+                    ) : (
+                      bulletins.slice(0, 3).map((bulletin) => {
+                        const dateObj = new Date(bulletin.createdAt);
+                        const month = dateObj.toLocaleString('en-US', { month: 'short' });
+                        const day = dateObj.getDate();
+                        const formattedDate = `${month} ${day}`;
+                        return (
+                          <BulletinItem 
+                            key={bulletin._id}
+                            title={bulletin.title}
+                            date={formattedDate}
+                            type={bulletin.channel}
+                          />
+                        );
+                      })
+                    )}
                  </div>
               </Card>
            </div>

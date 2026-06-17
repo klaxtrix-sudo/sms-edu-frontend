@@ -45,6 +45,7 @@ export default function TeacherDashboardPage() {
   const [recentAssignments, setRecentAssignments] = useState<any[]>([]);
   const [allClasses, setAllClasses] = useState<any[]>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, { marked: boolean, present: number, absent: number }>>({});
+  const [bulletins, setBulletins] = useState<any[]>([]);
 
   useEffect(() => {
     if (supabase) {
@@ -196,6 +197,19 @@ export default function TeacherDashboardPage() {
       );
 
       setRecentAssignments(assignmentsWithCounts);
+
+      // 10. Fetch MongoDB broadcasts/bulletins for the active school and targeted role
+      try {
+        const bulletinRes = await fetch(`${getBackendUrl()}/broadcasts`, {
+          headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+        const bulletinResult = await bulletinRes.json();
+        if (bulletinResult.success && bulletinResult.data) {
+          setBulletins(bulletinResult.data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch bulletins:", e);
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to sync teacher dashboard");
     } finally {
@@ -514,22 +528,23 @@ export default function TeacherDashboardPage() {
               <Bell className="size-4 text-primary/60" />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <BulletinItem 
-                title="Term 3 Continuous Assessment Prep" 
-                date="Jun 20" 
-                type="academic"
-              />
-              <BulletinItem 
-                title="Staff Senate & Budget Review Meeting" 
-                date="Jun 24" 
-                type="meeting"
-              />
-              <BulletinItem 
-                title="Academic Progress Report Submission" 
-                date="Jul 02" 
-                type="deadline"
-              />
+            <div className={cn(
+              bulletins.length > 0 ? "grid grid-cols-1 md:grid-cols-3 gap-6" : "space-y-4"
+            )}>
+              {bulletins.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-xs font-medium w-full col-span-3">
+                  No active notices listed.
+                </div>
+              ) : (
+                bulletins.slice(0, 3).map((bulletin) => (
+                  <BulletinItem 
+                    key={bulletin._id}
+                    title={bulletin.title}
+                    date={new Date(bulletin.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    type={bulletin.channel}
+                  />
+                ))
+              )}
             </div>
           </Card>
 
