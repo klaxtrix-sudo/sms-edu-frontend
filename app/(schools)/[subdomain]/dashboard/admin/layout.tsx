@@ -57,7 +57,7 @@ export default function AdminLayout({
     { label: "Staff", href: "/dashboard/admin/users/staff", icon: "UserCog" },
     { label: "Attendance Intel", href: "/dashboard/admin/attendance", icon: "ClipboardCheck" },
     { label: "Executive Analytics", href: "/dashboard/admin/analytics", icon: "BarChart3" },
-    { label: "Global Communications", href: "/dashboard/admin/communications", icon: "Megaphone" },
+    { label: "Announcements", href: "/dashboard/admin/communications", icon: "Megaphone" },
     { label: "MCQ Exams", href: "/dashboard/admin/exams", icon: "ClipboardList" },
     { label: "Academic Results", href: "/dashboard/admin/academics/results", icon: "CheckSquare" },
     { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
