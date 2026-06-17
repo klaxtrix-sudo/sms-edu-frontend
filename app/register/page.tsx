@@ -330,18 +330,18 @@ export default function RegisterPage() {
                     </p>
                     <div className="space-y-2">
                       <Label htmlFor="supabaseUrl">Supabase Project URL</Label>
-                      <Input id="supabaseUrl" placeholder="https://xyz.supabase.co" className="h-11 rounded-xl font-mono text-sm"
+                      <Input id="supabaseUrl" placeholder="https://xyz.supabase.co" className="h-12 rounded-xl font-mono text-sm py-2.5 leading-normal"
                         value={formData.supabaseUrl} onChange={e => update('supabaseUrl', e.target.value)} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="supabaseAnonKey">Anon Key</Label>
-                        <Input id="supabaseAnonKey" type="text" placeholder="eyJhbG..." className="h-11 rounded-xl font-mono text-sm"
+                        <Input id="supabaseAnonKey" type="text" placeholder="eyJhbG..." className="h-12 rounded-xl font-mono text-sm py-2.5 leading-normal"
                           value={formData.supabaseAnonKey} onChange={e => update('supabaseAnonKey', e.target.value)} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="supabaseServiceRoleKey">Service Role Key</Label>
-                        <Input id="supabaseServiceRoleKey" type="text" placeholder="eyJhbG..." className="h-11 rounded-xl font-mono text-sm"
+                        <Input id="supabaseServiceRoleKey" type="text" placeholder="eyJhbG..." className="h-12 rounded-xl font-mono text-sm py-2.5 leading-normal"
                           value={formData.supabaseServiceRoleKey} onChange={e => update('supabaseServiceRoleKey', e.target.value)} />
                         <p className="text-[10px] text-muted-foreground">Used for one-time provisioning only. Never stored in plaintext.</p>
                       </div>
@@ -354,7 +354,7 @@ export default function RegisterPage() {
                         id="dbConnectionString"
                         type="text"
                         placeholder="postgresql://postgres.[ref]:[password]@aws-0-region.pooler.supabase.com:5432/postgres"
-                        className="h-11 rounded-xl font-mono text-sm"
+                        className="h-12 rounded-xl font-mono text-sm py-2.5 leading-normal"
                         value={formData.dbConnectionString}
                         onChange={e => update('dbConnectionString', e.target.value)}
                       />
@@ -370,7 +370,7 @@ export default function RegisterPage() {
                       <div className="space-y-2">
                         <Label htmlFor="mongodbUri">MongoDB Atlas Connection URI</Label>
                         <Input id="mongodbUri" type="text" placeholder="mongodb+srv://admin:password@cluster.mongodb.net/"
-                          className="h-11 rounded-xl font-mono text-sm"
+                          className="h-12 rounded-xl font-mono text-sm py-2.5 leading-normal"
                           value={formData.mongodbUri} onChange={e => update('mongodbUri', e.target.value)} />
                         <p className="text-[10px] text-muted-foreground">
                           Find this in Atlas → Clusters → Connect → Drivers. All credentials are AES-256 encrypted before storage.
