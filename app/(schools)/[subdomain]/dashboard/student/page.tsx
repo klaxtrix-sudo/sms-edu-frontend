@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { createClient } from '@/lib/supabase/client';
-import { GraduationCap, CalendarDays, BookOpen, CreditCard } from 'lucide-react';
+import { GraduationCap, CalendarDays, BookOpen } from 'lucide-react';
 
 export default function StudentDashboard() {
   const { tenant } = useTenant();
@@ -38,7 +38,7 @@ export default function StudentDashboard() {
         <p className="text-muted-foreground mt-1">Hello, {userName}! Welcome to your portal.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <DashboardCard
           icon={<CalendarDays className="size-6 text-blue-500" />}
           title="My Timetable"
@@ -56,12 +56,6 @@ export default function StudentDashboard() {
           title="Exams"
           description="Upcoming examinations"
           color="purple"
-        />
-        <DashboardCard
-          icon={<CreditCard className="size-6 text-orange-500" />}
-          title="Payments"
-          description="View fee status"
-          color="orange"
         />
       </div>
     </div>

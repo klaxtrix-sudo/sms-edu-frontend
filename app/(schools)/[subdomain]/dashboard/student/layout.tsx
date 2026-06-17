@@ -57,7 +57,6 @@ export default function StudentLayout({
     { label: "My Timetable", href: "/dashboard/student/timetable", icon: "CalendarDays" },
     { label: "My Assignments", href: "/dashboard/student/assignments", icon: "BookOpen" },
     { label: "My Exams", href: "/dashboard/student/exams", icon: "ClipboardList" },
-    { label: "Payments", href: "/dashboard/student/finance", icon: "CreditCard" },
   ];
 
   if (isTenantLoading || isAuthChecking) {

@@ -48,16 +48,7 @@ export default function ParentDashboardPage() {
 
       setParentName(session.user.user_metadata?.full_name || "Parent");
 
-      // 1. Get Parent ID
-      const { data: parent } = await supabase
-        .from("parents")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (!parent) return;
-
-      // 2. Fetch Linked Children
+      // Fetch Linked Children (parent_id references profiles.id, which is session.user.id)
       const { data: students, error: studentError } = await supabase
         .from("students")
         .select(`
@@ -67,7 +58,7 @@ export default function ParentDashboardPage() {
           classes (name),
           profiles:user_id (full_name, avatar_url)
         `)
-        .eq("parent_id", parent.id);
+        .eq("parent_id", session.user.id);
 
       if (studentError) throw studentError;
       setChildren(students || []);
@@ -145,8 +136,10 @@ export default function ParentDashboardPage() {
                        <p className="text-white/70 font-bold mt-2 uppercase tracking-widest text-[9px]">Term 2 Balance</p>
                     </div>
                     <div className="text-6xl font-black tabular-nums tracking-tighter">₦125,400</div>
-                    <Button className="w-full h-16 bg-white text-primary hover:bg-white/90 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all active:scale-95 uppercase tracking-tighter italic">
-                       Settle Fees
+                    <Button asChild className="w-full h-16 bg-white text-primary hover:bg-white/90 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all active:scale-95 uppercase tracking-tighter italic">
+                       <Link href="/dashboard/parent/finance">
+                          Settle Fees
+                       </Link>
                     </Button>
                  </div>
               </Card>
