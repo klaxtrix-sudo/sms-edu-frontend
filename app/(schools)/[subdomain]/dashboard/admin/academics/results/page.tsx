@@ -578,7 +578,7 @@ export default function AdminResultsPage() {
 
       {/* Metrics Configuration Dialog */}
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Configure Assessment Metrics</DialogTitle>
             <DialogDescription>
@@ -592,7 +592,7 @@ export default function AdminResultsPage() {
               <span className="text-sm font-semibold text-muted-foreground w-24 text-center">Max Points</span>
             </div>
 
-            <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[25vh] overflow-y-auto pr-1">
               {configMetrics.map((metric, idx) => (
                 <div key={idx} className="flex items-center gap-3">
                   <Input
