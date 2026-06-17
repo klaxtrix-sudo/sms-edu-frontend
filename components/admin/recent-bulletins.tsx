@@ -125,7 +125,7 @@ export function RecentBulletins() {
                 {selectedBulletin && getIcon(selectedBulletin.channel)}
                 {selectedBulletin?.channel}
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 pr-6">
                 <Calendar className="size-3" />
                 {selectedBulletin && new Date(selectedBulletin.createdAt).toLocaleDateString()}
               </span>
