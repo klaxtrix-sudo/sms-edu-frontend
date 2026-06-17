@@ -9,7 +9,8 @@ import {
   CreditCard,
   Trash2,
   Loader2,
-  X
+  X,
+  Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -41,10 +42,13 @@ export function NotificationDrawer() {
   const [open, setOpen] = useState(false);
   const supabase = createClient();
 
-  const fetchNotifications = async () => {
-    setLoading(true);
+  const fetchNotifications = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) {
+      if (showLoading) setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(`${getBackendUrl()}/notifications`, {
@@ -55,12 +59,22 @@ export function NotificationDrawer() {
     } catch (error) {
       console.error("Failed to load notifications");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (open) fetchNotifications();
+    fetchNotifications(true);
+
+    const interval = setInterval(() => {
+      fetchNotifications(false);
+    }, 20000); // 20s background polling
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (open) fetchNotifications(true);
   }, [open]);
 
   const markAsRead = async (id: string) => {
@@ -100,6 +114,7 @@ export function NotificationDrawer() {
       case 'error': return <AlertCircle className="size-5 text-destructive" />;
       case 'payment': return <CreditCard className="size-5 text-primary" />;
       case 'exam': return <MessageSquare className="size-5 text-orange-500" />;
+      case 'announcement': return <Megaphone className="size-5 text-blue-500" />;
       default: return <Bell className="size-5 text-muted-foreground" />;
     }
   };
