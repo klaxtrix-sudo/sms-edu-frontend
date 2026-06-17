@@ -61,7 +61,7 @@ interface Metric {
   is_custom?: boolean;
 }
 
-export default function AdminResultsPage() {
+export default function TeacherResultsPage() {
   const params = useParams();
   const subdomain = params.subdomain as string;
   
@@ -70,6 +70,7 @@ export default function AdminResultsPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [academicYear, setAcademicYear] = useState<string>("2025/2026");
   const [currentTerm, setCurrentTerm] = useState<number>(1);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
   
   // Selection state
   const [classes, setClasses] = useState<any[]>([]);
@@ -94,6 +95,7 @@ export default function AdminResultsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setTeacherId(user.id);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -116,25 +118,35 @@ export default function AdminResultsPage() {
           setCurrentTerm(school.current_term || 1);
         }
 
-        const [classesRes, subjectsRes] = await Promise.all([
-          (supabase as any)
-            .from("classes")
-            .select("id, name")
-            .eq("school_id", profile.school_id)
-            .order("name"),
-          (supabase as any)
-            .from("subjects")
-            .select("id, name")
-            .eq("school_id", profile.school_id)
-            .order("name")
-        ]);
+        // Fetch ONLY class-subject assignments for this teacher from timetables
+        const { data: assignments, error: timetableError } = await supabase
+          .from("timetables")
+          .select(`
+            class_id,
+            subject_id,
+            classes:class_id ( id, name ),
+            subjects:subject_id ( id, name )
+          `)
+          .eq("teacher_id", user.id) as any;
 
-        setClasses(classesRes.data || []);
-        setSubjects(subjectsRes.data || []);
+        if (timetableError) throw timetableError;
+
+        if (assignments) {
+          const uniqueClasses: Record<string, any> = {};
+          const uniqueSubjects: Record<string, any> = {};
+
+          assignments.forEach((a: any) => {
+            if (a.classes) uniqueClasses[a.classes.id] = a.classes;
+            if (a.subjects) uniqueSubjects[a.subjects.id] = a.subjects;
+          });
+
+          setClasses(Object.values(uniqueClasses));
+          setSubjects(Object.values(uniqueSubjects));
+        }
       }
     } catch (error) {
-      console.error("Error fetching initial data:", error);
-      toast.error("Failed to load filter options");
+      console.error("Error fetching initial teacher data:", error);
+      toast.error("Failed to load assigned classes or subjects");
     } finally {
       setLoading(false);
     }
@@ -153,7 +165,7 @@ export default function AdminResultsPage() {
         setMetrics(activeMetrics);
         setIsCustomMetrics(!!metricsRes.isCustom);
       } else {
-        // Fallback hardcoded defaults if error
+        // Fallback defaults
         activeMetrics = [
           { name: "First Test", weight: 20, school_id: schoolId },
           { name: "Second Test", weight: 20, school_id: schoolId },
@@ -259,7 +271,6 @@ export default function AdminResultsPage() {
       const current = prev[studentId] || { scores: {} };
       const updatedScores = { ...current.scores, [metricKey]: numValue };
       
-      // Compute total sum from the current metrics configuration
       const total = metrics.reduce((sum, m) => {
         const key = m.id || m.name;
         return sum + (updatedScores[key] || 0);
@@ -293,7 +304,7 @@ export default function AdminResultsPage() {
         const grade = calculateGrade(total);
 
         return {
-          id: res.id || undefined, // upsert matching UUID if exists
+          id: res.id || undefined,
           student_id: student.id,
           school_id: schoolId,
           class_id: selectedClass,
@@ -311,7 +322,7 @@ export default function AdminResultsPage() {
       if (result.error) throw new Error(result.error);
       
       toast.success("Results updated successfully!");
-      loadMetricsAndResults(); // reload to fetch newly assigned result IDs
+      loadMetricsAndResults();
     } catch (error: any) {
       toast.error(error.message || "Failed to save results");
     } finally {
@@ -319,7 +330,6 @@ export default function AdminResultsPage() {
     }
   };
 
-  // Metrics customization config handlers
   const openConfigModal = () => {
     setConfigMetrics(metrics.map(m => ({ ...m })));
     setIsConfigOpen(true);
@@ -369,9 +379,9 @@ export default function AdminResultsPage() {
       const res = await saveResultMetrics(payload, subdomain);
       if (res.error) throw new Error(res.error);
 
-      toast.success("Custom results entry metrics updated!");
+      toast.success("Custom class grading metrics updated successfully!");
       setIsConfigOpen(false);
-      loadMetricsAndResults(); // Reload grid layout
+      loadMetricsAndResults();
     } catch (error: any) {
       toast.error(error.message || "Failed to update metrics");
     } finally {
@@ -382,7 +392,6 @@ export default function AdminResultsPage() {
   const resetToDefaultMetrics = async () => {
     setSavingConfig(true);
     try {
-      // Deleting custom class/subject metrics resets to school default fallback
       const { error } = await (supabase as any)
         .from("result_metrics")
         .delete()
@@ -392,7 +401,7 @@ export default function AdminResultsPage() {
 
       if (error) throw error;
 
-      toast.success("Reverted custom metrics to school-wide defaults.");
+      toast.success("Reverted custom metrics to default.");
       setIsConfigOpen(false);
       loadMetricsAndResults();
     } catch (error: any) {
@@ -406,8 +415,8 @@ export default function AdminResultsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Academic Results</h1>
-          <p className="text-muted-foreground mt-1 text-lg">Record and manage student performance scores.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Assigned Results Entry</h1>
+          <p className="text-muted-foreground mt-1 text-lg">Input scores for students in your assigned classes and subjects.</p>
         </div>
         <div className="flex items-center gap-2">
           {selectedClass && selectedSubject && (
@@ -417,7 +426,7 @@ export default function AdminResultsPage() {
               className="border-primary/20 bg-background/50 hover:bg-accent"
             >
               <Settings className="mr-2 h-4 w-4 text-primary" />
-              Configure Metrics
+              Customize Metrics
             </Button>
           )}
           <Button 
@@ -426,7 +435,7 @@ export default function AdminResultsPage() {
             className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
           >
             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save All Results
+            Save Grades
           </Button>
         </div>
       </div>
@@ -436,7 +445,7 @@ export default function AdminResultsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
-                <ChevronRight className="size-3 text-primary" /> Select Class
+                <ChevronRight className="size-3 text-primary" /> Assigned Class
               </label>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger className="bg-background/50">
@@ -449,7 +458,7 @@ export default function AdminResultsPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-2">
-                <ChevronRight className="size-3 text-primary" /> Select Subject
+                <ChevronRight className="size-3 text-primary" /> Assigned Subject
               </label>
               <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                 <SelectTrigger className="bg-background/50">
@@ -463,7 +472,7 @@ export default function AdminResultsPage() {
             <div className="md:col-span-2 flex items-center justify-end">
                <div className="text-xs text-muted-foreground flex items-center gap-2 bg-muted/50 px-3 py-2 rounded-lg border border-border/50">
                   <Filter className="size-3" />
-                  Filtering for: <span className="text-foreground font-semibold">{academicYear} Academic Year • Term {currentTerm}</span>
+                  Cycle: <span className="text-foreground font-semibold">{academicYear} Academic Year • Term {currentTerm}</span>
                </div>
             </div>
           </div>
@@ -476,14 +485,14 @@ export default function AdminResultsPage() {
             <Filter className="size-6" />
           </div>
           <div className="text-center">
-            <p className="text-lg font-medium">Ready to record results?</p>
-            <p className="text-muted-foreground">Select a class and subject above to load the student list.</p>
+            <p className="text-lg font-medium">Record results for your assignments</p>
+            <p className="text-muted-foreground">Select one of your assigned classes and subjects above to get started.</p>
           </div>
         </div>
       ) : loading ? (
         <div className="h-[40vh] flex flex-col items-center justify-center space-y-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-muted-foreground">Fetching class roster & grading system...</p>
+          <p className="text-muted-foreground">Loading roster & assessment system...</p>
         </div>
       ) : (
         <Card className="border-none shadow-sm overflow-hidden">
@@ -507,7 +516,6 @@ export default function AdminResultsPage() {
                 {students.map((student) => {
                   const result = results[student.id] || { scores: {}, grade: "F9", remark: "Fail" };
                   
-                  // Compute total
                   const total = metrics.reduce((sum, m) => {
                     const key = m.id || m.name;
                     return sum + (result.scores[key] || 0);
@@ -580,9 +588,9 @@ export default function AdminResultsPage() {
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Configure Assessment Metrics</DialogTitle>
+            <DialogTitle>Customize Results Metrics</DialogTitle>
             <DialogDescription>
-              Customize the distribution of evaluation marks for this class and subject. Total weight must sum to exactly 100.
+              Assign the distribution of CA and Exam weights specifically for this class and subject. Total weight must equal exactly 100.
             </DialogDescription>
           </DialogHeader>
 
@@ -596,7 +604,7 @@ export default function AdminResultsPage() {
               {configMetrics.map((metric, idx) => (
                 <div key={idx} className="flex items-center gap-3">
                   <Input
-                    placeholder="e.g. First Test"
+                    placeholder="e.g. First Assignment"
                     value={metric.name}
                     onChange={(e) => handleConfigMetricChange(idx, "name", e.target.value)}
                     className="flex-1"
@@ -628,7 +636,7 @@ export default function AdminResultsPage() {
               onClick={handleAddConfigMetric}
               className="w-full mt-2"
             >
-              <Plus className="mr-2 size-4" /> Add Metric Column
+              <Plus className="mr-2 size-4" /> Add Metric
             </Button>
 
             <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg border text-sm">
@@ -644,7 +652,7 @@ export default function AdminResultsPage() {
             {isCustomMetrics && (
               <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 p-3 rounded-lg text-xs flex gap-2">
                 <AlertCircle className="size-4 shrink-0" />
-                <span>This class-subject currently has a custom override. Removing custom configuration will revert this screen back to school defaults.</span>
+                <span>Removing custom configuration will automatically revert this class back to school-wide defaults.</span>
               </div>
             )}
           </div>
@@ -657,7 +665,7 @@ export default function AdminResultsPage() {
                 onClick={resetToDefaultMetrics}
                 className="mr-auto"
               >
-                Reset to Default
+                Revert to Defaults
               </Button>
             )}
             <Button variant="ghost" onClick={() => setIsConfigOpen(false)}>Cancel</Button>
@@ -667,7 +675,7 @@ export default function AdminResultsPage() {
               className="bg-primary hover:bg-primary/90"
             >
               {savingConfig && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Apply & Save
+              Save Configuration
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -100,7 +100,7 @@ function compressAndBase64(file: File): Promise<string> {
   });
 }
 
-export default function ManageQuestionsPage() {
+export default function TeacherManageQuestionsPage() {
   const params = useParams();
   const examId = params.id as string;
   const router = useRouter();
@@ -183,7 +183,6 @@ export default function ManageQuestionsPage() {
   };
 
   const handleSave = async () => {
-    // Validate that we have text OR image for question, and for options
     if (!qText.trim() && !qImageUrl) {
       toast.error("Please provide either question text or a question image");
       return;
@@ -225,7 +224,6 @@ export default function ManageQuestionsPage() {
       const result = await res.json();
       if (result.success) {
         toast.success(editingQuestion ? "Question updated" : "Question added");
-        // Update local state
         if (editingQuestion) {
           setQuestions(qs => qs.map(q => q._id === result.data._id ? result.data : q));
         } else {
@@ -244,7 +242,7 @@ export default function ManageQuestionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure?")) return;
+    if (!confirm("Are you sure you want to delete this question?")) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       await fetch(`${getBackendUrl()}/questions/${id}`, {
@@ -295,7 +293,7 @@ export default function ManageQuestionsPage() {
           <h1 className="text-3xl font-bold tracking-tight">{exam?.title}</h1>
           <p className="text-muted-foreground">Managing Questions • {exam?.subjectId} • {questions.length} Total</p>
         </div>
-        <Button className="ml-auto bg-primary hover:bg-primary/90" onClick={() => { resetForm(); setIsModalOpen(true); }}>
+        <Button className="ml-auto bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" onClick={() => { resetForm(); setIsModalOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Add Question
         </Button>
       </div>
@@ -519,8 +517,7 @@ export default function ManageQuestionsPage() {
           <DialogFooter className="pt-4 border-t">
             <Button variant="outline" className="rounded-xl h-11" onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={submitting || compressing} className="rounded-xl h-11 bg-primary hover:bg-primary/90">
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {compressing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {(submitting || compressing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingQuestion ? "Update Question" : "Save Question"}
             </Button>
           </DialogFooter>
@@ -528,10 +525,6 @@ export default function ManageQuestionsPage() {
       </Dialog>
     </div>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
 }
 
 function cn(...classes: any[]) {

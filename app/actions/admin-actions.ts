@@ -514,3 +514,97 @@ export async function resetUserPassword(userId: string, newPassword: string, sub
     return { error: error.message || "An unexpected error occurred" };
   }
 }
+
+export async function getResultMetrics(
+  classId: string | null,
+  subjectId: string | null,
+  schoolId: string,
+  subdomain: string
+) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    
+    // If classId and subjectId are provided, check for custom metrics first
+    if (classId && subjectId) {
+      const { data: customMetrics, error: customError } = await (tenantSupabase as any)
+        .from('result_metrics')
+        .select('*')
+        .eq('school_id', schoolId)
+        .eq('class_id', classId)
+        .eq('subject_id', subjectId);
+
+      if (!customError && customMetrics && customMetrics.length > 0) {
+        return { success: true, data: customMetrics, isCustom: true };
+      }
+    }
+
+    // Fallback to default school-wide metrics (where class_id and subject_id are null)
+    const { data: defaultMetrics, error: defaultError } = await (tenantSupabase as any)
+      .from('result_metrics')
+      .select('*')
+      .eq('school_id', schoolId)
+      .is('class_id', null)
+      .is('subject_id', null);
+
+    if (defaultError) throw defaultError;
+
+    // If no default metrics exist, return system default templates
+    if (!defaultMetrics || defaultMetrics.length === 0) {
+      const systemDefaults = [
+        { name: 'First Test', weight: 20, is_default_template: true },
+        { name: 'Second Test', weight: 20, is_default_template: true },
+        { name: 'Exam', weight: 60, is_default_template: true }
+      ];
+      return { success: true, data: systemDefaults, isCustom: false, isTemplate: true };
+    }
+
+    return { success: true, data: defaultMetrics, isCustom: false };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to fetch result metrics' };
+  }
+}
+
+export async function saveResultMetrics(
+  metricsData: any[],
+  subdomain: string
+) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
+  
+  // Validate total weight is exactly 100
+  const totalWeight = metricsData.reduce((sum, m) => sum + Number(m.weight || 0), 0);
+  if (totalWeight !== 100) {
+    return { error: `Total metrics weight must equal exactly 100. Current total: ${totalWeight}` };
+  }
+
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    
+    // Prepare for upsert
+    // First, let's delete any existing metrics for this class/subject or default if we are overwriting
+    const sample = metricsData[0];
+    if (sample) {
+      let query = (tenantSupabase as any).from('result_metrics').delete().eq('school_id', sample.school_id);
+      if (sample.class_id && sample.subject_id) {
+        query = query.eq('class_id', sample.class_id).eq('subject_id', sample.subject_id);
+      } else {
+        query = query.is('class_id', null).is('subject_id', null);
+      }
+      const { error: deleteError } = await query;
+      if (deleteError) throw deleteError;
+    }
+
+    // Now insert the new ones
+    const cleanData = metricsData.map(({ id, created_at, updated_at, is_default_template, ...m }) => m); // strip auto fields
+    const { data, error } = await (tenantSupabase as any)
+      .from('result_metrics')
+      .insert(cleanData)
+      .select();
+
+    if (error) throw error;
+    
+    return { success: true, data };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to save result metrics' };
+  }
+}

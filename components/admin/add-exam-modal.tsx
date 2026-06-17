@@ -45,7 +45,8 @@ const examSchema = z.object({
   durationMins: z.coerce.number().int().min(5).max(180),
   totalMarks: z.coerce.number().int().min(1),
   questionCount: z.coerce.number().int().min(1),
-  randomise: z.boolean().default(true),
+  randomiseQuestions: z.boolean().default(true),
+  randomiseOptions: z.boolean().default(true),
   startAt: z.string().min(1, "Start date is required"),
   endAt: z.string().min(1, "End date is required"),
 });
@@ -72,7 +73,8 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
       durationMins: 60,
       totalMarks: 100,
       questionCount: 50,
-      randomise: true,
+      randomiseQuestions: true,
+      randomiseOptions: true,
       startAt: "",
       endAt: "",
     },
@@ -85,17 +87,44 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("school_id")
+        .select("school_id, role")
         .eq("id", user.id)
         .single() as any;
 
       if (profile?.school_id) {
-        const [{ data: classesData }, { data: subjectsData }] = await Promise.all([
-          (supabase as any).from("classes").select("id, name").eq("school_id", profile.school_id),
-          (supabase as any).from("subjects").select("id, name").eq("school_id", profile.school_id),
-        ]);
-        if (classesData) setClasses(classesData);
-        if (subjectsData) setSubjects(subjectsData);
+        if (profile.role === "teacher") {
+          // Fetch only assigned classes and subjects from timetables
+          const { data: assignments } = await supabase
+            .from("timetables")
+            .select(`
+              class_id,
+              subject_id,
+              classes:class_id ( id, name ),
+              subjects:subject_id ( id, name )
+            `)
+            .eq("teacher_id", user.id) as any;
+
+          if (assignments) {
+            const uniqueClasses: Record<string, any> = {};
+            const uniqueSubjects: Record<string, any> = {};
+
+            assignments.forEach((a: any) => {
+              if (a.classes) uniqueClasses[a.classes.id] = a.classes;
+              if (a.subjects) uniqueSubjects[a.subjects.id] = a.subjects;
+            });
+
+            setClasses(Object.values(uniqueClasses));
+            setSubjects(Object.values(uniqueSubjects));
+          }
+        } else {
+          // Admin fetches all classes and subjects
+          const [{ data: classesData }, { data: subjectsData }] = await Promise.all([
+            (supabase as any).from("classes").select("id, name").eq("school_id", profile.school_id),
+            (supabase as any).from("subjects").select("id, name").eq("school_id", profile.school_id),
+          ]);
+          if (classesData) setClasses(classesData);
+          if (subjectsData) setSubjects(subjectsData);
+        }
       }
     }
     if (open) fetchData();
@@ -104,11 +133,9 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
   const onSubmit = async (values: ExamFormValues) => {
     setLoading(true);
     try {
-      // 1. Get Session Token for Backend Auth
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No active session");
 
-      // 2. Call MongoDB Backend
       const response = await fetch(`${getBackendUrl()}/exams`, {
         method: "POST",
         headers: {
@@ -265,32 +292,55 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
-                    <FormDescription>Number of Qs each student will take</FormDescription>
+                    <FormDescription>Number of random questions each student will take</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="randomise"
-                render={({ field }: { field: any }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Randomise Questions</FormLabel>
-                      <FormDescription>
-                        Shuffle questions and options for each student.
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-2 col-span-1 md:col-span-2">
+                <FormField
+                  control={form.control}
+                  name="randomiseQuestions"
+                  render={({ field }: { field: any }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Randomise Questions</FormLabel>
+                        <FormDescription>
+                          Shuffle question sequence.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="randomiseOptions"
+                  render={({ field }: { field: any }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Randomise Options</FormLabel>
+                        <FormDescription>
+                          Shuffle MCQ answers sequence.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}

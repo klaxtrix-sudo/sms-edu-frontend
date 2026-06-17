@@ -51,8 +51,8 @@ export default async function TeacherLayout({
     { label: "Class Attendance", href: "/dashboard/teacher/attendance", icon: "ClipboardCheck" },
     { label: "Weekly Timetable", href: "/dashboard/teacher/timetable", icon: "CalendarDays" },
     { label: "Homework Hub", href: "/dashboard/teacher/assignments", icon: "BookOpen" },
-    // { label: "My Students", href: "/dashboard/teacher/students", icon: "Users" },
-    // { label: "Exam Manager", href: "/dashboard/teacher/exams", icon: "ClipboardList" },
+    { label: "Exam Manager", href: "/dashboard/teacher/exams", icon: "ClipboardList" },
+    { label: "Results Entry", href: "/dashboard/teacher/results", icon: "CheckSquare" },
   ];
 
   return (
