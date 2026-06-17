@@ -195,7 +195,7 @@ export default function TakeExamPage() {
       const res = await fetch(`${getBackendUrl()}/attempts/verify-student`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admissionNo, examId })
+        body: JSON.stringify({ admissionNo, examId, subdomain })
       });
       const result = await res.json();
       if (!result.success) throw new Error(result.message || "Failed to verify credentials");
