@@ -3,16 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Calendar, 
-  Clock, 
-  GraduationCap, 
-  Settings2, 
   Save, 
   AlertCircle,
   Loader2,
   Plus,
   Trash2,
   Percent,
-  Award
+  Award,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -234,24 +232,42 @@ export default function AcademicSettings() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Term & Session Console */}
-        <div className="glass-panel p-8 rounded-[2rem] space-y-8 col-span-1 lg:col-span-2">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-2xl">
-              <Calendar className="w-6 h-6 text-purple-600" />
+      {/* Academic Calendar — full width */}
+      <div className="glass-panel rounded-[2rem] overflow-hidden">
+        {/* Gradient accent bar */}
+        <div className="h-1.5 bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500" />
+
+        <div className="p-8 space-y-8">
+          {/* Header row with title + save */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 bg-gradient-to-br from-purple-100 to-violet-100 rounded-2xl shadow-sm">
+                <Calendar className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-heading font-extrabold text-slate-900">Academic Calendar</h2>
+                <p className="text-sm text-slate-500 font-medium tracking-tight">Manage your school&apos;s current session and active term cycle.</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-heading font-extrabold text-slate-900">Academic Calendar</h2>
-              <p className="text-sm text-slate-500 font-medium tracking-tight">Manage your school's current session and active term cycle.</p>
-            </div>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving} 
+              className="h-12 px-7 rounded-2xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-bold gap-2 shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/30 active:scale-[0.98]"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              Sync Academic Cycle
+            </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Current Session</Label>
+          {/* Session & Term — top row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="group relative bg-white border border-slate-100 rounded-2xl p-5 space-y-3 transition-all duration-200 hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/5">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Current Session</Label>
+                <span className="text-[10px] font-bold text-purple-400 bg-purple-50 px-2 py-0.5 rounded-full">Academic Year</span>
+              </div>
               <Select value={academicYear} onValueChange={setAcademicYear}>
-                <SelectTrigger className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-bold">
+                <SelectTrigger className="h-14 bg-slate-50/80 border-slate-200/80 rounded-xl font-bold text-base hover:bg-slate-100/60 transition-colors">
                   <SelectValue placeholder="Select Session" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-100">
@@ -263,105 +279,98 @@ export default function AcademicSettings() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Current Term</Label>
+            <div className="group relative bg-white border border-slate-100 rounded-2xl p-5 space-y-3 transition-all duration-200 hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/5">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Current Term</Label>
+                <span className="text-[10px] font-bold text-violet-400 bg-violet-50 px-2 py-0.5 rounded-full">Active Period</span>
+              </div>
               <Select value={currentTerm} onValueChange={setCurrentTerm}>
-                <SelectTrigger className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-bold">
+                <SelectTrigger className="h-14 bg-slate-50/80 border-slate-200/80 rounded-xl font-bold text-base hover:bg-slate-100/60 transition-colors">
                   <SelectValue placeholder="Select Term" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-100">
-                  <SelectItem value="1">1st Term (Advent)</SelectItem>
-                  <SelectItem value="2">2nd Term (Lent)</SelectItem>
-                  <SelectItem value="3">3rd Term (Trinity)</SelectItem>
+                  <SelectItem value="1">1st Term</SelectItem>
+                  <SelectItem value="2">2nd Term</SelectItem>
+                  <SelectItem value="3">3rd Term</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Term Begins</Label>
-              <Input 
-                type="date"
-                value={termBegins}
-                onChange={(e) => setTermBegins(e.target.value)}
-                className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-bold focus:ring-purple-500"
-              />
+          {/* Term Dates — styled card */}
+          <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-100 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-purple-400 to-violet-500" />
+              <span className="text-xs font-black uppercase tracking-[0.15em] text-slate-500">Term Duration</span>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Term Ends</Label>
-              <Input 
-                type="date"
-                value={termEnds}
-                onChange={(e) => setTermEnds(e.target.value)}
-                className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-bold focus:ring-purple-500"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 px-1 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  Starts
+                </Label>
+                <Input 
+                  type="date"
+                  value={termBegins}
+                  onChange={(e) => setTermBegins(e.target.value)}
+                  className="h-14 bg-white border-slate-200 rounded-xl font-bold text-base focus:ring-purple-500 focus:border-purple-300 transition-all hover:border-slate-300"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 px-1 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  Ends
+                </Label>
+                <Input 
+                  type="date"
+                  value={termEnds}
+                  onChange={(e) => setTermEnds(e.target.value)}
+                  className="h-14 bg-white border-slate-200 rounded-xl font-bold text-base focus:ring-purple-500 focus:border-purple-300 transition-all hover:border-slate-300"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="bg-amber-50/50 border border-amber-100 p-6 rounded-3xl flex gap-4 items-start">
-            <AlertCircle className="w-6 h-6 text-amber-600 mt-1" />
-            <div className="space-y-1">
-              <p className="text-sm font-bold text-amber-900 uppercase tracking-tight">Critical Action Required</p>
-              <p className="text-sm text-amber-700 font-medium">
-                Changing the active session or term will affect across-the-board GPA calculations and report card generation. Ensure all results for the previous term are finalized.
-              </p>
+          {/* Live status strip */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 border border-purple-100">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+              <span className="text-xs font-bold text-purple-700">{academicYear}</span>
             </div>
-          </div>
-
-          <div className="pt-4 flex justify-end">
-            <Button 
-              onClick={handleSave} 
-              disabled={saving} 
-              className="h-14 px-8 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold gap-2 shadow-xl shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Sync Academic Cycle
-            </Button>
-          </div>
-        </div>
-
-        {/* Academic Status Bento */}
-        <div className="glass-panel p-8 rounded-[2rem] flex flex-col space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-xl">
-              <Clock className="w-4 h-4 text-emerald-600" />
-            </div>
-            <span className="text-sm font-bold text-slate-600">Active Cycle Info</span>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center py-3 border-b border-slate-100">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Session</span>
-              <span className="font-extrabold text-slate-800 text-sm">{academicYear}</span>
-            </div>
-            <div className="flex justify-between items-center py-3 border-b border-slate-100">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Term</span>
-              <span className="font-extrabold text-slate-800 text-sm">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-50 border border-violet-100">
+              <span className="text-xs font-bold text-violet-700">
                 {currentTerm === '1' ? '1st Term' : currentTerm === '2' ? '2nd Term' : '3rd Term'}
               </span>
             </div>
-            <div className="flex justify-between items-center py-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Phase</span>
-              <Badge className="bg-purple-100 text-purple-700 border-none font-bold uppercase">
-                {weekPreview}
-              </Badge>
+            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border ${
+              weekPreview.startsWith('Week') 
+                ? 'bg-emerald-50 border-emerald-100' 
+                : 'bg-slate-50 border-slate-100'
+            }`}>
+              <span className={`text-xs font-bold ${
+                weekPreview.startsWith('Week') ? 'text-emerald-700' : 'text-slate-500'
+              }`}>
+                {weekPreview.startsWith('Week') ? `📍 ${weekPreview}` : `🏖️ ${weekPreview}`}
+              </span>
             </div>
+            {termBegins && termEnds && (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-xs font-medium text-slate-500">
+                  {Math.ceil((new Date(termEnds).getTime() - new Date(termBegins).getTime()) / (1000 * 60 * 60 * 24 * 7))} weeks total
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="mt-auto space-y-4">
-            <h4 className="text-sm font-bold text-slate-900">Grading System</h4>
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-500">WAEC Standard</span>
-                <GraduationCap className="w-4 h-4 text-slate-300" />
-              </div>
-              <p className="text-[10px] text-slate-400 font-medium">
-                Last updated: March 15, 2026 by SuperAdmin
+          {/* Warning banner */}
+          <div className="relative bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-200/60 p-5 rounded-2xl flex gap-4 items-start overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-400 rounded-r" />
+            <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 ml-2 shrink-0" />
+            <div className="space-y-0.5">
+              <p className="text-xs font-black text-amber-800 uppercase tracking-wider">Important Notice</p>
+              <p className="text-sm text-amber-700/80 font-medium leading-relaxed">
+                Changing the active session or term will affect GPA calculations and report card generation across all classes. Ensure all results for the previous term are finalized before syncing.
               </p>
-              <Button variant="outline" className="w-full text-xs font-bold border-slate-200 h-9 rounded-xl hover:bg-white hover:text-blue-600">
-                <Settings2 className="w-3 h-3 mr-2" />
-                Configure Scales
-              </Button>
             </div>
           </div>
         </div>
@@ -472,18 +481,104 @@ export default function AcademicSettings() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {metrics.map((m, idx) => (
-              <div key={idx} className="bg-slate-50 border border-slate-100 p-6 rounded-2xl flex items-center justify-between">
-                <span className="font-extrabold text-slate-800 text-base">{m.name}</span>
-                <Badge className="bg-indigo-100 text-indigo-700 font-extrabold text-sm px-3 py-1 rounded-lg">
-                  {m.weight}%
-                </Badge>
-              </div>
-            ))}
+          <div className="space-y-3">
+            {metrics.length > 0 && (
+              <>
+                {/* Header row */}
+                <div className="grid grid-cols-12 items-center px-5 py-2">
+                  <span className="col-span-1 text-[10px] font-black uppercase tracking-widest text-slate-300">#</span>
+                  <span className="col-span-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Component</span>
+                  <span className="col-span-4 text-[10px] font-black uppercase tracking-widest text-slate-300">Distribution</span>
+                  <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-slate-300 text-right">Weight</span>
+                </div>
+
+                {/* Metric rows */}
+                {metrics.map((m, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`group grid grid-cols-12 items-center px-5 py-4 rounded-2xl border transition-all duration-200 hover:shadow-md hover:border-indigo-200 hover:bg-indigo-50/30 ${
+                      idx % 2 === 0 
+                        ? 'bg-white border-slate-100' 
+                        : 'bg-slate-50/60 border-slate-100'
+                    }`}
+                  >
+                    {/* Number */}
+                    <div className="col-span-1">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-indigo-100 text-xs font-extrabold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                        {idx + 1}
+                      </span>
+                    </div>
+
+                    {/* Name */}
+                    <div className="col-span-5 flex items-center gap-3">
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                      <span className="font-bold text-slate-800 text-sm group-hover:text-indigo-900 transition-colors">{m.name}</span>
+                    </div>
+
+                    {/* Visual bar */}
+                    <div className="col-span-4 pr-6">
+                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden group-hover:bg-indigo-100/60 transition-colors">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500 ease-out"
+                          style={{ 
+                            width: `${m.weight}%`,
+                            background: m.weight >= 50 
+                              ? 'linear-gradient(90deg, #6366f1, #818cf8)' 
+                              : m.weight >= 20 
+                                ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)' 
+                                : 'linear-gradient(90deg, #c4b5fd, #ddd6fe)'
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Weight badge */}
+                    <div className="col-span-2 flex justify-end">
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 border border-indigo-100 group-hover:border-indigo-200 transition-colors">
+                        <span className="text-sm font-extrabold text-indigo-700">{m.weight}</span>
+                        <span className="text-xs font-bold text-indigo-400">%</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Total summary */}
+                <div className="grid grid-cols-12 items-center px-5 py-4 mt-2 rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100">
+                  <div className="col-span-1" />
+                  <div className="col-span-5">
+                    <span className="text-xs font-black uppercase tracking-widest text-indigo-500">Total Weight</span>
+                  </div>
+                  <div className="col-span-4 pr-6">
+                    <div className="w-full h-2.5 bg-indigo-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{ 
+                          width: `${Math.min(totalWeight, 100)}%`,
+                          background: totalWeight === 100 
+                            ? 'linear-gradient(90deg, #10b981, #34d399)' 
+                            : 'linear-gradient(90deg, #f43f5e, #fb7185)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-span-2 flex justify-end">
+                    <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border font-extrabold text-sm ${
+                      totalWeight === 100 
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                        : 'bg-rose-50 border-rose-200 text-rose-700'
+                    }`}>
+                      {totalWeight}<span className="text-xs font-bold opacity-60">%</span>
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
             {metrics.length === 0 && (
-              <div className="col-span-full text-center py-6 text-slate-400 font-medium">
-                No default metrics configured. Fallback system defaults (Tests, Assignment, Exam) are currently active.
+              <div className="text-center py-12 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
+                <Award className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 font-semibold text-sm">No default metrics configured</p>
+                <p className="text-slate-400 text-xs mt-1">Fallback system defaults (Tests, Assignment, Exam) are currently active.</p>
               </div>
             )}
           </div>
