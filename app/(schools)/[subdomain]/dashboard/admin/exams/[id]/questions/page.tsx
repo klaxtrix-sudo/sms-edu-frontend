@@ -533,7 +533,3 @@ export default function ManageQuestionsPage() {
 function cn(...classes: any[]) {
   return classes.filter(Boolean).join(" ");
 }
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
-}
