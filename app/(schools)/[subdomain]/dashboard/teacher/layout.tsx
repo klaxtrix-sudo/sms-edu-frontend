@@ -58,9 +58,9 @@ export default async function TeacherLayout({
   return (
     <OnboardingGate user={user}>
       <UserStatusGuard userId={user.id} />
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen relative overflow-hidden">
         <Sidebar items={teacherNavItems} role="Teacher" />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
           <DashboardHeader />
           <main className="flex-1 overflow-y-auto bg-background flex flex-col min-h-0">
             <div className="flex-1 p-8 lg:p-12">
