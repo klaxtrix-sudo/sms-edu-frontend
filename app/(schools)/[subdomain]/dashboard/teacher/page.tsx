@@ -15,7 +15,9 @@ import {
   MapPin,
   ClipboardCheck,
   FileText,
-  Bookmark
+  Bookmark,
+  Smartphone,
+  Megaphone
 } from "lucide-react";
 import { 
   Card, 
@@ -30,6 +32,12 @@ import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn, getBackendUrl } from "@/lib/utils";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function TeacherDashboardPage() {
   const { supabase, tenant, academicCycle, isLoading: isTenantLoading } = useTenant();
@@ -46,6 +54,7 @@ export default function TeacherDashboardPage() {
   const [allClasses, setAllClasses] = useState<any[]>([]);
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, { marked: boolean, present: number, absent: number }>>({});
   const [bulletins, setBulletins] = useState<any[]>([]);
+  const [selectedBulletin, setSelectedBulletin] = useState<any | null>(null);
 
   useEffect(() => {
     if (supabase) {
@@ -527,7 +536,6 @@ export default function TeacherDashboardPage() {
               </h3>
               <Bell className="size-4 text-primary/60" />
             </div>
-            
             <div className={cn(
               bulletins.length > 0 ? "grid grid-cols-1 md:grid-cols-3 gap-6" : "space-y-4"
             )}>
@@ -537,12 +545,14 @@ export default function TeacherDashboardPage() {
                 </div>
               ) : (
                 bulletins.slice(0, 3).map((bulletin) => (
-                  <BulletinItem 
-                    key={bulletin._id}
-                    title={bulletin.title}
-                    date={new Date(bulletin.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    type={bulletin.channel}
-                  />
+                  <div key={bulletin._id} onClick={() => setSelectedBulletin(bulletin)} className="cursor-pointer">
+                    <BulletinItem 
+                      key={bulletin._id}
+                      title={bulletin.title}
+                      date={new Date(bulletin.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      type={bulletin.channel}
+                    />
+                  </div>
                 ))
               )}
             </div>
@@ -550,6 +560,32 @@ export default function TeacherDashboardPage() {
 
         </div>
       )}
+
+      {/* Detail Dialog */}
+      <Dialog open={!!selectedBulletin} onOpenChange={(open) => !open && setSelectedBulletin(null)}>
+        <DialogContent className="max-w-md rounded-2xl border bg-card p-6 shadow-lg">
+          <DialogHeader className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">
+                {selectedBulletin?.channel === 'sms' ? <Smartphone className="size-3" /> : selectedBulletin?.channel === 'system' ? <Bell className="size-3" /> : <Megaphone className="size-3" />}
+                {selectedBulletin?.channel}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                <Calendar className="size-3" />
+                {selectedBulletin && new Date(selectedBulletin.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+            <DialogTitle className="text-xl font-bold leading-snug">
+              {selectedBulletin?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 border-t pt-4">
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {selectedBulletin?.message}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

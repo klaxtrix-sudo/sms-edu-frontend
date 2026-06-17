@@ -13,7 +13,9 @@ import {
   BookOpen,
   Calendar,
   Wallet,
-  CheckCircle2
+  CheckCircle2,
+  Smartphone,
+  Megaphone
 } from "lucide-react";
 import { 
   Card, 
@@ -29,12 +31,19 @@ import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn, getBackendUrl } from "@/lib/utils";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ParentDashboardPage() {
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [parentName, setParentName] = useState("");
   const [bulletins, setBulletins] = useState<any[]>([]);
+  const [selectedBulletin, setSelectedBulletin] = useState<any | null>(null);
   const supabase = createTenantClient();
 
   useEffect(() => {
@@ -175,12 +184,13 @@ export default function ParentDashboardPage() {
                         const day = dateObj.getDate();
                         const formattedDate = `${month} ${day}`;
                         return (
-                          <BulletinItem 
-                            key={bulletin._id}
-                            title={bulletin.title}
-                            date={formattedDate}
-                            type={bulletin.channel}
-                          />
+                          <div key={bulletin._id} onClick={() => setSelectedBulletin(bulletin)} className="cursor-pointer">
+                            <BulletinItem 
+                              title={bulletin.title}
+                              date={formattedDate}
+                              type={bulletin.channel}
+                            />
+                          </div>
                         );
                       })
                     )}
@@ -189,6 +199,32 @@ export default function ParentDashboardPage() {
            </div>
         </div>
       )}
+
+      {/* Detail Dialog */}
+      <Dialog open={!!selectedBulletin} onOpenChange={(open) => !open && setSelectedBulletin(null)}>
+        <DialogContent className="max-w-md rounded-2xl border bg-card p-6 shadow-lg">
+          <DialogHeader className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">
+                {selectedBulletin?.channel === 'sms' ? <Smartphone className="size-3" /> : selectedBulletin?.channel === 'system' ? <Bell className="size-3" /> : <Megaphone className="size-3" />}
+                {selectedBulletin?.channel}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                <Calendar className="size-3" />
+                {selectedBulletin && new Date(selectedBulletin.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+            <DialogTitle className="text-xl font-bold leading-snug">
+              {selectedBulletin?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 border-t pt-4">
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {selectedBulletin?.message}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
