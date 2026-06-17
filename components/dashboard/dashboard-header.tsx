@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Moon, Sun, Monitor, Menu } from 'lucide-react';
+import { LogOut, Moon, Sun, Monitor, Menu, Calendar } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth-actions';
 
 interface DashboardHeaderProps {
@@ -51,23 +51,41 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
       </div>
 
       {academicCycle && (
-        <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-accent/30 rounded-full border border-border/50 text-xs font-semibold text-muted-foreground select-none animate-in fade-in slide-in-from-top-2 duration-500">
-          <span className="font-bold text-foreground">{academicCycle.academicYear} Session</span>
-          <span className="size-1 bg-border rounded-full" />
-          <span className="font-bold text-foreground">
-            {academicCycle.currentTerm === 1 ? '1st Term' : 
-             academicCycle.currentTerm === 2 ? '2nd Term' : 
-             '3rd Term'}
-          </span>
-          <span className="size-1 bg-border rounded-full" />
-          <span className={cn(
-            "px-2 py-0.5 rounded-full font-black text-[9px] tracking-wide uppercase",
-            academicCycle.currentWeek 
-              ? "bg-primary/10 text-primary" 
-              : "bg-amber-500/10 text-amber-600"
-          )}>
-            {academicCycle.currentWeek ? `Week ${academicCycle.currentWeek}` : 'Break / Holiday'}
-          </span>
+        <div className="hidden md:flex items-center gap-3.5 px-4.5 py-2 bg-slate-500/[0.03] dark:bg-white/[0.02] backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] text-xs select-none animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex items-center gap-1.5 text-muted-foreground/80 font-medium">
+            <Calendar className="size-3.5 text-primary/75" />
+            <span className="font-bold text-foreground/90">{academicCycle.academicYear}</span>
+            <span className="text-[10px] text-muted-foreground/50">Session</span>
+          </div>
+          
+          <span className="h-3.5 w-px bg-slate-200 dark:bg-white/10" />
+          
+          <div className="font-semibold text-foreground/80 flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground/50 font-medium">Term:</span>
+            <span className="text-primary font-bold">
+              {academicCycle.currentTerm === 1 ? '1st' : 
+               academicCycle.currentTerm === 2 ? '2nd' : 
+               '3rd'}
+            </span>
+          </div>
+
+          <span className="h-3.5 w-px bg-slate-200 dark:bg-white/10" />
+
+          <div className="flex items-center gap-2">
+            {academicCycle.currentWeek ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                Week {academicCycle.currentWeek}
+              </div>
+            ) : (
+              <span className="px-2.5 py-0.5 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                Holiday / Break
+              </span>
+            )}
+          </div>
         </div>
       )}
       <DropdownMenu>
