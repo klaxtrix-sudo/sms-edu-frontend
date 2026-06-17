@@ -251,284 +251,287 @@ export default function TeacherDashboardPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="space-y-8">
           
-          {/* Main Dashboard Panel */}
-          <div className="xl:col-span-2 space-y-8">
+          {/* 2. Metrics Grid (Spans the whole horizontal space) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              label="My Form Classes" 
+              value={formClasses.length} 
+              icon={Users} 
+              color="blue" 
+              description={formClasses.map(c => c.name).join(", ") || "None assigned"}
+            />
+            <StatCard 
+              label="Assigned Students" 
+              value={totalStudents} 
+              icon={GraduationCap} 
+              color="emerald" 
+              description="In managed classes"
+            />
+            <StatCard 
+              label="Today's Periods" 
+              value={todayPeriods.length} 
+              icon={Clock} 
+              color="amber" 
+              description={isWeekend ? "Monday (Weekend view)" : "Scheduled today"}
+            />
+            <StatCard 
+              label="Active Assignments" 
+              value={recentAssignments.length} 
+              icon={BookOpen} 
+              color="indigo" 
+              description="In Homework Hub"
+            />
+          </div>
+
+          {/* 3. Teaching Schedule & Quick Actions (Side-by-side grid layout) */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             
-            {/* 2. Metrics Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard 
-                label="My Form Classes" 
-                value={formClasses.length} 
-                icon={Users} 
-                color="blue" 
-                description={formClasses.map(c => c.name).join(", ") || "None assigned"}
-              />
-              <StatCard 
-                label="Assigned Students" 
-                value={totalStudents} 
-                icon={GraduationCap} 
-                color="emerald" 
-                description="In managed classes"
-              />
-              <StatCard 
-                label="Today's Periods" 
-                value={todayPeriods.length} 
-                icon={Clock} 
-                color="amber" 
-                description={isWeekend ? "Monday (Weekend view)" : "Scheduled today"}
-              />
-              <StatCard 
-                label="Active Assignments" 
-                value={recentAssignments.length} 
-                icon={BookOpen} 
-                color="indigo" 
-                description="In Homework Hub"
-              />
+            {/* Teaching Schedule (takes up 2 columns) */}
+            <div className="xl:col-span-2">
+              <Card className="border border-border/80 shadow-sm rounded-xl overflow-hidden bg-card h-full flex flex-col">
+                <CardHeader className="p-6 pb-4 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-semibold text-foreground">
+                      Teaching Schedule
+                    </CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground">
+                      Your periods for {isWeekend ? "Monday (Next Week)" : "Today"} ({getDayLabel(targetScheduleDay)})
+                    </CardDescription>
+                  </div>
+                  {isWeekend && (
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 rounded-full font-semibold text-[10px]">
+                      Weekend View
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-4 flex-1">
+                  {todayPeriods.length === 0 ? (
+                    <div className="border border-dashed border-border/80 rounded-xl p-8 text-center text-muted-foreground h-full flex flex-col justify-center items-center">
+                      <Clock className="size-8 opacity-30 mb-3" />
+                      <p className="font-semibold text-sm">No periods scheduled for {getDayLabel(targetScheduleDay)}.</p>
+                      <p className="text-xs text-muted-foreground/80 mt-0.5">Enjoy your prep time!</p>
+                    </div>
+                  ) : (
+                    <div className="relative border-l border-primary/25 ml-2 pl-6 space-y-6">
+                      {todayPeriods.map((period) => (
+                        <div key={period.id} className="relative group">
+                          {/* Dot indicator */}
+                          <div className="absolute -left-[31px] top-1.5 size-3 rounded-full bg-primary border-2 border-background group-hover:scale-125 transition-transform" />
+                          
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50/50 border border-border/50 hover:bg-slate-50 transition-colors">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-primary/10 text-primary hover:bg-primary/15 rounded-lg font-semibold text-xs">
+                                  {period.classes?.name}
+                                </Badge>
+                                <span className="text-xs font-semibold text-muted-foreground">
+                                  {period.subjects?.code}
+                                </span>
+                              </div>
+                              <h4 className="text-base font-semibold mt-1 text-foreground">
+                                {period.subjects?.name}
+                              </h4>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="size-3.5 text-primary/60" />
+                                {period.start_time.slice(0, 5)} - {period.end_time.slice(0, 5)}
+                              </div>
+                              {period.room && (
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="size-3.5 text-primary/45" />
+                                  {period.room}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
-            {/* 3. Today's Teaching Schedule (Timeline) */}
-            <Card className="border border-border/80 shadow-sm rounded-xl overflow-hidden bg-card">
-              <CardHeader className="p-6 pb-4 flex flex-row items-center justify-between">
-                <div>
+            {/* Quick Actions (takes up 1 column) */}
+            <div className="xl:col-span-1">
+              <Card className="border border-border/80 shadow-sm bg-card rounded-xl overflow-hidden h-full flex flex-col">
+                <CardHeader className="p-6 pb-4">
                   <CardTitle className="text-lg font-semibold text-foreground">
-                    Teaching Schedule
+                    Quick Actions
                   </CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground">
-                    Your periods for {isWeekend ? "Monday (Next Week)" : "Today"} ({getDayLabel(targetScheduleDay)})
+                  <CardDescription className="text-xs text-muted-foreground">
+                    Access common administrative tasks.
                   </CardDescription>
-                </div>
-                {isWeekend && (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 rounded-full font-semibold text-[10px]">
-                    Weekend View
-                  </Badge>
-                )}
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4">
-                {todayPeriods.length === 0 ? (
-                  <div className="border border-dashed border-border/80 rounded-xl p-8 text-center text-muted-foreground">
-                    <Clock className="size-8 mx-auto opacity-30 mb-3" />
-                    <p className="font-semibold text-sm">No periods scheduled for {getDayLabel(targetScheduleDay)}.</p>
-                    <p className="text-xs text-muted-foreground/80 mt-0.5">Enjoy your prep time!</p>
-                  </div>
-                ) : (
-                  <div className="relative border-l border-primary/25 ml-2 pl-6 space-y-6">
-                    {todayPeriods.map((period) => (
-                      <div key={period.id} className="relative group">
-                        {/* Dot indicator */}
-                        <div className="absolute -left-[31px] top-1.5 size-3 rounded-full bg-primary border-2 border-background group-hover:scale-125 transition-transform" />
-                        
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50/50 border border-border/50 hover:bg-slate-50 transition-colors">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-primary/10 text-primary hover:bg-primary/15 rounded-lg font-semibold text-xs">
-                                {period.classes?.name}
-                              </Badge>
-                              <span className="text-xs font-semibold text-muted-foreground">
-                                {period.subjects?.code}
-                              </span>
-                            </div>
-                            <h4 className="text-base font-semibold mt-1 text-foreground">
-                              {period.subjects?.name}
-                            </h4>
-                          </div>
-
-                          <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="size-3.5 text-primary/60" />
-                              {period.start_time.slice(0, 5)} - {period.end_time.slice(0, 5)}
-                            </div>
-                            {period.room && (
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="size-3.5 text-primary/45" />
-                                {period.room}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 4. My Classrooms & Attendance Status */}
-            <Card className="border border-border/80 shadow-sm rounded-xl overflow-hidden bg-card">
-              <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Classroom Manager
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Quick status tracking for classrooms you manage as Form Teacher.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                {formClasses.length === 0 ? (
-                  <div className="p-6 border border-dashed border-border/80 rounded-xl text-center text-muted-foreground">
-                    <p className="font-semibold text-sm">You are not designated as Form Teacher for any classes.</p>
-                    <p className="text-xs text-muted-foreground/80 mt-0.5">Contact the administrator to assign you a form classroom.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {formClasses.map((cls) => {
-                      const status = attendanceStatus[cls.id] || { marked: false, present: 0, absent: 0 };
-                      return (
-                        <Card key={cls.id} className="border border-border/60 shadow-none bg-slate-50/20 rounded-xl p-5 hover:bg-slate-50/50 transition-all">
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge className="rounded-lg px-2.5 py-0.5 bg-primary/10 text-primary border-none font-semibold text-xs">
-                              {cls.name}
-                            </Badge>
-                            {status.marked ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 border-none font-medium">
-                                <CheckCircle2 className="size-3 mr-1" /> Marked
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 border-none font-medium">
-                                <AlertCircle className="size-3 mr-1" /> Pending
-                              </Badge>
-                            )}
-                          </div>
-                          <h4 className="text-base font-semibold mb-1">Daily Attendance Tracker</h4>
-                          <p className="text-xs text-muted-foreground mb-4">
-                            Check student presence logs for the school calendar day.
-                          </p>
-                          
-                          {status.marked ? (
-                            <div className="grid grid-cols-2 gap-2 text-center bg-background p-2.5 rounded-xl border border-border/60">
-                              <div>
-                                <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Present</span>
-                                <p className="text-base font-semibold text-emerald-600">{status.present}</p>
-                              </div>
-                              <div>
-                                <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Absent</span>
-                                <p className="text-base font-semibold text-rose-600">{status.absent}</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <Button asChild size="sm" className="w-full rounded-lg font-semibold text-xs h-9 shadow-sm">
-                              <Link href="/dashboard/teacher/attendance">
-                                Mark Attendance
-                              </Link>
-                            </Button>
-                          )}
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-          </div>
-
-          {/* Sidebar Panel */}
-          <div className="xl:col-span-1 space-y-8">
-
-            {/* 5. Action Hub */}
-            <Card className="border border-border/80 shadow-sm bg-card rounded-xl overflow-hidden">
-              <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Quick Actions
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  Access common administrative tasks.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-3">
-                <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
-                  <Link href="/dashboard/teacher/attendance">
-                    <ClipboardCheck className="size-4 text-primary" />
-                    Mark Daily Attendance
-                  </Link>
-                </Button>
-
-                <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
-                  <Link href="/dashboard/teacher/assignments">
-                    <BookOpen className="size-4 text-primary" />
-                    Create Homework Assignment
-                  </Link>
-                </Button>
-
-                <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
-                  <Link href="/dashboard/teacher/timetable">
-                    <Calendar className="size-4 text-primary" />
-                    View Weekly Timetable
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* 6. Recent Homework Tasks */}
-            <Card className="border border-border/80 shadow-sm rounded-xl p-6 bg-card">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Recent Tasks
-                </h3>
-                <BookOpen className="size-4 text-primary/60" />
-              </div>
-              <div className="space-y-4">
-                {recentAssignments.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-xs font-medium">
-                    No active assignments listed.
-                  </div>
-                ) : (
-                  recentAssignments.map((task) => (
-                    <Link key={task._id} href={`/dashboard/teacher/assignments/${task._id}`} className="block group">
-                      <div className="border-b border-border/50 pb-3 group-last:border-none flex items-start gap-3">
-                        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform min-w-[2rem]">
-                          <FileText className="size-4" />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <h5 className="text-sm font-semibold leading-tight group-hover:text-primary transition-colors line-clamp-1">
-                            {task.title}
-                          </h5>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {task.className}
-                            </span>
-                            <span className="text-[10px] font-medium text-muted-foreground/85">
-                              Submissions: {task.submissionCount}
-                            </span>
-                          </div>
-                        </div>
-                        <ChevronRight className="size-4 self-center text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                      </div>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-3 flex-1 flex flex-col justify-start">
+                  <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
+                    <Link href="/dashboard/teacher/attendance">
+                      <ClipboardCheck className="size-4 text-primary" />
+                      Mark Daily Attendance
                     </Link>
-                  ))
-                )}
-              </div>
-            </Card>
+                  </Button>
 
-            {/* 7. Bulletins Widget */}
-            <Card className="border border-border/80 shadow-sm rounded-xl p-6 bg-card">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Notice Board
-                </h3>
-                <Bell className="size-4 text-primary/60" />
-              </div>
-              <div className="space-y-4">
-                <BulletinItem 
-                  title="Term 3 Continuous Assessment Prep" 
-                  date="Jun 20" 
-                  type="academic"
-                />
-                <BulletinItem 
-                  title="Staff Senate & Budget Review Meeting" 
-                  date="Jun 24" 
-                  type="meeting"
-                />
-                <BulletinItem 
-                  title="Academic Progress Report Submission" 
-                  date="Jul 02" 
-                  type="deadline"
-                />
-              </div>
-            </Card>
+                  <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
+                    <Link href="/dashboard/teacher/assignments">
+                      <BookOpen className="size-4 text-primary" />
+                      Create Homework Assignment
+                    </Link>
+                  </Button>
 
+                  <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
+                    <Link href="/dashboard/teacher/timetable">
+                      <Calendar className="size-4 text-primary" />
+                      View Weekly Timetable
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            
           </div>
+
+          {/* 4. Classroom Manager (Spans the whole horizontal space) */}
+          <Card className="border border-border/80 shadow-sm rounded-xl overflow-hidden bg-card">
+            <CardHeader className="p-6 pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">
+                Classroom Manager
+              </CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                Quick status tracking for classrooms you manage as Form Teacher.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              {formClasses.length === 0 ? (
+                <div className="p-6 border border-dashed border-border/80 rounded-xl text-center text-muted-foreground">
+                  <p className="font-semibold text-sm">You are not designated as Form Teacher for any classes.</p>
+                  <p className="text-xs text-muted-foreground/80 mt-0.5">Contact the administrator to assign you a form classroom.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {formClasses.map((cls) => {
+                    const status = attendanceStatus[cls.id] || { marked: false, present: 0, absent: 0 };
+                    return (
+                      <Card key={cls.id} className="border border-border/60 shadow-none bg-slate-50/20 rounded-xl p-5 hover:bg-slate-50/50 transition-all">
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge className="rounded-lg px-2.5 py-0.5 bg-primary/10 text-primary border-none font-semibold text-xs">
+                            {cls.name}
+                          </Badge>
+                          {status.marked ? (
+                            <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 border-none font-medium">
+                              <CheckCircle2 className="size-3 mr-1" /> Marked
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 border-none font-medium">
+                              <AlertCircle className="size-3 mr-1" /> Pending
+                            </Badge>
+                          )}
+                        </div>
+                        <h4 className="text-base font-semibold mb-1">Daily Attendance Tracker</h4>
+                        <p className="text-xs text-muted-foreground mb-4">
+                          Check student presence logs for the school calendar day.
+                        </p>
+                        
+                        {status.marked ? (
+                          <div className="grid grid-cols-2 gap-2 text-center bg-background p-2.5 rounded-xl border border-border/60">
+                            <div>
+                              <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Present</span>
+                              <p className="text-base font-semibold text-emerald-600">{status.present}</p>
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Absent</span>
+                              <p className="text-base font-semibold text-rose-600">{status.absent}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button asChild size="sm" className="w-full rounded-lg font-semibold text-xs h-9 shadow-sm">
+                            <Link href="/dashboard/teacher/attendance">
+                              Mark Attendance
+                            </Link>
+                          </Button>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 5. Recent Homework Tasks (Spans the whole horizontal space) */}
+          <Card className="border border-border/80 shadow-sm rounded-xl p-6 bg-card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground">
+                Recent Tasks
+              </h3>
+              <BookOpen className="size-4 text-primary/60" />
+            </div>
+            
+            <div className={cn(
+              recentAssignments.length > 0 ? "grid grid-cols-1 md:grid-cols-3 gap-6" : "space-y-4"
+            )}>
+              {recentAssignments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-xs font-medium w-full col-span-3">
+                  No active assignments listed.
+                </div>
+              ) : (
+                recentAssignments.map((task) => (
+                  <Link key={task._id} href={`/dashboard/teacher/assignments/${task._id}`} className="block group">
+                    <div className="border border-border/60 hover:border-primary/40 p-4 rounded-xl flex items-start gap-3 bg-slate-50/20 hover:bg-slate-50/50 transition-all h-full">
+                      <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform min-w-[2rem]">
+                        <FileText className="size-4" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <h5 className="text-sm font-semibold leading-tight group-hover:text-primary transition-colors line-clamp-1">
+                          {task.title}
+                        </h5>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {task.className}
+                          </span>
+                          <span className="text-[10px] font-medium text-muted-foreground/85">
+                            Submissions: {task.submissionCount}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="size-4 self-center text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </Card>
+
+          {/* 6. Notice Board (Spans the whole horizontal space) */}
+          <Card className="border border-border/80 shadow-sm rounded-xl p-6 bg-card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground">
+                Notice Board
+              </h3>
+              <Bell className="size-4 text-primary/60" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <BulletinItem 
+                title="Term 3 Continuous Assessment Prep" 
+                date="Jun 20" 
+                type="academic"
+              />
+              <BulletinItem 
+                title="Staff Senate & Budget Review Meeting" 
+                date="Jun 24" 
+                type="meeting"
+              />
+              <BulletinItem 
+                title="Academic Progress Report Submission" 
+                date="Jul 02" 
+                type="deadline"
+              />
+            </div>
+          </Card>
 
         </div>
       )}
@@ -568,13 +571,13 @@ function StatCard({ label, value, icon: Icon, color, description }: any) {
 
 function BulletinItem({ title, date, type }: any) {
   return (
-    <div className="flex items-center gap-3 group cursor-pointer text-left">
+    <div className="flex items-center gap-3 group cursor-pointer text-left p-4 rounded-xl border border-border/60 bg-slate-50/20 hover:bg-slate-50/50 transition-all">
       <div className="size-10 rounded-lg bg-muted border border-border/80 flex flex-col items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-all min-w-[2.5rem]">
         <span className="text-[9px] font-semibold uppercase leading-none">{date.split(' ')[0]}</span>
         <span className="text-xs font-bold mt-0.5">{date.split(' ')[1]}</span>
       </div>
-      <div className="flex-1 border-b border-border/40 pb-3 group-last:border-none text-left">
-        <h5 className="text-sm font-semibold leading-snug group-hover:text-primary transition-colors">{title}</h5>
+      <div className="flex-1 min-w-0 text-left">
+        <h5 className="text-sm font-semibold leading-snug group-hover:text-primary transition-colors truncate">{title}</h5>
         <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60 mt-0.5 block">{type}</span>
       </div>
     </div>
