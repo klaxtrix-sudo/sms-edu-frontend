@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTheme } from 'next-themes';
 import { useTenant } from '@/components/providers/tenant-provider';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const { theme, setTheme } = useTheme();
-  const { tenant } = useTenant();
+  const { tenant, academicCycle } = useTenant();
 
   const handleSignOut = async () => {
     await signOutAction(tenant?.subdomain || '');
@@ -48,6 +49,27 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
           <Menu className="h-5 w-5" />
         </Button>
       </div>
+
+      {academicCycle && (
+        <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-accent/30 rounded-full border border-border/50 text-xs font-semibold text-muted-foreground select-none animate-in fade-in slide-in-from-top-2 duration-500">
+          <span className="font-bold text-foreground">{academicCycle.academicYear} Session</span>
+          <span className="size-1 bg-border rounded-full" />
+          <span className="font-bold text-foreground">
+            {academicCycle.currentTerm === 1 ? '1st Term' : 
+             academicCycle.currentTerm === 2 ? '2nd Term' : 
+             '3rd Term'}
+          </span>
+          <span className="size-1 bg-border rounded-full" />
+          <span className={cn(
+            "px-2 py-0.5 rounded-full font-black text-[9px] tracking-wide uppercase",
+            academicCycle.currentWeek 
+              ? "bg-primary/10 text-primary" 
+              : "bg-amber-500/10 text-amber-600"
+          )}>
+            {academicCycle.currentWeek ? `Week ${academicCycle.currentWeek}` : 'Break / Holiday'}
+          </span>
+        </div>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-xl focus-visible:ring-1 focus-visible:ring-ring">

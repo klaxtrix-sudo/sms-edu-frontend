@@ -18,11 +18,21 @@ interface TenantConfig {
   isSetupCompleted: boolean;
 }
 
+export interface AcademicCycle {
+  academicYear: string;
+  currentTerm: number;
+  termBegins: string | null;
+  termEnds: string | null;
+  currentWeek: number | null;
+}
+
 interface TenantContextType {
   tenant: TenantConfig | null;
   supabase: SupabaseClient<Database, any, any> | null;
   isLoading: boolean;
   error: string | null;
+  academicCycle: AcademicCycle | null;
+  refreshAcademicCycle: () => Promise<void>;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
@@ -35,6 +45,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [academicCycle, setAcademicCycle] = useState<AcademicCycle | null>(null);
 
   // Initialize tenant-specific supabase client
   // Memoize it only based on the URL and key values, not the tenant object itself
@@ -46,9 +57,61 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     return null;
   }, [tenant?.supabaseUrl, tenant?.supabaseAnonKey, tenant?.name]);
 
+  const fetchAcademicCycle = async () => {
+    if (!supabase || !tenant?.id) return;
+    try {
+      const { data, error: cycleError } = await supabase
+        .from('schools')
+        .select('academic_year, current_term, term_begins, term_ends')
+        .eq('id', tenant.id)
+        .maybeSingle();
+
+      if (cycleError) {
+        console.error('[Tenant Provider] Error fetching academic cycle:', cycleError.message);
+        return;
+      }
+
+      if (data) {
+        let currentWeek: number | null = null;
+        if (data.term_begins && data.term_ends) {
+          const start = new Date(data.term_begins);
+          const end = new Date(data.term_ends);
+          const now = new Date();
+          
+          start.setHours(0, 0, 0, 0);
+          end.setHours(23, 59, 59, 999);
+          now.setHours(12, 0, 0, 0); // midday for calculation safety
+          
+          if (now >= start && now <= end) {
+            const diffTime = now.getTime() - start.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            // Week 1 starts on days 0 to 6
+            currentWeek = Math.floor(diffDays / 7) + 1;
+          }
+        }
+
+        setAcademicCycle({
+          academicYear: data.academic_year || '2025/2026',
+          currentTerm: data.current_term || 1,
+          termBegins: data.term_begins,
+          termEnds: data.term_ends,
+          currentWeek
+        });
+      }
+    } catch (err) {
+      console.error('[Tenant Provider] Error calculating academic cycle:', err);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (supabase && tenant?.id) {
+      fetchAcademicCycle();
+    }
+  }, [supabase, tenant?.id]);
 
   useEffect(() => {
     if (!subdomain || !mounted) return;
@@ -106,7 +169,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   if (!mounted) return null;
 
   return (
-    <TenantContext.Provider value={{ tenant, supabase, isLoading, error }}>
+    <TenantContext.Provider value={{ tenant, supabase, isLoading, error, academicCycle, refreshAcademicCycle: fetchAcademicCycle }}>
       {children}
     </TenantContext.Provider>
   );
@@ -116,7 +179,14 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 export function useTenant() {
   const context = useContext(TenantContext);
   // Return a safe null-state if used outside a provider (e.g. Master Console)
-  return context || { tenant: null, supabase: null, isLoading: false, error: null };
+  return context || { 
+    tenant: null, 
+    supabase: null, 
+    isLoading: false, 
+    error: null,
+    academicCycle: null,
+    refreshAcademicCycle: async () => {}
+  };
 }
 
 export function useTenantSupabase() {
