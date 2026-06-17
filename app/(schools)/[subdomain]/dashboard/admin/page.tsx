@@ -8,8 +8,7 @@ import {
   Plus, 
   TrendingUp, 
   Bell, 
-  Calendar,
-  ArrowRight
+  Calendar
 } from "lucide-react";
 import { PerformanceChart } from '@/components/dashboard/performance-chart';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import Link from 'next/link';
 
 import { resolveTenantKeys } from '@/lib/supabase/tenant-resolver';
 import { getBackendUrl } from '@/lib/utils';
+import { RecentBulletins } from '@/components/admin/recent-bulletins';
 
 export default async function AdminDashboard({ params }: { params: { subdomain: string } }) {
   const { subdomain } = params;
@@ -68,6 +68,8 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   } catch (error) {
     console.error('Failed to fetch performance data:', error);
   }
+
+
 
   const stats = [
     { label: "Teachers", value: String(teachersCount.count ?? 0), icon: Users, color: "from-blue-500 to-indigo-600" },
@@ -170,39 +172,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
         </div>
 
         {/* LARGE BENTO CELL: Global Feed / Bulletins */}
-        <div className="lg:col-span-3 glass-panel rounded-[2rem] p-8 border border-white/5 bg-white/5 group overflow-hidden relative">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold">Recent Bulletins</h3>
-            <Button variant="link" className="text-primary gap-2 p-0 group-hover:translate-x-1 transition-transform">
-              View All <ArrowRight className="size-4" />
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="group/item glass-panel !bg-white/[0.03] rounded-2xl p-6 border-white/5 hover:border-primary/30 transition-colors cursor-pointer">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-blue-500/20 text-blue-400 pointer-events-none">Operational</Badge>
-                      <span className="text-xs text-muted-foreground font-medium">Post {i} • Mar 20, 2024</span>
-                    </div>
-                    <h4 className="font-bold text-lg group-hover/item:text-primary transition-colors">Term 2 Examination Schedule Published</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                      The official schedule for all senior levels is now live in the Academics department. Teachers are requested to verify their respective subject timings...
-                    </p>
-                  </div>
-                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary opacity-0 group-hover/item:opacity-100 transition-opacity">
-                    <ArrowRight className="size-5" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Background animation blob */}
-          <div className="absolute -bottom-24 -right-24 size-48 bg-primary/20 blur-[80px] rounded-full" />
-        </div>
+        <RecentBulletins />
 
       </div>
     </div>
