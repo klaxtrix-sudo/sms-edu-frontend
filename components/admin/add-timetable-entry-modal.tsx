@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
   Plus, 
   Calendar, 
   Clock, 
   BookOpen, 
   MapPin,
-  Loader2
+  Loader2,
+  User
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,8 +69,9 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [teacherName, setTeacherName] = useState<string>("");
+  const [teacherLoading, setTeacherLoading] = useState(false);
   const supabase = createTenantClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -85,6 +87,9 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
     },
   });
 
+  const watchClassId = form.watch("class_id");
+  const watchSubjectId = form.watch("subject_id");
+
   useEffect(() => {
     if (open) {
       fetchData();
@@ -92,16 +97,57 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
     }
   }, [open, defaultClassId]);
 
+  // Auto-load teacher when class + subject are both selected
+  const lookupTeacher = useCallback(async (classId: string, subjectId: string) => {
+    if (!classId || !subjectId) {
+      setTeacherName("");
+      form.setValue("teacher_id", "");
+      return;
+    }
+    setTeacherLoading(true);
+    try {
+      const { data: assignment } = await supabase
+        .from("class_subject_teachers")
+        .select("teacher_id")
+        .eq("class_id", classId)
+        .eq("subject_id", subjectId)
+        .maybeSingle();
+
+      if (assignment?.teacher_id) {
+        form.setValue("teacher_id", assignment.teacher_id);
+        // Fetch teacher name
+        const { data: teacher } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", assignment.teacher_id)
+          .single();
+        setTeacherName(teacher?.full_name || "Unknown Teacher");
+      } else {
+        form.setValue("teacher_id", "");
+        setTeacherName("Not assigned");
+      }
+    } catch {
+      form.setValue("teacher_id", "");
+      setTeacherName("Lookup failed");
+    } finally {
+      setTeacherLoading(false);
+    }
+  }, [supabase, form]);
+
+  useEffect(() => {
+    if (open) {
+      lookupTeacher(watchClassId, watchSubjectId);
+    }
+  }, [watchClassId, watchSubjectId, open]);
+
   const fetchData = async () => {
     try {
-      const [{ data: classData }, { data: subjectData }, { data: teacherData }] = await Promise.all([
+      const [{ data: classData }, { data: subjectData }] = await Promise.all([
         supabase.from("classes").select("*"),
         supabase.from("subjects").select("*"),
-        supabase.from("profiles").select("*").eq("role", "teacher").eq("is_archived", false).order("full_name"),
       ]);
       setClasses(classData || []);
       setSubjects(subjectData || []);
-      setTeachers(teacherData || []);
     } catch (error) {
       toast.error("Failed to load scheduling options");
     }
@@ -233,22 +279,24 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
               <FormField
                 control={form.control}
                 name="teacher_id"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Teacher (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
-                          <SelectValue placeholder="Pick Teacher" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">None (No Teacher)</SelectItem>
-                        {teachers.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Teacher</FormLabel>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        readOnly
+                        value={
+                          teacherLoading
+                            ? "Loading..."
+                            : (!watchClassId || !watchSubjectId)
+                            ? ""
+                            : teacherName
+                        }
+                        placeholder="Select class & subject"
+                        className="pl-10 bg-muted/50 border-none ring-1 ring-border rounded-xl font-bold cursor-default text-sm"
+                      />
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
