@@ -66,7 +66,7 @@ export default function ParentDashboardPage() {
           admission_no,
           user_id,
           classes (name),
-          profiles:user_id (full_name, avatar_url)
+          profiles!user_id (full_name, avatar_url)
         `)
         .eq("parent_id", session.user.id);
 

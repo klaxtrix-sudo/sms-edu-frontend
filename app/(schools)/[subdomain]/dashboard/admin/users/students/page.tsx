@@ -107,11 +107,11 @@ export default function StudentsPage() {
             user_id,
             admission_no,
             gender,
-            profiles:user_id (
+            profiles!user_id (
               full_name,
               phone
             ),
-            classes:class_id (
+            classes!class_id (
               id,
               name
             )
