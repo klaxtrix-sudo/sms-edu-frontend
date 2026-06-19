@@ -23,24 +23,51 @@ import { Badge } from '@/components/ui/badge';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { saveResendConfig, getResendConfig, type ResendConfig, type TenantCredentials } from '@/app/actions/config-actions';
+import { 
+  saveResendConfig, 
+  getResendConfig, 
+  saveTermiiConfig, 
+  getTermiiConfig, 
+  savePaystackConfig, 
+  getPaystackConfig,
+  toggleIntegrationActive,
+  type ResendConfig, 
+  type TermiiConfig,
+  type PaystackConfig,
+  type TenantCredentials 
+} from '@/app/actions/config-actions';
 
 export default function IntegrationSettings() {
   const { tenant } = useTenant();
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [copied, setCopied] = useState(false);
   
-  const [isSmsEnabled, setIsSmsEnabled] = useState(true);
-  const [isPaymentEnabled, setIsPaymentEnabled] = useState(true);
+  // Loading states for actions
+  const [loadingSms, setLoadingSms] = useState(false);
+  const [loadingPaystack, setLoadingPaystack] = useState(false);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+
+  // Integration Active/Enabled states
+  const [isSmsEnabled, setIsSmsEnabled] = useState(false);
+  const [isPaymentEnabled, setIsPaymentEnabled] = useState(false);
+  const [isResendExpanded, setIsResendExpanded] = useState(false);
   
+  // Configuration structures
   const [resendConfig, setResendConfig] = useState<ResendConfig>({
     apiKey: '',
     fromEmail: '',
     fromName: ''
   });
-  const [isResendExpanded, setIsResendExpanded] = useState(false);
+
+  const [termiiConfig, setTermiiConfig] = useState<TermiiConfig>({
+    apiKey: '',
+    senderId: ''
+  });
+
+  const [paystackConfig, setPaystackConfig] = useState<PaystackConfig>({
+    secretKey: ''
+  });
 
   useEffect(() => {
     if (tenant?.id) {
@@ -55,24 +82,42 @@ export default function IntegrationSettings() {
       supabaseUrl: tenant.supabaseUrl,
       supabaseAnonKey: tenant.supabaseAnonKey
     };
-    const { config, error } = await getResendConfig(tenant.id, tenantCreds);
-    if (error) {
-      toast.error(error);
-    } else if (config) {
-      setResendConfig(config);
-      if (config.apiKey) setIsResendExpanded(true);
+
+    try {
+      const [resendRes, termiiRes, paystackRes] = await Promise.all([
+        getResendConfig(tenant.id, tenantCreds),
+        getTermiiConfig(tenant.id, tenantCreds),
+        getPaystackConfig(tenant.id, tenantCreds)
+      ]);
+
+      if (resendRes.config) {
+        setResendConfig(resendRes.config);
+        setIsResendExpanded(resendRes.isActive ?? false);
+      }
+      if (termiiRes.config) {
+        setTermiiConfig(termiiRes.config);
+        setIsSmsEnabled(termiiRes.isActive ?? false);
+      }
+      if (paystackRes.config) {
+        setPaystackConfig(paystackRes.config);
+        setIsPaymentEnabled(paystackRes.isActive ?? false);
+      }
+    } catch (err: any) {
+      console.error("Error loading integrations:", err);
+      toast.error("Failed to load integration configurations");
+    } finally {
+      setFetching(false);
     }
-    setFetching(false);
   };
 
   const handleSaveResend = async () => {
-    if (!tenant?.id) return;
-    if (!tenant.supabaseUrl || !tenant.supabaseAnonKey) {
-      toast.error("School configuration is unavailable. Please refresh the page.");
+    if (!tenant?.id || !tenant.supabaseUrl || !tenant.supabaseAnonKey) return;
+    if (!resendConfig.apiKey) {
+      toast.error("API Key is required");
       return;
     }
 
-    setLoading(true);
+    setLoadingEmail(true);
     const tenantCreds: TenantCredentials = {
       supabaseUrl: tenant.supabaseUrl,
       supabaseAnonKey: tenant.supabaseAnonKey
@@ -81,13 +126,103 @@ export default function IntegrationSettings() {
 
     if (result.success) {
       toast.success("Institutional Email Configured", {
-        description: "Branded delivery is now active for your school."
+        description: "Branded delivery has been verified and is now active."
       });
+      setIsResendExpanded(true);
       fetchConfig();
     } else {
       toast.error(result.error || "Failed to save configuration");
     }
-    setLoading(false);
+    setLoadingEmail(false);
+  };
+
+  const handleSaveTermii = async () => {
+    if (!tenant?.id || !tenant.supabaseUrl || !tenant.supabaseAnonKey) return;
+    if (!termiiConfig.apiKey) {
+      toast.error("API Key is required");
+      return;
+    }
+
+    setLoadingSms(true);
+    const tenantCreds: TenantCredentials = {
+      supabaseUrl: tenant.supabaseUrl,
+      supabaseAnonKey: tenant.supabaseAnonKey
+    };
+    const result = await saveTermiiConfig(tenant.id, termiiConfig, tenantCreds);
+
+    if (result.success) {
+      toast.success("Termii SMS Gateway Configured", {
+        description: "Credentials verified and active."
+      });
+      setIsSmsEnabled(true);
+      fetchConfig();
+    } else {
+      toast.error(result.error || "Failed to save configuration");
+    }
+    setLoadingSms(false);
+  };
+
+  const handleSavePaystack = async () => {
+    if (!tenant?.id || !tenant.supabaseUrl || !tenant.supabaseAnonKey) return;
+    if (!paystackConfig.secretKey) {
+      toast.error("Secret Key is required");
+      return;
+    }
+
+    setLoadingPaystack(true);
+    const tenantCreds: TenantCredentials = {
+      supabaseUrl: tenant.supabaseUrl,
+      supabaseAnonKey: tenant.supabaseAnonKey
+    };
+    const result = await savePaystackConfig(tenant.id, paystackConfig, tenantCreds);
+
+    if (result.success) {
+      toast.success("Paystack Payment Engine Configured", {
+        description: "Secret key verified and active."
+      });
+      setIsPaymentEnabled(true);
+      fetchConfig();
+    } else {
+      toast.error(result.error || "Failed to save configuration");
+    }
+    setLoadingPaystack(false);
+  };
+
+  const handleToggleSwitch = async (key: string, checked: boolean) => {
+    if (!tenant?.id || !tenant.supabaseUrl || !tenant.supabaseAnonKey) return;
+    const tenantCreds: TenantCredentials = {
+      supabaseUrl: tenant.supabaseUrl,
+      supabaseAnonKey: tenant.supabaseAnonKey
+    };
+
+    if (key === 'termii') {
+      if (checked && (!termiiConfig.apiKey || termiiConfig.apiKey.trim() === '')) {
+        toast.error("Invalid Configuration", {
+          description: "Configure and verify a valid Termii API key before enabling."
+        });
+        return;
+      }
+      setIsSmsEnabled(checked);
+      await toggleIntegrationActive(tenant.id, 'termii_settings', checked, tenantCreds);
+    } else if (key === 'paystack') {
+      if (checked && (!paystackConfig.secretKey || paystackConfig.secretKey.trim() === '')) {
+        toast.error("Invalid Configuration", {
+          description: "Configure and verify a valid Paystack secret key before enabling."
+        });
+        return;
+      }
+      setIsPaymentEnabled(checked);
+      await toggleIntegrationActive(tenant.id, 'paystack_settings', checked, tenantCreds);
+    } else if (key === 'resend') {
+      if (checked && (!resendConfig.apiKey || resendConfig.apiKey.trim() === '')) {
+        toast.error("Invalid Configuration", {
+          description: "Configure and verify a valid Resend API key before enabling."
+        });
+        return;
+      }
+      setIsResendExpanded(checked);
+      await toggleIntegrationActive(tenant.id, 'resend_settings', checked, tenantCreds);
+    }
   };
 
   const toggleKey = (id: string) => {
@@ -104,6 +239,15 @@ export default function IntegrationSettings() {
     toast.success("Webhook URL copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (fetching) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+        <p className="text-slate-400 font-medium text-sm animate-pulse">Fetching integrations status...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -140,62 +284,68 @@ export default function IntegrationSettings() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Switch checked={isSmsEnabled} onCheckedChange={setIsSmsEnabled} />
+              <Switch checked={isSmsEnabled} onCheckedChange={(c) => handleToggleSwitch('termii', c)} />
             </div>
           </div>
 
-          <AnimatePresence initial={false}>
-            {isSmsEnabled && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
+            <div className="space-y-2">
+              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">API Key</Label>
+              <div className="relative">
+                <Input 
+                  type={showKeys['sms'] ? 'text' : 'password'}
+                  value={termiiConfig.apiKey}
+                  onChange={(e) => setTermiiConfig({...termiiConfig, apiKey: e.target.value})}
+                  placeholder="TL-xxxxxxxxxxxxxxxx"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-indigo-500 focus:border-indigo-300"
+                />
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                  onClick={() => toggleKey('sms')}
+                >
+                  {showKeys['sms'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender ID</Label>
+              <Input 
+                value={termiiConfig.senderId}
+                onChange={(e) => setTermiiConfig({...termiiConfig, senderId: e.target.value})}
+                placeholder="KLAXTRIX"
+                className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-indigo-500 focus:border-indigo-300"
+              />
+            </div>
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Badge className={`border font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl ${
+              isSmsEnabled 
+                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+                : "bg-slate-50 text-slate-400 border-slate-200"
+            }`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isSmsEnabled ? "text-emerald-500" : "text-slate-300"}`} />
+              {isSmsEnabled ? "Connected & Active" : "Config Inactive"}
+            </Badge>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Button 
+                onClick={handleSaveTermii}
+                disabled={loadingSms}
+                className="w-full sm:w-auto h-12 bg-indigo-600 hover:bg-indigo-700 text-white px-6 rounded-2xl font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 active:scale-[0.98] transition-all"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">API Key</Label>
-                    <div className="relative">
-                      <Input 
-                        type={showKeys['sms'] ? 'text' : 'password'}
-                        defaultValue="TL-3892-XXXX-KLAX"
-                        disabled
-                        className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 text-slate-500"
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
-                        onClick={() => toggleKey('sms')}
-                      >
-                        {showKeys['sms'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender ID</Label>
-                    <Input 
-                      defaultValue="KLAXTRIX"
-                      disabled
-                      className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-bold uppercase pl-5 text-slate-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-100 font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    System Connected
-                  </Badge>
-                  <Button variant="ghost" className="text-xs font-black text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all gap-2 rounded-xl px-4 py-2">
-                    View SMS Analytics <ExternalLink className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {loadingSms ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save & Verify Config
+              </Button>
+              {isSmsEnabled && (
+                <Button variant="ghost" className="text-xs font-black text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all gap-2 rounded-xl px-4 py-2">
+                  View SMS Analytics <ExternalLink className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 2. Payment Gateway (Paystack) */}
@@ -218,87 +368,92 @@ export default function IntegrationSettings() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Switch checked={isPaymentEnabled} onCheckedChange={setIsPaymentEnabled} />
+              <Switch checked={isPaymentEnabled} onCheckedChange={(c) => handleToggleSwitch('paystack', c)} />
             </div>
           </div>
 
-          <AnimatePresence initial={false}>
-            {isPaymentEnabled && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Secret Key (SK)</Label>
-                      <div className="relative">
-                        <Input 
-                          type={showKeys['paystack'] ? 'text' : 'password'}
-                          defaultValue="sk_test_4e9ad...01"
-                          disabled
-                          className="h-14 bg-slate-50/50 border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 text-slate-500"
-                        />
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
-                          onClick={() => toggleKey('paystack')}
-                        >
-                          {showKeys['paystack'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-2xl">
-                      <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-emerald-800 font-medium leading-relaxed">
-                        Financial transactions are encrypted and audited through Paystack Infrastructure. Standard sandbox key is pre-authorized.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Webhook Configuration Guide */}
-                  <div className="space-y-4 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-black text-slate-800">Paystack Webhook Endpoint</h4>
-                      <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                        Provide this URL in your Paystack Dashboard Developer Settings to receive real-time payment notifications.
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-white border border-slate-200 px-4 py-2.5 rounded-xl font-mono text-xs text-slate-600 truncate">
-                        {webhookUrl}
-                      </code>
-                      <Button 
-                        type="button" 
-                        onClick={handleCopyWebhook} 
-                        variant="outline"
-                        size="icon"
-                        className="size-11 rounded-xl bg-white border-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all shrink-0"
-                      >
-                        {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-100 font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    Environment: TEST
-                  </Badge>
-                  <Button className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 active:scale-[0.98] transition-all">
-                    Verify Webhooks
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Secret Key (SK)</Label>
+                <div className="relative">
+                  <Input 
+                    type={showKeys['paystack'] ? 'text' : 'password'}
+                    value={paystackConfig.secretKey}
+                    onChange={(e) => setPaystackConfig({...paystackConfig, secretKey: e.target.value})}
+                    placeholder="sk_live_xxxxxxxxxxxxxxxx"
+                    className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-emerald-500 focus:border-emerald-300"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                    onClick={() => toggleKey('paystack')}
+                  >
+                    {showKeys['paystack'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+
+              <div className="flex items-start gap-3 p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-2xl">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+                  Financial transactions are encrypted and audited through Paystack Infrastructure.
+                </p>
+              </div>
+            </div>
+
+            {/* Webhook Configuration Guide */}
+            <div className="space-y-4 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="space-y-1">
+                <h4 className="text-sm font-black text-slate-800">Paystack Webhook Endpoint</h4>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Provide this URL in your Paystack Dashboard Developer Settings to receive real-time payment notifications.
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-white border border-slate-200 px-4 py-2.5 rounded-xl font-mono text-xs text-slate-600 truncate">
+                  {webhookUrl}
+                </code>
+                <Button 
+                  type="button" 
+                  onClick={handleCopyWebhook} 
+                  variant="outline"
+                  size="icon"
+                  className="size-11 rounded-xl bg-white border-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all shrink-0"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Badge className={`border font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl ${
+              isPaymentEnabled 
+                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+                : "bg-slate-50 text-slate-400 border-slate-200"
+            }`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isPaymentEnabled ? "text-emerald-500" : "text-slate-300"}`} />
+              {isPaymentEnabled ? "Active (Live/Test)" : "Config Inactive"}
+            </Badge>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Button 
+                onClick={handleSavePaystack}
+                disabled={loadingPaystack}
+                className="w-full sm:w-auto h-12 bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-2xl font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 active:scale-[0.98] transition-all"
+              >
+                {loadingPaystack ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save & Verify Config
+              </Button>
+              {isPaymentEnabled && (
+                <Button className="h-12 bg-slate-900 hover:bg-slate-800 text-white px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+                  Verify Webhooks
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 3. Unified Email (Resend) */}
@@ -321,101 +476,67 @@ export default function IntegrationSettings() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Switch checked={isResendExpanded} onCheckedChange={setIsResendExpanded} />
+              <Switch checked={isResendExpanded} onCheckedChange={(c) => handleToggleSwitch('resend', c)} />
             </div>
           </div>
 
-          <AnimatePresence initial={false}>
-            {isResendExpanded ? (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Resend API Key</Label>
-                      <div className="relative">
-                        <Input 
-                          type={showKeys['resend'] ? 'text' : 'password'}
-                          value={resendConfig.apiKey}
-                          onChange={(e) => setResendConfig({...resendConfig, apiKey: e.target.value})}
-                          placeholder="re_xxxxxxxxxxxxxx"
-                          className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-blue-500 focus:border-blue-300"
-                        />
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
-                          onClick={() => toggleKey('resend')}
-                        >
-                          {showKeys['resend'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Email (From)</Label>
-                      <Input 
-                        value={resendConfig.fromEmail}
-                        onChange={(e) => setResendConfig({...resendConfig, fromEmail: e.target.value})}
-                        placeholder="portal@yourdomain.com"
-                        className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Institutional Sender Name</Label>
-                      <Input 
-                        value={resendConfig.fromName}
-                        onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
-                        placeholder="Solab Academy Portal"
-                        className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300"
-                      />
-                    </div>
-
-                    <div className="pt-6 flex gap-4">
-                      <Button 
-                        onClick={handleSaveResend}
-                        disabled={loading || fetching}
-                        className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest gap-2 shadow-xl shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all"
-                      >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                        Save Configuration
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 mt-8">
-                  <div className="flex-1 space-y-1 text-center md:text-left">
-                    <p className="text-sm font-bold text-slate-800 italic">"Reach parents every time, everywhere."</p>
-                    <p className="text-xs text-slate-500">Configure your email gateway to send automated results and newsletters.</p>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Resend API Key</Label>
+                <div className="relative">
+                  <Input 
+                    type={showKeys['resend'] ? 'text' : 'password'}
+                    value={resendConfig.apiKey}
+                    onChange={(e) => setResendConfig({...resendConfig, apiKey: e.target.value})}
+                    placeholder="re_xxxxxxxxxxxxxx"
+                    className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-blue-500 focus:border-blue-300"
+                  />
                   <Button 
-                    variant="outline" 
-                    className="h-12 px-8 rounded-xl border-slate-200 font-bold hover:bg-white hover:border-blue-500 hover:text-blue-600 transition-all shrink-0"
-                    onClick={() => setIsResendExpanded(true)}
+                    variant="ghost" 
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                    onClick={() => toggleKey('resend')}
                   >
-                    Setup Resend API
+                    {showKeys['resend'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Email (From)</Label>
+                <Input 
+                  value={resendConfig.fromEmail}
+                  onChange={(e) => setResendConfig({...resendConfig, fromEmail: e.target.value})}
+                  placeholder="portal@yourdomain.com"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Institutional Sender Name</Label>
+                <Input 
+                  value={resendConfig.fromName}
+                  onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
+                  placeholder="Solab Academy Portal"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300"
+                />
+              </div>
+
+              <div className="pt-6 flex gap-4">
+                <Button 
+                  onClick={handleSaveResend}
+                  disabled={loadingEmail}
+                  className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest gap-2 shadow-xl shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all"
+                >
+                  {loadingEmail ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                  Save & Verify Config
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
