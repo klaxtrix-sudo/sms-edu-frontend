@@ -20,6 +20,7 @@ import { AddSubjectModal } from "@/components/admin/add-subject-modal";
 import { getClasses, getSubjects, deleteSubject } from "@/app/actions/admin-actions";
 import { EditClassModal } from "@/components/admin/edit-class-modal";
 import { DeleteClassModal } from "@/components/admin/delete-class-modal";
+import { ManageSubjectTeachersModal } from "@/components/admin/manage-subject-teachers-modal";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -37,6 +38,11 @@ export default function AcademicsPage() {
   const [isDeleteClassModalOpen, setIsDeleteClassModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
+
+  // Subject-Teacher assignment states
+  const [isSubjectTeacherModalOpen, setIsSubjectTeacherModalOpen] = useState(false);
+  const [selectedClassForSubjects, setSelectedClassForSubjects] = useState<any>(null);
+  const [classAssignments, setClassAssignments] = useState<any[]>([]);
   
   const supabase = createTenantClient();
 
@@ -44,9 +50,10 @@ export default function AcademicsPage() {
     if (!tenant?.id) return;
     
     try {
-      const [classesRes, subjectsRes] = await Promise.all([
+      const [classesRes, subjectsRes, assignmentsRes] = await Promise.all([
         getClasses(tenant.id, subdomain as string),
-        getSubjects(tenant.id, subdomain as string)
+        getSubjects(tenant.id, subdomain as string),
+        supabase.from("class_subject_teachers").select("class_id, subject_id")
       ]);
 
       if (classesRes.error) throw new Error(classesRes.error);
@@ -54,6 +61,7 @@ export default function AcademicsPage() {
 
       setClasses(classesRes.data || []);
       setSubjects(subjectsRes.data || []);
+      setClassAssignments(assignmentsRes.data || []);
     } catch (error: any) {
       console.error("Error fetching academics data:", error);
       toast.error(error.message || "Failed to load academic records");
@@ -309,6 +317,22 @@ export default function AcademicsPage() {
                       <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
                         {cls.name}
                       </h3>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px] rounded-lg">
+                          {classAssignments.filter((a) => a.class_id === cls.id).length} Subjects
+                        </Badge>
+                        <Button 
+                          onClick={() => {
+                            setSelectedClassForSubjects({ id: cls.id, name: cls.name });
+                            setIsSubjectTeacherModalOpen(true);
+                          }}
+                          variant="ghost" 
+                          className="h-7 text-[10px] font-black uppercase tracking-wider px-3 rounded-lg border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/50 hover:text-indigo-600 transition-all flex items-center gap-1.5"
+                        >
+                          Manage Subjects
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Card Footer: Teacher Section */}
@@ -460,6 +484,21 @@ export default function AcademicsPage() {
             onSuccess={fetchData} 
             schoolId={tenant.id}
           />
+
+          {selectedClassForSubjects && (
+            <ManageSubjectTeachersModal 
+              isOpen={isSubjectTeacherModalOpen}
+              onClose={() => {
+                setIsSubjectTeacherModalOpen(false);
+                setSelectedClassForSubjects(null);
+              }}
+              onSuccess={fetchData}
+              classData={selectedClassForSubjects}
+              subjects={subjects}
+              schoolId={tenant.id}
+              subdomain={subdomain as string}
+            />
+          )}
         </>
       )}
     </div>

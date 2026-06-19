@@ -110,11 +110,21 @@ export default function TeacherExamsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // 1. Fetch Teacher Assignments
-      const { data: assignments } = await supabase
-        .from("timetables")
-        .select("class_id, subject_id")
-        .eq("teacher_id", session.user.id);
+      // 1. Fetch Teacher Assignments from both sources in parallel
+      const [{ data: directAssignments }, { data: timetableAssignments }] = await Promise.all([
+        supabase
+          .from("class_subject_teachers")
+          .select("class_id, subject_id")
+          .eq("teacher_id", session.user.id),
+        supabase
+          .from("timetables")
+          .select("class_id, subject_id")
+          .eq("teacher_id", session.user.id)
+      ]);
+
+      const allAssignments: { class_id: string; subject_id: string }[] = [];
+      if (directAssignments) allAssignments.push(...directAssignments);
+      if (timetableAssignments) allAssignments.push(...timetableAssignments);
 
       // 2. Fetch Exams from MongoDB
       const response = await fetch(`${getBackendUrl()}/exams`, {
@@ -123,10 +133,10 @@ export default function TeacherExamsPage() {
         },
       });
       const result = await response.json();
-      if (result.success && assignments) {
+      if (result.success && allAssignments.length > 0) {
         // Filter exams to only show assigned classes & subjects
         const teacherExams = result.data.filter((exam: Exam) => 
-          assignments.some(a => a.class_id === exam.classId && a.subject_id === exam.subjectId)
+          allAssignments.some(a => a.class_id === exam.classId && a.subject_id === exam.subjectId)
         );
         setExams(teacherExams);
       } else if (result.success) {

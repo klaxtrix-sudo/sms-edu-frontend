@@ -813,3 +813,65 @@ export async function resendTeacherCredentials(
     return { error: err.message || 'Failed to resend credentials.' };
   }
 }
+
+export async function getClassSubjectTeachers(classId: string, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { data, error } = await (tenantSupabase as any)
+      .from('class_subject_teachers')
+      .select('subject_id, teacher_id')
+      .eq('class_id', classId);
+
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error('[Admin Actions] getClassSubjectTeachers Error:', error.message);
+    return { error: error.message || 'Failed to fetch class subject teachers.' };
+  }
+}
+
+export async function saveClassSubjectAssignments(
+  classId: string,
+  assignments: { subjectId: string; teacherId: string | null }[],
+  schoolId: string,
+  subdomain: string
+) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+
+    // 1. Delete all existing subject teacher assignments for this class
+    const { error: deleteError } = await (tenantSupabase as any)
+      .from('class_subject_teachers')
+      .delete()
+      .eq('class_id', classId);
+
+    if (deleteError) throw deleteError;
+
+    // 2. Filter out unassigned (null/none) teachers and map the others
+    const recordsToInsert = assignments
+      .filter(a => a.teacherId && a.teacherId !== 'none' && a.teacherId !== '')
+      .map(a => ({
+        school_id: schoolId,
+        class_id: classId,
+        subject_id: a.subjectId,
+        teacher_id: a.teacherId
+      }));
+
+    // 3. Perform bulk insert if there are any records
+    if (recordsToInsert.length > 0) {
+      const { error: insertError } = await (tenantSupabase as any)
+        .from('class_subject_teachers')
+        .insert(recordsToInsert);
+
+      if (insertError) throw insertError;
+    }
+
+    revalidatePath('/dashboard/admin/academics');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Admin Actions] saveClassSubjectAssignments Error:', error.message);
+    return { error: error.message || 'Failed to save subject assignments.' };
+  }
+}

@@ -93,22 +93,35 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
 
       if (profile?.school_id) {
         if (profile.role === "teacher") {
-          // Fetch only assigned classes and subjects from timetables
-          const { data: assignments } = await supabase
-            .from("timetables")
-            .select(`
-              class_id,
-              subject_id,
-              classes:class_id ( id, name ),
-              subjects:subject_id ( id, name )
-            `)
-            .eq("teacher_id", user.id) as any;
+          // Fetch assigned classes and subjects from both class_subject_teachers and timetables
+          const [{ data: directAssignments }, { data: timetableAssignments }] = await Promise.all([
+            supabase
+              .from("class_subject_teachers")
+              .select(`
+                class_id,
+                subject_id,
+                classes:class_id ( id, name ),
+                subjects:subject_id ( id, name )
+              `)
+              .eq("teacher_id", user.id),
+            supabase
+              .from("timetables")
+              .select(`
+                class_id,
+                subject_id,
+                classes:class_id ( id, name ),
+                subjects:subject_id ( id, name )
+              `)
+              .eq("teacher_id", user.id)
+          ]) as any[];
 
-          if (assignments) {
+          const allAssignments = [...(directAssignments || []), ...(timetableAssignments || [])];
+
+          if (allAssignments.length > 0) {
             const uniqueClasses: Record<string, any> = {};
             const uniqueSubjects: Record<string, any> = {};
 
-            assignments.forEach((a: any) => {
+            allAssignments.forEach((a: any) => {
               if (a.classes) uniqueClasses[a.classes.id] = a.classes;
               if (a.subjects) uniqueSubjects[a.subjects.id] = a.subjects;
             });
