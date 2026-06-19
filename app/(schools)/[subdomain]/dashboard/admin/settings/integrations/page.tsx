@@ -481,60 +481,69 @@ export default function IntegrationSettings() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Resend API Key</Label>
-                <div className="relative">
-                  <Input 
-                    type={showKeys['resend'] ? 'text' : 'password'}
-                    value={resendConfig.apiKey}
-                    onChange={(e) => setResendConfig({...resendConfig, apiKey: e.target.value})}
-                    placeholder="re_xxxxxxxxxxxxxx"
-                    className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-blue-500 focus:border-blue-300"
-                  />
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
-                    onClick={() => toggleKey('resend')}
-                  >
-                    {showKeys['resend'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Email (From)</Label>
+            {/* Resend API Key */}
+            <div className="space-y-2">
+              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Resend API Key</Label>
+              <div className="relative">
                 <Input 
-                  value={resendConfig.fromEmail}
-                  onChange={(e) => setResendConfig({...resendConfig, fromEmail: e.target.value})}
-                  placeholder="portal@yourdomain.com"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-slate-400"
+                  type={showKeys['resend'] ? 'text' : 'password'}
+                  value={resendConfig.apiKey}
+                  onChange={(e) => setResendConfig({...resendConfig, apiKey: e.target.value})}
+                  placeholder="re_xxxxxxxxxxxxxx"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-slate-400"
                 />
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                  onClick={() => toggleKey('resend')}
+                >
+                  {showKeys['resend'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Institutional Sender Name</Label>
-                <Input 
-                  value={resendConfig.fromName}
-                  onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
-                  placeholder="Klaxtrix Academy"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:normal-case placeholder:text-slate-400"
-                />
-              </div>
+            {/* Institutional Sender Name */}
+            <div className="space-y-2">
+              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Institutional Sender Name</Label>
+              <Input 
+                value={resendConfig.fromName}
+                onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
+                placeholder="Klaxtrix Academy"
+                className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:normal-case placeholder:text-slate-400"
+              />
+            </div>
 
-              <div className="pt-6 flex gap-4">
-                <Button 
-                  onClick={handleSaveResend}
-                  disabled={loadingEmail}
-                  className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest gap-2 shadow-xl shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all"
-                >
-                  {loadingEmail ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                  Save & Verify Config
-                </Button>
-              </div>
+            {/* Sender Email (From) - Full Width */}
+            <div className="space-y-2 col-span-1 md:col-span-2">
+              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Email (From)</Label>
+              <Input 
+                value={resendConfig.fromEmail}
+                onChange={(e) => setResendConfig({...resendConfig, fromEmail: e.target.value})}
+                placeholder="portal@yourdomain.com"
+                className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Badge className={`border font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl ${
+              isResendExpanded 
+                ? "bg-blue-50 text-blue-700 border-blue-100" 
+                : "bg-slate-50 text-slate-400 border-slate-200"
+            }`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isResendExpanded ? "text-blue-500" : "text-slate-300"}`} />
+              {isResendExpanded ? "Email Gateway Active" : "Config Inactive"}
+            </Badge>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Button 
+                onClick={handleSaveResend}
+                disabled={loadingEmail}
+                className="w-full sm:w-auto h-12 bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-2xl font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all"
+              >
+                {loadingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save & Verify Config
+              </Button>
             </div>
           </div>
         </div>
