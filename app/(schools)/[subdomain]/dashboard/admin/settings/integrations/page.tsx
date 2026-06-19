@@ -316,7 +316,7 @@ export default function IntegrationSettings() {
                 value={termiiConfig.senderId}
                 onChange={(e) => setTermiiConfig({...termiiConfig, senderId: e.target.value})}
                 placeholder="KLAXTRIX"
-                className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-indigo-500 focus:border-indigo-300"
+                className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-indigo-500 focus:border-indigo-300 placeholder:font-normal placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function IntegrationSettings() {
                   value={resendConfig.fromEmail}
                   onChange={(e) => setResendConfig({...resendConfig, fromEmail: e.target.value})}
                   placeholder="portal@yourdomain.com"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -520,8 +520,8 @@ export default function IntegrationSettings() {
                 <Input 
                   value={resendConfig.fromName}
                   onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
-                  placeholder="Solab Academy Portal"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300"
+                  placeholder="Klaxtrix Academy"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:normal-case placeholder:text-slate-400"
                 />
               </div>
 
