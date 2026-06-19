@@ -35,6 +35,10 @@ async function verifyResendKey(apiKey: string): Promise<void> {
   const resend = new Resend(apiKey);
   const { error } = await resend.domains.list();
   if (error) {
+    // If the key is valid but restricted to sending only, it's perfect for our needs.
+    if (error.name === 'restricted_api_key') {
+      return;
+    }
     throw new Error(`Resend verification failed: ${error.message}`);
   }
 }

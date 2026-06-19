@@ -59,16 +59,19 @@ export default function IntegrationSettings() {
     fromEmail: '',
     fromName: ''
   });
+  const [savedResendConfig, setSavedResendConfig] = useState<ResendConfig | null>(null);
 
   const [termiiConfig, setTermiiConfig] = useState<TermiiConfig>({
     apiKey: '',
     senderId: ''
   });
+  const [savedTermiiConfig, setSavedTermiiConfig] = useState<TermiiConfig | null>(null);
 
   const [paystackConfig, setPaystackConfig] = useState<PaystackConfig>({
     secretKey: ''
   });
-
+  const [savedPaystackConfig, setSavedPaystackConfig] = useState<PaystackConfig | null>(null);
+  
   useEffect(() => {
     if (tenant?.id) {
       fetchConfig();
@@ -92,14 +95,17 @@ export default function IntegrationSettings() {
 
       if (resendRes.config) {
         setResendConfig(resendRes.config);
+        setSavedResendConfig(resendRes.config);
         setIsResendExpanded(resendRes.isActive ?? false);
       }
       if (termiiRes.config) {
         setTermiiConfig(termiiRes.config);
+        setSavedTermiiConfig(termiiRes.config);
         setIsSmsEnabled(termiiRes.isActive ?? false);
       }
       if (paystackRes.config) {
         setPaystackConfig(paystackRes.config);
+        setSavedPaystackConfig(paystackRes.config);
         setIsPaymentEnabled(paystackRes.isActive ?? false);
       }
     } catch (err: any) {
@@ -129,6 +135,7 @@ export default function IntegrationSettings() {
         description: "Branded delivery has been verified and is now active."
       });
       setIsResendExpanded(true);
+      setSavedResendConfig(resendConfig);
       fetchConfig();
     } else {
       toast.error(result.error || "Failed to save configuration");
@@ -155,6 +162,7 @@ export default function IntegrationSettings() {
         description: "Credentials verified and active."
       });
       setIsSmsEnabled(true);
+      setSavedTermiiConfig(termiiConfig);
       fetchConfig();
     } else {
       toast.error(result.error || "Failed to save configuration");
@@ -181,6 +189,7 @@ export default function IntegrationSettings() {
         description: "Secret key verified and active."
       });
       setIsPaymentEnabled(true);
+      setSavedPaystackConfig(paystackConfig);
       fetchConfig();
     } else {
       toast.error(result.error || "Failed to save configuration");
@@ -196,27 +205,39 @@ export default function IntegrationSettings() {
     };
 
     if (key === 'termii') {
-      if (checked && (!termiiConfig.apiKey || termiiConfig.apiKey.trim() === '')) {
-        toast.error("Invalid Configuration", {
-          description: "Configure and verify a valid Termii API key before enabling."
+      const hasUnsavedChanges = !savedTermiiConfig || 
+        termiiConfig.apiKey !== savedTermiiConfig.apiKey || 
+        termiiConfig.senderId !== savedTermiiConfig.senderId;
+
+      if (checked && hasUnsavedChanges) {
+        toast.error("Unsaved Configuration", {
+          description: "Please save and verify your Termii configuration before activating."
         });
         return;
       }
       setIsSmsEnabled(checked);
       await toggleIntegrationActive(tenant.id, 'termii_settings', checked, tenantCreds);
     } else if (key === 'paystack') {
-      if (checked && (!paystackConfig.secretKey || paystackConfig.secretKey.trim() === '')) {
-        toast.error("Invalid Configuration", {
-          description: "Configure and verify a valid Paystack secret key before enabling."
+      const hasUnsavedChanges = !savedPaystackConfig || 
+        paystackConfig.secretKey !== savedPaystackConfig.secretKey;
+
+      if (checked && hasUnsavedChanges) {
+        toast.error("Unsaved Configuration", {
+          description: "Please save and verify your Paystack configuration before activating."
         });
         return;
       }
       setIsPaymentEnabled(checked);
       await toggleIntegrationActive(tenant.id, 'paystack_settings', checked, tenantCreds);
     } else if (key === 'resend') {
-      if (checked && (!resendConfig.apiKey || resendConfig.apiKey.trim() === '')) {
-        toast.error("Invalid Configuration", {
-          description: "Configure and verify a valid Resend API key before enabling."
+      const hasUnsavedChanges = !savedResendConfig || 
+        resendConfig.apiKey !== savedResendConfig.apiKey || 
+        resendConfig.fromEmail !== savedResendConfig.fromEmail || 
+        resendConfig.fromName !== savedResendConfig.fromName;
+
+      if (checked && hasUnsavedChanges) {
+        toast.error("Unsaved Configuration", {
+          description: "Please save and verify your Resend configuration before activating."
         });
         return;
       }
