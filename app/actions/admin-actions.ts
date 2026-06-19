@@ -1,8 +1,8 @@
 "use server";
 
-
 import { createTenantAdminClient } from "@/lib/supabase/tenant-admin";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
 
 interface CreateUserData {
   email: string;
@@ -235,6 +235,89 @@ export async function createTeacher(data: CreateUserData) {
 
       if (tenantProfileError) {
         console.error('[Admin Actions] Tenant Profile Error:', tenantProfileError.message);
+      }
+
+      // 4. Look up active Resend config from tenant DB
+      let resendApiKey: string | null = null;
+      let resendFromEmail: string | null = null;
+      let resendFromName = 'Klaxtrix Portal';
+
+      const { data: configData } = await tenantSupabase
+        .from('institutional_configs')
+        .select('config_value, is_active')
+        .eq('school_id', schoolId)
+        .eq('config_key', 'resend_settings')
+        .maybeSingle();
+
+      if (configData && configData.is_active && configData.config_value) {
+        try {
+          const parsed = JSON.parse(configData.config_value);
+          resendApiKey = parsed.apiKey ?? null;
+          resendFromEmail = parsed.fromEmail ?? null;
+          resendFromName = parsed.fromName ?? resendFromName;
+        } catch (e) {
+          console.error('[createTeacher] Failed to parse resend_settings JSON:', e);
+        }
+      }
+
+      // Fallback to process.env config if tenant config is missing or inactive
+      if (!resendApiKey) {
+        resendApiKey = process.env.RESEND_API_KEY || null;
+        resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.site';
+        resendFromName = 'Klaxtrix Portal';
+      }
+
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+      const loginUrl = process.env.NODE_ENV === 'production'
+        ? `https://${subdomain}.${rootDomain}/login`
+        : `http://${subdomain}.${rootDomain}/login`;
+
+      if (resendApiKey) {
+        const resend = new Resend(resendApiKey);
+        const emailHtml = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+            <h2 style="color: #4f46e5; margin-bottom: 24px;">Welcome to Klaxtrix!</h2>
+            <p>Hello <strong>${fullName}</strong>,</p>
+            <p>An administrator has registered your teacher account at the school portal.</p>
+            <p>Please use the following credentials to access the portal:</p>
+            <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; margin: 20px 0; border: 1px solid #f1f5f9;">
+              <p style="margin: 4px 0;"><strong>Portal Login URL:</strong> <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a></p>
+              <p style="margin: 4px 0;"><strong>Username / Email:</strong> ${email}</p>
+              <p style="margin: 4px 0;"><strong>Temporary Password:</strong> ${password}</p>
+            </div>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+              <strong>Important Onboarding Action:</strong> upon your first login, you will be prompted to pass an OTP verification and change your temporary password to secure your account.
+            </p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+            <p style="color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply directly to this email.</p>
+          </div>
+        `;
+
+        try {
+          const { error: sendError } = await resend.emails.send({
+            from: `${resendFromName} <${resendFromEmail}>`,
+            to: email,
+            subject: 'Your Teacher Account Credentials — Klaxtrix Portal',
+            html: emailHtml
+          });
+
+          if (sendError) {
+            console.error('[createTeacher] Resend error sending credentials:', sendError);
+          } else {
+            console.log('[createTeacher] Welcome email sent successfully to:', email);
+          }
+        } catch (err: any) {
+          console.error('[createTeacher] Failed to dispatch welcome email:', err.message);
+        }
+      } else {
+        console.log('==================================================');
+        console.log('[createTeacher] MOCK EMAIL DISPATCH LOG (No Resend Key Found)');
+        console.log('To:', email);
+        console.log('Subject: Your Teacher Account Credentials — Klaxtrix Portal');
+        console.log('Login URL:', loginUrl);
+        console.log('Username:', email);
+        console.log('Password:', password);
+        console.log('==================================================');
       }
     }
 
