@@ -9,7 +9,8 @@ import {
   toggleTeacherStatus,
   resetUserPassword,
   archiveTeacher,
-  unarchiveTeacher
+  unarchiveTeacher,
+  resendTeacherCredentials
 } from '@/app/actions/admin-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +79,7 @@ export default function TeachersPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isResending, setIsResending] = useState<Record<string, boolean>>({});
   const [viewingTeacherProfile, setViewingTeacherProfile] = useState<any>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
@@ -207,6 +209,20 @@ export default function TeachersPage() {
       toast.error(result.error);
     }
     setIsResetting(false);
+  };
+
+  const handleResendCredentials = async (teacher: any) => {
+    if (!tenant?.id) return;
+    setIsResending(prev => ({ ...prev, [teacher.id]: true }));
+    
+    const result = await resendTeacherCredentials(teacher.id, tenant.id, subdomain as string);
+    if (result.success) {
+      toast.success(`Welcome email resent to ${teacher.full_name}.`);
+    } else {
+      toast.error(result.error || "Failed to resend credentials");
+    }
+    
+    setIsResending(prev => ({ ...prev, [teacher.id]: false }));
   };
 
   const filteredTeachers = teachers.filter(t => {
@@ -470,110 +486,126 @@ export default function TeachersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTeachers.map((teacher) => (
-                <TableRow key={teacher.id} className="hover:bg-primary/[0.02] transition-colors border-primary/5 group/row">
-                  <TableCell className="py-6 px-8">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary group-hover/row:scale-110 transition-transform">
-                        {teacher.full_name?.substring(0, 1) || 'T'}
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm tracking-tight">{teacher.full_name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Teacher ID: {teacher.id.substring(0, 8)}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Mail className="size-3" />
-                        {teacher.email}
-                      </div>
-                      {teacher.phone && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                          <Phone className="size-3" />
-                          {teacher.phone}
+              filteredTeachers.map((teacher) => {
+                const isPendingSetup = !teacher.is_archived && teacher.is_active && !teacher.onboarding_completed;
+                return (
+                  <TableRow key={teacher.id} className="hover:bg-primary/[0.02] transition-colors border-primary/5 group/row">
+                    <TableCell className="py-6 px-8">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary group-hover/row:scale-110 transition-transform">
+                          {teacher.full_name?.substring(0, 1) || 'T'}
                         </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={teacher.is_archived ? "outline" : (teacher.is_active ? (teacher.onboarding_completed ? "default" : "secondary") : "secondary")} 
-                      className={cn(
-                        "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                        teacher.is_archived ? "bg-slate-500/10 text-slate-500 border-slate-500/20" : 
-                        (teacher.is_active ? 
-                          (teacher.onboarding_completed ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20" : "bg-indigo-500/10 text-indigo-500 border-indigo-500/20") 
-                          : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20")
-                      )}
-                    >
-                      {teacher.is_archived ? "Archived" : (teacher.is_active ? (teacher.onboarding_completed ? "Active" : "Pending Setup") : "Suspended")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {new Date(teacher.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right px-8">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/10">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 border-primary/20 glass-panel">
-                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Teacher Management</DropdownMenuLabel>
-                        <DropdownMenuSeparator className="bg-primary/10" />
-                        <DropdownMenuItem 
-                          className="gap-2 text-xs font-medium cursor-pointer"
-                          onClick={() => {
-                            setViewingTeacherProfile(teacher);
-                            setIsProfileModalOpen(true);
-                          }}
-                        >
-                          <ExternalLink className="size-3.5" /> View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="gap-2 text-xs font-medium cursor-pointer"
-                          onClick={() => {
-                            setSelectedTeacher(teacher);
-                            setIsResetModalOpen(true);
-                          }}
-                        >
-                          <RotateCcw className="size-3.5" /> Reset Password
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-primary/10" />
-                        <DropdownMenuItem 
-                          className={cn(
-                            "gap-2 text-xs font-bold cursor-pointer",
-                            teacher.is_active ? "text-red-500 focus:text-red-500 focus:bg-red-500/10" : "text-green-500 focus:text-green-500 focus:bg-green-500/10"
-                          )}
-                          onClick={() => handleToggleStatus(teacher.id, teacher.is_active)}
-                        >
-                          <Power className="size-3.5" /> 
-                          {teacher.is_active ? "Suspend Access" : "Restore Access"}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-primary/10" />
-                        {teacher.is_archived ? (
-                          <DropdownMenuItem 
-                            className="gap-2 text-xs font-bold text-emerald-600 focus:text-emerald-600 focus:bg-emerald-600/10 cursor-pointer"
-                            onClick={() => handleUnarchiveTeacher(teacher.id)}
-                          >
-                            <ArchiveRestore className="size-3.5" /> Restore Account
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem 
-                            className="gap-2 text-xs font-bold text-slate-600 focus:text-slate-600 focus:bg-slate-600/10 cursor-pointer"
-                            onClick={() => handleArchiveTeacher(teacher.id)}
-                          >
-                            <Archive className="size-3.5" /> Archive Teacher
-                          </DropdownMenuItem>
+                        <div>
+                          <p className="font-bold text-sm tracking-tight">{teacher.full_name}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Teacher ID: {teacher.id.substring(0, 8)}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Mail className="size-3" />
+                          {teacher.email}
+                        </div>
+                        {teacher.phone && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                            <Phone className="size-3" />
+                            {teacher.phone}
+                          </div>
                         )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={teacher.is_archived ? "outline" : (teacher.is_active ? (teacher.onboarding_completed ? "default" : "secondary") : "secondary")} 
+                        className={cn(
+                          "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          teacher.is_archived ? "bg-slate-500/10 text-slate-500 border-slate-500/20" : 
+                          (teacher.is_active ? 
+                            (teacher.onboarding_completed ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20" : "bg-indigo-500/10 text-indigo-500 border-indigo-500/20") 
+                            : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20")
+                        )}
+                      >
+                        {teacher.is_archived ? "Archived" : (teacher.is_active ? (teacher.onboarding_completed ? "Active" : "Pending Setup") : "Suspended")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(teacher.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right px-8">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/10">
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 border-primary/20 glass-panel">
+                          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Teacher Management</DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-primary/10" />
+                          <DropdownMenuItem 
+                            className="gap-2 text-xs font-medium cursor-pointer"
+                            onClick={() => {
+                              setViewingTeacherProfile(teacher);
+                              setIsProfileModalOpen(true);
+                            }}
+                          >
+                            <ExternalLink className="size-3.5" /> View Profile
+                          </DropdownMenuItem>
+                          
+                          {isPendingSetup ? (
+                            <DropdownMenuItem 
+                              className="gap-2 text-xs font-medium cursor-pointer text-indigo-600 focus:text-indigo-600 focus:bg-indigo-500/10"
+                              disabled={isResending[teacher.id]}
+                              onClick={() => handleResendCredentials(teacher)}
+                            >
+                              <Mail className="size-3.5" /> {isResending[teacher.id] ? "Resending..." : "Resend Welcome Email"}
+                            </DropdownMenuItem>
+                          ) : (
+                            <>
+                              <DropdownMenuItem 
+                                className="gap-2 text-xs font-medium cursor-pointer"
+                                onClick={() => {
+                                  setSelectedTeacher(teacher);
+                                  setIsResetModalOpen(true);
+                                }}
+                              >
+                                <RotateCcw className="size-3.5" /> Reset Password
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-primary/10" />
+                              <DropdownMenuItem 
+                                className={cn(
+                                  "gap-2 text-xs font-bold cursor-pointer",
+                                  teacher.is_active ? "text-red-500 focus:text-red-500 focus:bg-red-500/10" : "text-green-500 focus:text-green-500 focus:bg-green-500/10"
+                                )}
+                                onClick={() => handleToggleStatus(teacher.id, teacher.is_active)}
+                              >
+                                <Power className="size-3.5" /> 
+                                {teacher.is_active ? "Suspend Access" : "Restore Access"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-primary/10" />
+                              {teacher.is_archived ? (
+                                <DropdownMenuItem 
+                                  className="gap-2 text-xs font-bold text-emerald-600 focus:text-emerald-600 focus:bg-emerald-600/10 cursor-pointer"
+                                  onClick={() => handleUnarchiveTeacher(teacher.id)}
+                                >
+                                  <ArchiveRestore className="size-3.5" /> Restore Account
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem 
+                                  className="gap-2 text-xs font-bold text-slate-600 focus:text-slate-600 focus:bg-slate-600/10 cursor-pointer"
+                                  onClick={() => handleArchiveTeacher(teacher.id)}
+                                >
+                                  <Archive className="size-3.5" /> Archive Teacher
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

@@ -691,3 +691,125 @@ export async function saveResultMetrics(
     return { error: error.message || 'Failed to save result metrics' };
   }
 }
+
+export async function resendTeacherCredentials(
+  teacherId: string,
+  schoolId: string,
+  subdomain: string
+) {
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+
+    // 1. Get teacher's profile (name & email)
+    const { data: profile, error: profileError } = await tenantSupabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', teacherId)
+      .single();
+
+    if (profileError || !profile || !profile.email) {
+      return { error: 'Teacher profile not found or email is missing.' };
+    }
+
+    // 2. Generate a new secure temporary password
+    const randomSuffix = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const tempPassword = `Klaxtrix-${randomSuffix}!`;
+
+    // 3. Update auth password in Supabase
+    const { error: authError } = await tenantSupabase.auth.admin.updateUserById(
+      teacherId,
+      {
+        password: tempPassword,
+        user_metadata: {
+          must_change_password: true,
+          email_onboarding_verified: false
+        }
+      }
+    );
+
+    if (authError) {
+      return { error: `Failed to update teacher credentials: ${authError.message}` };
+    }
+
+    // 4. Look up Resend configuration
+    let resendApiKey: string | null = null;
+    let resendFromEmail: string | null = null;
+    let resendFromName = 'Klaxtrix Portal';
+
+    const { data: configData } = await tenantSupabase
+      .from('institutional_configs')
+      .select('config_value, is_active')
+      .eq('school_id', schoolId)
+      .eq('config_key', 'resend_settings')
+      .maybeSingle();
+
+    if (configData && configData.is_active && configData.config_value) {
+      try {
+        const parsed = JSON.parse(configData.config_value);
+        resendApiKey = parsed.apiKey ?? null;
+        resendFromEmail = parsed.fromEmail ?? null;
+        resendFromName = parsed.fromName ?? resendFromName;
+      } catch (e) {
+        console.error('[resendTeacherCredentials] Failed to parse resend_settings JSON:', e);
+      }
+    }
+
+    if (!resendApiKey) {
+      resendApiKey = process.env.RESEND_API_KEY || null;
+      resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.site';
+      resendFromName = 'Klaxtrix Portal';
+    }
+
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+    const loginUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/login`
+      : `http://${subdomain}.${rootDomain}/login`;
+
+    if (resendApiKey) {
+      const resend = new Resend(resendApiKey);
+      const emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+          <h2 style="color: #4f46e5; margin-bottom: 24px;">Welcome to Klaxtrix!</h2>
+          <p>Hello <strong>${profile.full_name}</strong>,</p>
+          <p>An administrator has resent your teacher account credentials for the school portal.</p>
+          <p>Please use the following updated credentials to access the portal:</p>
+          <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; margin: 20px 0; border: 1px solid #f1f5f9;">
+            <p style="margin: 4px 0;"><strong>Portal Login URL:</strong> <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a></p>
+            <p style="margin: 4px 0;"><strong>Username / Email:</strong> ${profile.email}</p>
+            <p style="margin: 4px 0;"><strong>New Temporary Password:</strong> ${tempPassword}</p>
+          </div>
+          <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+            <strong>Important Onboarding Action:</strong> upon your first login with these new credentials, you will be prompted to pass an OTP verification and change your temporary password to secure your account.
+          </p>
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply directly to this email.</p>
+        </div>
+      `;
+
+      const { error: sendError } = await resend.emails.send({
+        from: `${resendFromName} <${resendFromEmail}>`,
+        to: profile.email,
+        subject: 'Your Teacher Account Credentials — Klaxtrix Portal',
+        html: emailHtml
+      });
+
+      if (sendError) {
+        throw new Error(sendError.message);
+      }
+    } else {
+      console.log('==================================================');
+      console.log('[resendTeacherCredentials] MOCK EMAIL DISPATCH LOG');
+      console.log('To:', profile.email);
+      console.log('Subject: Your Teacher Account Credentials — Klaxtrix Portal');
+      console.log('Login URL:', loginUrl);
+      console.log('Username:', profile.email);
+      console.log('New Temp Password:', tempPassword);
+      console.log('==================================================');
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[resendTeacherCredentials] Error:', err);
+    return { error: err.message || 'Failed to resend credentials.' };
+  }
+}
