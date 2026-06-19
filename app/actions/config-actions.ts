@@ -68,6 +68,50 @@ async function verifyPaystackKey(secretKey: string): Promise<void> {
   }
 }
 
+async function upsertConfig(
+  supabase: any,
+  schoolId: string,
+  configKey: string,
+  configValue: string,
+  isActive: boolean
+) {
+  const { data, error: selectError } = await supabase
+    .from('institutional_configs')
+    .select('id')
+    .eq('school_id', schoolId)
+    .eq('config_key', configKey)
+    .maybeSingle();
+
+  if (selectError) throw selectError;
+
+  if (data?.id) {
+    const { error: updateError } = await supabase
+      .from('institutional_configs')
+      .update({
+        config_value: configValue,
+        is_active: isActive,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', data.id);
+
+    if (updateError) throw updateError;
+  } else {
+    const { error: insertError } = await supabase
+      .from('institutional_configs')
+      .insert([
+        {
+          school_id: schoolId,
+          config_key: configKey,
+          config_value: configValue,
+          is_active: isActive,
+          updated_at: new Date().toISOString()
+        }
+      ]);
+
+    if (insertError) throw insertError;
+  }
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Resend (Email)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -107,19 +151,13 @@ export async function saveResendConfig(
       apiKey: unmaskedKey
     };
 
-    const { error } = await supabase
-      .from('institutional_configs')
-      .upsert([
-        {
-          school_id: schoolId,
-          config_key: 'resend_settings',
-          config_value: JSON.stringify(configToSave),
-          is_active: true,
-          updated_at: new Date().toISOString()
-        }
-      ], { onConflict: 'school_id,config_key' });
-
-    if (error) throw error;
+    await upsertConfig(
+      supabase,
+      schoolId,
+      'resend_settings',
+      JSON.stringify(configToSave),
+      true
+    );
 
     revalidatePath("/dashboard/admin/settings/integrations");
     return { success: true };
@@ -201,19 +239,13 @@ export async function saveTermiiConfig(
       apiKey: unmaskedKey
     };
 
-    const { error } = await supabase
-      .from('institutional_configs')
-      .upsert([
-        {
-          school_id: schoolId,
-          config_key: 'termii_settings',
-          config_value: JSON.stringify(configToSave),
-          is_active: true,
-          updated_at: new Date().toISOString()
-        }
-      ], { onConflict: 'school_id,config_key' });
-
-    if (error) throw error;
+    await upsertConfig(
+      supabase,
+      schoolId,
+      'termii_settings',
+      JSON.stringify(configToSave),
+      true
+    );
 
     revalidatePath("/dashboard/admin/settings/integrations");
     return { success: true };
@@ -294,19 +326,13 @@ export async function savePaystackConfig(
       secretKey: unmaskedKey
     };
 
-    const { error } = await supabase
-      .from('institutional_configs')
-      .upsert([
-        {
-          school_id: schoolId,
-          config_key: 'paystack_settings',
-          config_value: JSON.stringify(configToSave),
-          is_active: true,
-          updated_at: new Date().toISOString()
-        }
-      ], { onConflict: 'school_id,config_key' });
-
-    if (error) throw error;
+    await upsertConfig(
+      supabase,
+      schoolId,
+      'paystack_settings',
+      JSON.stringify(configToSave),
+      true
+    );
 
     revalidatePath("/dashboard/admin/settings/integrations");
     return { success: true };
