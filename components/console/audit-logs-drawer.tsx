@@ -106,9 +106,9 @@ export default function AuditLogsDrawer({ isOpen, onClose }: AuditLogsDrawerProp
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-1">
                    <Terminal className="w-4 h-4 text-cyan-500" />
-                   <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Full Protocol Logs</h2>
-                </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">High-Integrity Node Audit Trail</p>
+                    <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Activity Log</h2>
+                 </div>
+                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Complete history of admin actions</p>
               </div>
               <button 
                 onClick={onClose}
@@ -123,12 +123,12 @@ export default function AuditLogsDrawer({ isOpen, onClose }: AuditLogsDrawerProp
               {isLoading ? (
                 <div className="h-full flex flex-col items-center justify-center gap-4">
                   <Activity className="w-8 h-8 text-cyan-500/20 animate-pulse" />
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] animate-pulse">Synchronizing Logs...</p>
+                   <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] animate-pulse">Loading activity...</p>
                 </div>
               ) : logs.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
                   <Database className="w-8 h-8 text-slate-700" />
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">No records found</p>
+                   <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">No activity yet</p>
                 </div>
               ) : (
                 <div className="space-y-6 relative">
@@ -166,7 +166,7 @@ export default function AuditLogsDrawer({ isOpen, onClose }: AuditLogsDrawerProp
                                <Shield className="w-3 h-3 text-slate-400" />
                             </div>
                             <div className="flex flex-col gap-0.5">
-                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.1em]">Actor Identity</span>
+                               <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.1em]">Performed by</span>
                               <span className="text-[10px] font-bold text-white uppercase tracking-wider">{log.actor_id}</span>
                             </div>
                           </div>
@@ -194,16 +194,16 @@ export default function AuditLogsDrawer({ isOpen, onClose }: AuditLogsDrawerProp
             {/* Footer */}
             <div className="p-6 border-t border-white/5 bg-slate-950/20">
               <div className="flex items-center justify-between mb-4">
-                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Audit Status</span>
-                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Monitoring Active
-                 </span>
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Status</span>
+                  <span className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+                  </span>
               </div>
               <button 
                 onClick={fetchLogs}
                 className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 text-[10px] font-black text-white hover:text-cyan-400 uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2 group"
               >
-                <Activity className="w-3 h-3 group-hover:animate-spin" /> Synchronize Matrix Hub
+                <Activity className="w-3 h-3 group-hover:animate-spin" /> Refresh
               </button>
             </div>
           </motion.div>
