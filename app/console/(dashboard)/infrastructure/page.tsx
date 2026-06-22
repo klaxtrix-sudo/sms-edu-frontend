@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
-import { getConsoleAuthHeaders } from '@/lib/console-auth';
+import { useConsoleAuthHeaders } from '@/components/console/console-auth-provider';
 
 const BACKEND_URL = getBackendUrl();
 
@@ -39,6 +39,7 @@ interface HealthData {
 }
 
 export default function InfrastructurePage() {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
   const [health, setHealth] = useState<HealthData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSync, setLastSync] = useState<Date>(new Date());

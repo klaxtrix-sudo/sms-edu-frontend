@@ -3,8 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useRouter, usePathname } from 'next/navigation';
-import { clearConsoleToken } from '@/lib/console-auth';
+import { usePathname } from 'next/navigation';
+import { consoleLogout } from '@/app/actions/console-actions';
 import { toast } from 'sonner';
 import { 
   Shield, 
@@ -35,14 +35,12 @@ const MENU_ITEMS = [
 
 export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const handleLogout = () => {
-    clearConsoleToken();
+  const handleLogout = async () => {
     toast.info('Signed out', {
       description: 'You have been securely logged out.'
     });
-    router.push('/console');
+    await consoleLogout();
   };
 
   return (
@@ -108,15 +106,15 @@ export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
           <Settings className={cn("w-5 h-5", pathname === "/console/config" && "text-indigo-400")} />
           Settings
         </Link>
-        <div
+        <button
           onClick={handleLogout}
-          className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group cursor-pointer hover:bg-red-500/10 transition-all active:scale-95"
+          className="w-full p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group cursor-pointer hover:bg-red-500/10 transition-all active:scale-95"
         >
           <div className="flex items-center gap-3">
             <LogOut className="w-5 h-5 text-red-400" />
             <span className="text-sm font-bold text-red-200">Log out</span>
           </div>
-        </div>
+        </button>
       </div>
     </aside>
   );

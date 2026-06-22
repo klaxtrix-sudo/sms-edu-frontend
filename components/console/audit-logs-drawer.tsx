@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { getBackendUrl } from '@/lib/utils';
+import { useConsoleAuthHeaders } from '@/components/console/console-auth-provider';
 
 const BACKEND_URL = getBackendUrl();
 
@@ -33,6 +34,7 @@ interface AuditLogsDrawerProps {
 }
 
 export default function AuditLogsDrawer({ isOpen, onClose }: AuditLogsDrawerProps) {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +47,7 @@ export default function AuditLogsDrawer({ isOpen, onClose }: AuditLogsDrawerProp
   const fetchLogs = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BACKEND_URL}/audit/admin/logs`);
+      const response = await axios.get(`${BACKEND_URL}/audit/admin/logs`, getConsoleAuthHeaders());
       if (response.data.success) {
         setLogs(response.data.logs);
       }

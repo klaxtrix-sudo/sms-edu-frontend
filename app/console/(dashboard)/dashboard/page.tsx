@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn, getBackendUrl } from '@/lib/utils';
 import axios from 'axios';
-import { getConsoleAuthHeaders } from '@/lib/console-auth';
+import { useConsoleAuthHeaders } from '@/components/console/console-auth-provider';
 import { 
   Tooltip, 
   TooltipContent, 
@@ -36,6 +36,7 @@ import {
 const MOCK_TENANTS = []; // Deprecated
 
 export default function ConsoleDashboard() {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

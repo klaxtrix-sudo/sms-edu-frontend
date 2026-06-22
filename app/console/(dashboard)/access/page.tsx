@@ -32,7 +32,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
-import { getConsoleAuthHeaders } from '@/lib/console-auth';
+import { useConsoleAuthHeaders } from '@/components/console/console-auth-provider';
 import AuditLogsDrawer from '@/components/console/audit-logs-drawer';
 import { Trash2 } from 'lucide-react';
 
@@ -46,6 +46,7 @@ const MOCK_CODES = [
 ];
 
 export default function AccessManagementPage() {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
   const [codes, setCodes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

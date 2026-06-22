@@ -49,7 +49,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
-import { getConsoleAuthHeaders, getConsoleUser } from '@/lib/console-auth';
+import { useConsoleAuthHeaders, useConsoleAuth } from '@/components/console/console-auth-provider';
 
 const BACKEND_URL = getBackendUrl();
 
@@ -68,6 +68,8 @@ interface PlatformConfig {
 }
 
 export default function ConfigPage() {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
+  const { user: consoleUser } = useConsoleAuth();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [config, setConfig] = useState<PlatformConfig | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -94,17 +96,12 @@ export default function ConfigPage() {
       if (adminRes.data.success) setAdmins(adminRes.data.data);
       if (configRes.data.success) setConfig(configRes.data.data);
       
-      let user = getConsoleUser();
+      let user = consoleUser;
       if (user && !user.id) {
-        // Legacy session without ID - refresh from backend
+        // Fallback: refresh from backend if context user lacks id
         const meRes = await axios.get(`${BACKEND_URL}/console/me`, getConsoleAuthHeaders());
         if (meRes.data.success) {
           user = meRes.data.data;
-          // Synchronize localStorage
-          const token = localStorage.getItem('klaxtrix_console_token');
-          if (token) {
-            localStorage.setItem('klaxtrix_console_user', JSON.stringify(user));
-          }
         }
       }
       setCurrentUser(user);

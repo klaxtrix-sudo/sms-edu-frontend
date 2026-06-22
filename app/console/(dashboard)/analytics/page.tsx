@@ -31,7 +31,7 @@ import {
   Cell
 } from 'recharts';
 import { cn, getBackendUrl } from '@/lib/utils';
-import { getConsoleAuthHeaders } from '@/lib/console-auth';
+import { useConsoleAuthHeaders } from '@/components/console/console-auth-provider';
 
 const BACKEND_URL = getBackendUrl();
 
@@ -57,6 +57,7 @@ interface PulseEvent {
 const COLORS = ['#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
 export default function AnalyticsPage() {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [pulse, setPulse] = useState<PulseEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);

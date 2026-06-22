@@ -29,7 +29,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
-import { getConsoleAuthHeaders } from '@/lib/console-auth';
+import { useConsoleAuthHeaders } from '@/components/console/console-auth-provider';
 
 const BACKEND_URL = getBackendUrl();
 
@@ -42,6 +42,7 @@ interface Tenant {
 }
 
 export default function TenantManagementPage() {
+  const getConsoleAuthHeaders = useConsoleAuthHeaders();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
