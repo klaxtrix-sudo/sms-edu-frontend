@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Settings, 
-  Users, 
-  Shield, 
-  Lock, 
-  Mail, 
-  Palette, 
-  Power, 
-  RefreshCcw, 
+import {
+  Settings,
+  Users,
+  Shield,
+  Lock,
+  Mail,
+  Palette,
+  Power,
+  RefreshCcw,
   Plus,
   Trash2,
   KeyRound,
-  UserCircle
+  UserCircle,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,22 +23,29 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { cn, getBackendUrl } from '@/lib/utils';
@@ -65,8 +74,14 @@ export default function ConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Form States
-  const [newAdmin, setNewAdmin] = useState({ username: '', email: '', password: '', role: 'admin' });
-  const [profileUpdate, setProfileUpdate] = useState({ email: '', password: '' });
+  const [newAdmin, setNewAdmin] = useState({ username: '', email: '', password: '', role: 'admin', creatorPassword: '' });
+  const [profileUpdate, setProfileUpdate] = useState({ email: '', password: '', creatorPassword: '' });
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [deleteCreatorPassword, setDeleteCreatorPassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -105,50 +120,106 @@ export default function ConfigPage() {
     fetchData();
   }, []);
 
+  const resetCreateForm = () => {
+    setNewAdmin({ username: '', email: '', password: '', role: 'admin', creatorPassword: '' });
+  };
+
   const handleCreateAdmin = async () => {
+    if (!newAdmin.username.trim()) { toast.error('Username is required.'); return; }
+    if (!/^[a-zA-Z0-9._-]{3,30}$/.test(newAdmin.username.trim())) {
+      toast.error('Invalid username', { description: '3-30 chars: letters, numbers, dots, hyphens, underscores.' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAdmin.email.trim())) { toast.error('A valid email is required.'); return; }
+    if (newAdmin.password.length < 8) { toast.error('Password must be at least 8 characters.'); return; }
+    if (!newAdmin.creatorPassword) { toast.error('Confirm with your password to authorize this creation.'); return; }
+
     try {
+      setIsCreating(true);
       const response = await axios.post(`${BACKEND_URL}/console/admins`, newAdmin, getConsoleAuthHeaders());
       if (response.data.success) {
         toast.success('Administrative node established successfully.');
         fetchData();
-        setNewAdmin({ username: '', email: '', password: '', role: 'admin' });
+        resetCreateForm();
+        setIsDialogOpen(false);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create admin.');
+      const msg = error.response?.data?.message;
+      if (error.response?.data?.errors) {
+        const fieldErrors = error.response.data.errors;
+        const firstField = Object.keys(fieldErrors)[0];
+        toast.error(fieldErrors[firstField]?.[0] || 'Validation failed.');
+      } else {
+        toast.error(msg || 'Failed to create admin.');
+      }
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleUpdateProfile = async () => {
     if (!currentUser?.id) return;
+    if (!profileUpdate.creatorPassword) { toast.error('Confirm with your password to authorize this update.'); return; }
+    if (profileUpdate.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileUpdate.email.trim())) {
+      toast.error('A valid email is required.'); return;
+    }
+    if (profileUpdate.password && profileUpdate.password.length < 8) {
+      toast.error('New password must be at least 8 characters.'); return;
+    }
+
     try {
+      setIsUpdating(true);
       const response = await axios.patch(`${BACKEND_URL}/console/admins/${currentUser.id}`, profileUpdate, getConsoleAuthHeaders());
       if (response.data.success) {
         toast.success('Your profile parameters have been updated.');
-        setProfileUpdate({ email: '', password: '' });
+        setProfileUpdate({ email: '', password: '', creatorPassword: '' });
       }
-    } catch (error) {
-      toast.error('Failed to update your profile.');
+    } catch (error: any) {
+      const msg = error.response?.data?.message;
+      if (error.response?.data?.errors) {
+        const fieldErrors = error.response.data.errors;
+        const firstField = Object.keys(fieldErrors)[0];
+        toast.error(fieldErrors[firstField]?.[0] || 'Validation failed.');
+      } else {
+        toast.error(msg || 'Failed to update your profile.');
+      }
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const handleDeleteAdmin = async (id: string, username: string) => {
-    if (id === currentUser?.id) {
-       toast.error('Security Protocol: You cannot purge your own administrative node.');
-       return;
+  const handleDeleteAdmin = async () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.id === currentUser?.id) {
+      toast.error('Security Protocol: You cannot purge your own administrative node.');
+      setDeleteTarget(null);
+      return;
     }
-
-    if (!window.confirm(`Are you sure you want to permanently purge administrative node: ${username}?`)) {
-       return;
-    }
+    if (!deleteCreatorPassword) { toast.error('Confirm with your password to authorize this purge.'); return; }
 
     try {
-      const response = await axios.delete(`${BACKEND_URL}/console/admins/${id}`, getConsoleAuthHeaders());
+      setIsDeleting(true);
+      const response = await axios.delete(`${BACKEND_URL}/console/admins/${deleteTarget.id}`, {
+        ...getConsoleAuthHeaders(),
+        data: { creatorPassword: deleteCreatorPassword },
+      });
       if (response.data.success) {
-        toast.success(`Node ${username} has been purged from the registry.`);
+        toast.success(`Node ${deleteTarget.username} has been purged from the registry.`);
+        setDeleteTarget(null);
+        setDeleteCreatorPassword('');
         fetchData();
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Purge protocol failed.');
+      const msg = error.response?.data?.message;
+      if (error.response?.data?.errors) {
+        const fieldErrors = error.response.data.errors;
+        const firstField = Object.keys(fieldErrors)[0];
+        toast.error(fieldErrors[firstField]?.[0] || 'Validation failed.');
+      } else {
+        toast.error(msg || 'Purge protocol failed.');
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -203,52 +274,100 @@ export default function ConfigPage() {
                <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Users className="w-5 h-5 text-indigo-400" /> Active Master Nodes
                </h2>
-               <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl gap-2 h-10 px-4">
-                       <Plus className="w-4 h-4" /> Create Admin
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-black uppercase tracking-tight">Access Escalation</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                       <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Admin Username</label>
-                          <Input 
-                            placeholder="e.g. solomon.admin" 
-                            className="bg-slate-900 border-slate-800 h-12 rounded-xl"
-                            value={newAdmin.username}
-                            onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
-                          />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Primary Email</label>
-                          <Input 
-                            type="email"
-                            placeholder="orbital@klaxtrix.com" 
-                            className="bg-slate-900 border-slate-800 h-12 rounded-xl"
-                            value={newAdmin.email}
-                            onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
-                          />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Secure Passphrase</label>
-                          <Input 
-                            type="password"
-                            placeholder="••••••••" 
-                            className="bg-slate-900 border-slate-800 h-12 rounded-xl"
-                            value={newAdmin.password}
-                            onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-                          />
-                       </div>
-                    </div>
-                    <DialogFooter>
-                       <Button onClick={handleCreateAdmin} className="w-full bg-indigo-500 h-12 font-black uppercase rounded-xl">Initialize Node</Button>
-                    </DialogFooter>
-                  </DialogContent>
-               </Dialog>
+               {currentUser?.role === 'super-admin' ? (
+                <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetCreateForm(); }}>
+                   <DialogTrigger asChild>
+                     <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl gap-2 h-10 px-4">
+                        <Plus className="w-4 h-4" /> Create Admin
+                     </Button>
+                   </DialogTrigger>
+                   <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white">
+                     <DialogHeader>
+                       <DialogTitle className="text-xl font-black uppercase tracking-tight">Access Escalation</DialogTitle>
+                     </DialogHeader>
+                     <div className="space-y-4 py-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Admin Username</label>
+                           <Input
+                             placeholder="e.g. solomon.admin"
+                             className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                             value={newAdmin.username}
+                             onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Primary Email</label>
+                           <Input
+                             type="email"
+                             placeholder="orbital@klaxtrix.com"
+                             className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                             value={newAdmin.email}
+                             onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Secure Passphrase</label>
+                           <Input
+                             type="password"
+                             placeholder="Min. 8 characters"
+                             className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                             value={newAdmin.password}
+                             onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Clearance Level</label>
+                           <Select value={newAdmin.role} onValueChange={(v) => setNewAdmin({ ...newAdmin, role: v })}>
+                             <SelectTrigger className="bg-slate-900 border-slate-800 h-12 rounded-xl text-sm">
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                               <SelectItem value="admin">Admin</SelectItem>
+                               <SelectItem value="viewer">Viewer</SelectItem>
+                               <SelectItem value="super-admin">Super Admin</SelectItem>
+                             </SelectContent>
+                           </Select>
+                        </div>
+                        {newAdmin.role === 'super-admin' && (
+                          <div className="flex gap-2.5 items-center p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300">
+                            <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                            <p className="text-[10px] font-bold uppercase tracking-wider leading-relaxed">
+                              Super-admin grants full privileges, including the ability to create more super-admins. This action is audited.
+                            </p>
+                          </div>
+                        )}
+                        <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Confirm With Your Password</label>
+                           <Input
+                             type="password"
+                             placeholder="••••••••"
+                             className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                             value={newAdmin.creatorPassword}
+                             onChange={(e) => setNewAdmin({ ...newAdmin, creatorPassword: e.target.value })}
+                           />
+                        </div>
+                     </div>
+                     <DialogFooter>
+                        <Button
+                          onClick={handleCreateAdmin}
+                          disabled={isCreating}
+                          className={cn(
+                            "w-full h-12 font-black uppercase rounded-xl",
+                            newAdmin.role === 'super-admin'
+                              ? "bg-red-600 hover:bg-red-500 text-white"
+                              : "bg-indigo-500 hover:bg-indigo-600 text-white"
+                          )}
+                        >
+                          {isCreating ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Provisioning…</>
+                          ) : (
+                            newAdmin.role === 'super-admin' ? 'Initialize Super-Admin Node' : 'Initialize Node'
+                          )}
+                        </Button>
+                     </DialogFooter>
+                   </DialogContent>
+                </Dialog>
+               ) : null}
             </div>
             <Table>
               <TableHeader className="bg-slate-900/40">
@@ -285,25 +404,72 @@ export default function ConfigPage() {
                        {admin.last_login ? new Date(admin.last_login).toLocaleString() : 'Never Recorded'}
                     </TableCell>
                     <TableCell className="text-right">
-                       <Button 
-                         variant="ghost" 
-                         size="icon" 
-                         disabled={admin.id === currentUser?.id}
-                         onClick={() => handleDeleteAdmin(admin.id, admin.username)}
-                         className={cn(
-                           "text-slate-600 hover:text-red-400",
-                           admin.id === currentUser?.id && "opacity-20 cursor-not-allowed grayscale"
-                         )}
-                       >
-                          <Trash2 className="w-4 h-4" />
-                       </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={admin.id === currentUser?.id}
+                          onClick={() => { setDeleteTarget(admin); setDeleteCreatorPassword(''); }}
+                          className={cn(
+                            "text-slate-600 hover:text-red-400",
+                            admin.id === currentUser?.id && "opacity-20 cursor-not-allowed grayscale"
+                          )}
+                        >
+                           <Trash2 className="w-4 h-4" />
+                        </Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
+             </Table>
+           </Card>
+
+           {/* Delete Confirmation Dialog (re-auth required) */}
+           <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteCreatorPassword(''); } }}>
+             <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white">
+               <DialogHeader>
+                 <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-400">Purge Administrative Node</DialogTitle>
+               </DialogHeader>
+               <div className="space-y-4 py-4">
+                 <div className="flex gap-2.5 items-center p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300">
+                   <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                   <p className="text-[11px] font-bold leading-relaxed">
+                     You are about to permanently purge <strong className="text-white">{deleteTarget?.username}</strong>. This action is irreversible and audited.
+                   </p>
+                 </div>
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Confirm With Your Password</label>
+                   <Input
+                     type="password"
+                     placeholder="••••••••"
+                     className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                     value={deleteCreatorPassword}
+                     onChange={(e) => setDeleteCreatorPassword(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && handleDeleteAdmin()}
+                   />
+                 </div>
+               </div>
+               <DialogFooter>
+                 <div className="flex gap-3 w-full">
+                   <Button
+                     variant="ghost"
+                     className="flex-1 h-12 rounded-xl text-slate-400"
+                     onClick={() => { setDeleteTarget(null); setDeleteCreatorPassword(''); }}
+                     disabled={isDeleting}
+                   >
+                     Cancel
+                   </Button>
+                   <Button
+                     className="flex-1 h-12 bg-red-600 hover:bg-red-500 text-white font-black uppercase rounded-xl"
+                     onClick={handleDeleteAdmin}
+                     disabled={isDeleting || !deleteCreatorPassword}
+                   >
+                     {isDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Purging…</> : 'Purge Node'}
+                   </Button>
+                 </div>
+               </DialogFooter>
+             </DialogContent>
+           </Dialog>
+         </TabsContent>
 
         {/* Tab 2: Profile */}
         <TabsContent value="profile" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -324,18 +490,33 @@ export default function ConfigPage() {
                       onChange={(e) => setProfileUpdate({ ...profileUpdate, email: e.target.value })}
                     />
                  </div>
-                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">New Secure Passphrase</label>
-                    <Input 
-                      type="password"
-                      className="bg-slate-900 border-slate-800 h-12 rounded-xl"
-                      value={profileUpdate.password}
-                      onChange={(e) => setProfileUpdate({ ...profileUpdate, password: e.target.value })}
-                    />
-                 </div>
-                 <Button onClick={handleUpdateProfile} className="w-full bg-slate-100 hover:bg-white text-black font-black uppercase rounded-xl h-12 mt-4">
-                    Update Node Credentials
-                 </Button>
+                  <div className="space-y-1.5">
+                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">New Secure Passphrase</label>
+                     <Input
+                       type="password"
+                       placeholder="Leave blank to keep current"
+                       className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                       value={profileUpdate.password}
+                       onChange={(e) => setProfileUpdate({ ...profileUpdate, password: e.target.value })}
+                     />
+                  </div>
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
+                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Confirm With Your Password</label>
+                     <Input
+                       type="password"
+                       placeholder="••••••••"
+                       className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                       value={profileUpdate.creatorPassword}
+                       onChange={(e) => setProfileUpdate({ ...profileUpdate, creatorPassword: e.target.value })}
+                     />
+                  </div>
+                  <Button
+                    onClick={handleUpdateProfile}
+                    disabled={isUpdating}
+                    className="w-full bg-slate-100 hover:bg-white text-black font-black uppercase rounded-xl h-12 mt-4"
+                  >
+                    {isUpdating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating…</> : 'Update Node Credentials'}
+                  </Button>
               </div>
            </Card>
 
