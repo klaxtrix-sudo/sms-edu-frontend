@@ -62,7 +62,7 @@ export default function AccessManagementPage() {
         setCodes(response.data.data);
       }
     } catch (error) {
-      toast.error('Failed to sync with Access Matrix.');
+       toast.error("Couldn't load access codes.");
     } finally {
       setIsLoading(false);
     }
@@ -77,14 +77,14 @@ export default function AccessManagementPage() {
       setIsGenerating(true);
       const response = await axios.post(`${BACKEND_URL}/access/admin/generate`, {}, getConsoleAuthHeaders());
       
-      if (response.data.success) {
-        toast.success('Access Code Generated', {
-          description: `New secure gate ${response.data.data.code} created and logged.`,
-        });
-        fetchCodes(); // Refresh list
-      }
-    } catch (error) {
-      toast.error('Code generation protocol failed.');
+       if (response.data.success) {
+         toast.success('Code generated', {
+           description: `Code ${response.data.data.code} is ready to share with a school.`,
+         });
+         fetchCodes(); // Refresh list
+       }
+     } catch (error) {
+       toast.error("Couldn't generate the code. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -93,7 +93,7 @@ export default function AccessManagementPage() {
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
     toast.success('Copied to Clipboard', {
-      description: `Access code ${code} is ready for distribution.`,
+      description: `Access code ${code} is ready to share.`,
     });
   };
 
@@ -101,14 +101,14 @@ export default function AccessManagementPage() {
     try {
       const response = await axios.delete(`${BACKEND_URL}/access/admin/delete/${id}`, getConsoleAuthHeaders());
       if (response.data.success) {
-        toast.success('Access Code Purged', {
-          description: `Gate ${code} has been permanently removed from the Matrix.`,
+        toast.success('Code deleted', {
+          description: `Code ${code} has been deleted.`,
         });
         setPendingDeleteId(null);
         fetchCodes();
       }
     } catch (error) {
-      toast.error('Purge protocol failed.');
+      toast.error("Couldn't delete the code. Please try again.");
       setPendingDeleteId(null);
     }
   };
@@ -118,7 +118,7 @@ export default function AccessManagementPage() {
       case 'active':
         return <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 gap-1.5 py-1 px-3 uppercase text-[10px] font-bold tracking-wider animate-pulse-slow"><ShieldCheck className="w-3 h-3" /> Active</Badge>;
       case 'used':
-        return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1.5 py-1 px-3 uppercase text-[10px] font-bold tracking-wider"><CheckCircle2 className="w-3 h-3" /> Redeemed</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1.5 py-1 px-3 uppercase text-[10px] font-bold tracking-wider"><CheckCircle2 className="w-3 h-3" /> Used</Badge>;
       case 'expired':
         return <Badge className="bg-red-500/10 text-red-400 border-red-500/20 gap-1.5 py-1 px-3 uppercase text-[10px] font-bold tracking-wider"><AlertCircle className="w-3 h-3" /> Expired</Badge>;
       default:
@@ -131,12 +131,12 @@ export default function AccessManagementPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-slate-800/50">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-cyan-500 mb-2">
+           <div className="flex items-center gap-2 text-cyan-500 mb-2">
              <Key className="w-4 h-4" />
-             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Registry Access</span>
-          </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Access Codes</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium">Generate and coordinate secure onboarding for the Klaxtrix school network.</p>
+             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Onboarding</span>
+           </div>
+           <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Access Codes</h1>
+           <p className="text-slate-500 text-sm max-w-2xl font-medium">Generate codes that let new schools sign up.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -145,8 +145,8 @@ export default function AccessManagementPage() {
              disabled={isGenerating}
              className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-6 h-12 rounded-xl shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)] transition-all flex items-center gap-2"
            >
-              {isGenerating ? <Zap className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Generate Access Code
+               {isGenerating ? <Zap className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+               Generate code
            </Button>
         </div>
       </div>
@@ -154,10 +154,10 @@ export default function AccessManagementPage() {
       {/* Stats Quick View */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
          {[
-           { label: 'Total Codes', value: codes.length.toString(), color: 'slate' },
-           { label: 'Active Codes', value: codes.filter(c => c.status === 'active').length.toString(), color: 'cyan' },
-           { label: 'Redeemed', value: codes.filter(c => c.status === 'used').length.toString(), color: 'emerald' },
-           { label: 'Expirations', value: codes.filter(c => c.status === 'expired').length.toString(), color: 'red' },
+            { label: 'Total Codes', value: codes.length.toString(), color: 'slate' },
+            { label: 'Active Codes', value: codes.filter(c => c.status === 'active').length.toString(), color: 'cyan' },
+            { label: 'Used', value: codes.filter(c => c.status === 'used').length.toString(), color: 'emerald' },
+            { label: 'Expirations', value: codes.filter(c => c.status === 'expired').length.toString(), color: 'red' },
          ].map((stat, i) => (
            <Card key={i} className="p-4 bg-[#0c0c0c]/50 border-slate-800/50 relative overflow-hidden group">
               <div className="space-y-1 relative z-10">
@@ -194,11 +194,11 @@ export default function AccessManagementPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800/50">
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Access Code</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Code</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Status</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Assigned School</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Usage</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Expiration</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Used by</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Uses</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Expires</th>
                 <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
@@ -207,15 +207,15 @@ export default function AccessManagementPage() {
                 <tr>
                    <td colSpan={6} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
-                         <Zap className="w-8 h-8 text-cyan-500 animate-spin" />
-                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Connecting to Registry...</span>
+                   <Zap className="w-8 h-8 text-cyan-500 animate-spin" />
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Loading...</span>
                       </div>
                    </td>
                 </tr>
               ) : codes.length === 0 ? (
                 <tr>
                    <td colSpan={6} className="px-6 py-20 text-center">
-                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Active Access Codes Identified in Registry.</span>
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No access codes yet. Generate one to get started.</span>
                    </td>
                 </tr>
               ) : codes.filter(c => c.code.toLowerCase().includes(searchQuery.toLowerCase()) || c.institution_name?.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
@@ -236,13 +236,13 @@ export default function AccessManagementPage() {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
                        {item.institution_name ? (
-                          <>
-                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                             <span className="text-sm font-bold text-slate-300">{item.institution_name}</span>
-                          </>
-                       ) : (
-                          <span className="text-sm font-bold text-slate-600">Unused Code</span>
-                       )}
+                           <>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="text-sm font-bold text-slate-300">{item.institution_name}</span>
+                           </>
+                        ) : (
+                           <span className="text-sm font-bold text-slate-600">Not used yet</span>
+                        )}
                     </div>
                   </td>
                   <td className="px-6 py-5 text-center">
@@ -259,7 +259,7 @@ export default function AccessManagementPage() {
                   <td className="px-6 py-5 text-right">
                     {pendingDeleteId === item.id ? (
                       <div className="flex items-center justify-end gap-2">
-                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Confirm?</span>
+                         <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Delete?</span>
                         <Button
                           size="sm"
                           className="h-7 px-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider"
@@ -307,7 +307,7 @@ export default function AccessManagementPage() {
                                   : "text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer"
                               )}
                             >
-                              <Trash2 className="w-4 h-4" /> Delete Access Code
+                              <Trash2 className="w-4 h-4" /> Delete code
                             </DropdownMenuItem>
                             <DropdownMenuSeparator className="bg-slate-800" />
                             <DropdownMenuItem
@@ -319,7 +319,7 @@ export default function AccessManagementPage() {
                                   : "cursor-pointer"
                               )}
                             >
-                              <Zap className="w-4 h-4" /> Force Expire
+                              <Zap className="w-4 h-4" /> Expire now
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -335,18 +335,18 @@ export default function AccessManagementPage() {
         {/* Audit Log Overlay (Floating Indicator) */}
         <div className="p-4 bg-slate-900/40 border-t border-slate-800/50 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                 <Clock className="w-3 h-3" /> Latest Session Activity:
-              </div>
-              <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/5 px-2 py-0.5 rounded border border-cyan-500/10">
-                 {codes.length > 0 ? `${codes[0].code} created on ${new Date(codes[0].created_at).toLocaleDateString()}` : 'Protocol Initialized...'}
-              </div>
-            </div>
-           <div 
-             onClick={() => setIsLogsOpen(true)}
-             className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all group"
-           >
-              Full Audit History <ArrowUpRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+               <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  <Clock className="w-3 h-3" /> Latest activity:
+               </div>
+               <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider bg-cyan-500/5 px-2 py-0.5 rounded border border-cyan-500/10">
+                  {codes.length > 0 ? `${codes[0].code} created on ${new Date(codes[0].created_at).toLocaleDateString()}` : 'No activity yet.'}
+               </div>
+             </div>
+            <div
+              onClick={() => setIsLogsOpen(true)}
+              className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-all group"
+            >
+               View all activity <ArrowUpRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
            </div>
         </div>
       </Card>
@@ -358,12 +358,12 @@ export default function AccessManagementPage() {
          <div className="w-12 h-12 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-center text-red-500">
             <ShieldCheck className="w-6 h-6" />
          </div>
-         <div className="space-y-1">
-            <h4 className="text-red-400 text-xs font-black uppercase tracking-[0.2em]">Security Protocols Enforced</h4>
-            <p className="text-[11px] font-bold text-slate-500 leading-relaxed max-w-3xl">
-               ATTENTION: EVERY ACCESS CODE GENERATED IS AUDITED BY THE KLAXTRIX REGISTRY. CODES ARE CRYPTOGRAPHICALLY LINKED TO THE ISSUING ADMIN SESSION. SHARING CODES OUTSIDE OF VERIFIED SCHOOL CHANNELS IS A VIOLATION OF SECURITY COMPLIANCE.
-            </p>
-         </div>
+          <div className="space-y-1">
+             <h4 className="text-red-400 text-xs font-black uppercase tracking-[0.2em]">Security note</h4>
+             <p className="text-[11px] font-bold text-slate-500 leading-relaxed max-w-3xl">
+                Every access code is tied to the admin who generated it. Only share codes with schools you've approved.
+             </p>
+          </div>
       </div>
     </div>
   );
