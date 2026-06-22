@@ -9,16 +9,6 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Tenant dashboard pages query tenant-specific tables (classes, timetables, etc.)
-  // via the master-typed Supabase client. Those tables don't exist in types/supabase.ts
-  // (which reflects only the master DB schema), causing TypeScript to infer them as 'never'.
-  // This is a known type gap for staging — runtime behaviour is correct.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Allow cross-origin requests from *.localhost subdomains (tenant portals in dev)
   allowedDevOrigins: [
     'localhost:3000',
@@ -30,6 +20,33 @@ const nextConfig = {
     'http://localhost:3000',
     'http://glorydays.localhost:3000'
   ],
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https: blob:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://*.supabase.co https://api.paystack.co https://api.termii.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self' https://paystack.com",
+            ].join('; '),
+          },
+        ],
+      },
+    ];
+  },
   experimental: {
     serverComponentsExternalPackages: [],
     serverActions: {
