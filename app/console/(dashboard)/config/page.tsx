@@ -281,11 +281,11 @@ export default function ConfigPage() {
                         <Plus className="w-4 h-4" /> Create Admin
                      </Button>
                    </DialogTrigger>
-                   <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white">
+                   <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white max-h-[85vh] flex flex-col">
                      <DialogHeader>
                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Access Escalation</DialogTitle>
                      </DialogHeader>
-                     <div className="space-y-4 py-4">
+                     <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
                         <div className="space-y-1.5">
                            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Admin Username</label>
                            <Input
@@ -425,11 +425,11 @@ export default function ConfigPage() {
 
            {/* Delete Confirmation Dialog (re-auth required) */}
            <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteCreatorPassword(''); } }}>
-             <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white">
-               <DialogHeader>
-                 <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-400">Purge Administrative Node</DialogTitle>
-               </DialogHeader>
-               <div className="space-y-4 py-4">
+              <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-400">Purge Administrative Node</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
                  <div className="flex gap-2.5 items-center p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300">
                    <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
                    <p className="text-[11px] font-bold leading-relaxed">
