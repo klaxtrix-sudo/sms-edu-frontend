@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
       if (pulseRes.data.success) setPulse(pulseRes.data.data);
     } catch (error) {
       console.error('Analytics Fetch Error:', error);
-      toast.error('Failed to synchronize platform analytics.');
+      toast.error("Couldn't load analytics.");
     } finally {
       setIsLoading(false);
     }
@@ -90,30 +90,30 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-slate-800/50">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-cyan-400 mb-2">
-             <Activity className="w-4 h-4" />
-             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Global Intelligence</span>
-          </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Platform Analytics</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium">High-fidelity oversight of institutional growth and academic engagement markers.</p>
+           <div className="flex items-center gap-2 text-cyan-400 mb-2">
+              <Activity className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Platform Insights</span>
+           </div>
+           <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Analytics</h1>
+           <p className="text-slate-500 text-sm max-w-2xl font-medium">Track growth and activity across all schools.</p>
         </div>
         
         <Button 
           onClick={fetchAnalytics}
           className="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 font-bold px-6 h-12 rounded-xl transition-all flex items-center gap-2"
         >
-          <RefreshCcw className={cn("w-4 h-4", isLoading && "animate-spin text-cyan-400")} />
-          Sync Analytics
+           <RefreshCcw className={cn("w-4 h-4", isLoading && "animate-spin text-cyan-400")} />
+           Refresh
         </Button>
       </div>
 
       {/* Aggregate Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          {[
-           { label: 'Platform Students', value: data?.aggregate.totalStudents.toLocaleString(), icon: Users, color: 'text-cyan-400' },
-           { label: 'Certified Staff', value: data?.aggregate.totalTeachers.toLocaleString(), icon: GraduationCap, color: 'text-violet-400' },
-           { label: 'Exams Finalized', value: data?.aggregate.totalExams.toLocaleString(), icon: BookOpen, color: 'text-fuchsia-400' },
-           { label: 'Active Schools', value: data?.aggregate.activeSchools.toLocaleString(), icon: School, color: 'text-emerald-400' }
+            { label: 'Total Students', value: data?.aggregate.totalStudents.toLocaleString(), icon: Users, color: 'text-cyan-400' },
+            { label: 'Total Teachers', value: data?.aggregate.totalTeachers.toLocaleString(), icon: GraduationCap, color: 'text-violet-400' },
+            { label: 'Exams Completed', value: data?.aggregate.totalExams.toLocaleString(), icon: BookOpen, color: 'text-fuchsia-400' },
+            { label: 'Active Schools', value: data?.aggregate.activeSchools.toLocaleString(), icon: School, color: 'text-emerald-400' }
          ].map((stat, i) => (
            <Card key={i} className="bg-[#0b0b0b]/50 border-slate-800/50 p-6 flex items-start justify-between group hover:border-slate-700 transition-all">
               <div className="space-y-2">
@@ -135,12 +135,12 @@ export default function AnalyticsPage() {
          <Card className="lg:col-span-2 bg-[#0c0c0c]/50 border-slate-800/50 p-8 flex flex-col gap-8">
             <div className="flex items-center justify-between">
                <div className="space-y-1">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                     <TrendingUp className="w-5 h-5 text-cyan-400" /> Enrollment Velocity
-                  </h2>
-                  <p className="text-xs text-slate-500 font-medium">Monthly acquisition and retention trajectory.</p>
-               </div>
-               <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Real-time Pulse</Badge>
+                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-cyan-400" /> Enrollment Growth
+                   </h2>
+                   <p className="text-xs text-slate-500 font-medium">Monthly student enrollment over time.</p>
+                </div>
+                <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Live</Badge>
             </div>
 
             <div className="h-[300px] w-full">
@@ -189,9 +189,9 @@ export default function AnalyticsPage() {
          {/* Distribution & Pulse */}
          <div className="space-y-8 flex flex-col">
             <Card className="flex-1 bg-[#0c0c0c]/50 border-slate-800/50 p-8 space-y-6">
-               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-violet-400" /> Regional Density
-               </h2>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                   <Globe className="w-5 h-5 text-violet-400" /> Schools by Region
+                </h2>
                <div className="h-[200px] w-full flex items-center justify-center relative">
                   <ResponsiveContainer width="100%" height="100%">
                      <PieChart>
@@ -213,7 +213,7 @@ export default function AnalyticsPage() {
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
                      <span className="text-2xl font-black text-white">{data?.aggregate.activeSchools || 0}</span>
-                     <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Active Nodes</span>
+                      <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Active Schools</span>
                   </div>
                </div>
                <div className="grid grid-cols-2 gap-4">
@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
                <div className="p-4 border-b border-slate-800/50 flex items-center justify-between bg-cyan-900/5">
                   <div className="flex items-center gap-2">
                      <Zap className="w-4 h-4 text-cyan-400" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">Network Pulse</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">Live Activity</span>
                   </div>
                </div>
                <div className="p-4 space-y-4 max-h-[250px] overflow-y-auto custom-scrollbar bg-black/40">
@@ -248,7 +248,7 @@ export default function AnalyticsPage() {
                   {pulse.length === 0 && (
                      <div className="py-8 text-center space-y-2">
                         <Activity className="w-6 h-6 text-slate-800 mx-auto animate-pulse" />
-                        <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Awaiting Platform Engagement...</p>
+                         <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No recent activity.</p>
                      </div>
                   )}
                </div>
