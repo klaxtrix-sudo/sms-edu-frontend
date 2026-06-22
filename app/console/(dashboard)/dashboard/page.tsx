@@ -72,36 +72,36 @@ export default function ConsoleDashboard() {
         const data = statsRes.data.data;
         setStats([
           {
-            title: 'Active Institutions',
+            title: 'Active Schools',
             value: data.institutions.toString(),
             change: '+1',
             icon: Globe,
             color: 'text-cyan-400',
-            description: 'Total number of school environments currently provisioned and active on the Klaxtrix network.'
+            description: 'Schools currently set up and running.'
           },
           {
-            title: 'Platform Stability',
+            title: 'Provisioning Rate',
             value: `${data.stability}%`,
             change: 'Stable',
             icon: Server,
             color: 'text-indigo-400',
-            description: 'Percentage of schools reporting healthy connection status and successful provisioning.'
+            description: 'Share of schools with a successful setup.'
           },
           {
-            title: 'Onboarding Tokens',
+            title: 'Available Access Codes',
             value: data.tokens.toString(),
             change: 'Active',
             icon: Key,
             color: 'text-amber-400',
-            description: 'Number of unused Access Codes currently available for new school registration.'
+            description: 'Unused codes available for new school sign-ups.'
           },
           {
-            title: 'Registry Volume',
+            title: 'Total Records',
             value: data.volume > 1000 ? `${(data.volume / 1000).toFixed(1)}k` : data.volume.toString(),
             change: 'Live',
             icon: Activity,
             color: 'text-fuchsia-400',
-            description: 'Aggregate count of records (schools, registrations, and tokens) stored in the master registry.'
+            description: 'Total records across schools, registrations, and access codes.',
           },
         ]);
       }
@@ -119,8 +119,8 @@ export default function ConsoleDashboard() {
       setIsLogsLoading(false);
     } catch (err: any) {
       console.error('Data Fetch Error:', err);
-      setError('Telemetry Link Failure');
-      setTenantsError('Failed to sync institutional matrix.');
+      setError("Couldn't load data");
+      setTenantsError("Couldn't load schools.");
       setIsLoading(false);
       setIsTenantsLoading(false);
     }
@@ -147,8 +147,8 @@ export default function ConsoleDashboard() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-4xl font-heading font-bold tracking-tight text-white">Operations Hub</h1>
-          <p className="text-slate-400 text-lg">Centralized oversight of the Klaxtrix global institutional network.</p>
+          <h1 className="text-2xl md:text-4xl font-heading font-bold tracking-tight text-white">Dashboard</h1>
+          <p className="text-slate-400 text-lg">Overview of all schools on your platform.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
@@ -158,7 +158,7 @@ export default function ConsoleDashboard() {
             disabled={isLoading || isTenantsLoading}
           >
              <RefreshCw className={cn("w-4 h-4 mr-2", (isLoading || isTenantsLoading) && "animate-spin")} />
-             Sync Telemetry
+             Refresh
           </Button>
         </div>
       </div>
@@ -173,12 +173,12 @@ export default function ConsoleDashboard() {
           <div className="col-span-full p-8 rounded-2xl bg-red-500/5 border border-red-500/10 flex flex-col items-center justify-center gap-4 text-center">
              <Activity className="w-12 h-12 text-red-500/50" />
              <div className="space-y-1">
-               <p className="text-red-400 font-bold uppercase tracking-widest text-sm">{error}</p>
-               <p className="text-slate-500 text-xs">Registry link severed or cryptographic mismatch.</p>
-             </div>
-             <Button onClick={fetchData} variant="outline" size="sm" className="border-red-500/20 hover:bg-red-500/10 text-red-300">
-                Retry Sync
-             </Button>
+                <p className="text-red-400 font-bold uppercase tracking-widest text-sm">{error}</p>
+                <p className="text-slate-500 text-xs">We couldn't reach the server. Check your connection and try again.</p>
+              </div>
+              <Button onClick={fetchData} variant="outline" size="sm" className="border-red-500/20 hover:bg-red-500/10 text-red-300">
+                 Try again
+              </Button>
           </div>
         ) : (
           stats?.map((stat: any, i: number) => (
@@ -224,12 +224,12 @@ export default function ConsoleDashboard() {
             </h2>
             <div className="relative w-64">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-               <Input 
-                 placeholder="Filter nodes..." 
-                 className="pl-10 h-10 bg-slate-900/50 border-slate-800 rounded-xl text-sm"
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-               />
+                <Input
+                  placeholder="Search schools..."
+                  className="pl-10 h-10 bg-slate-900/50 border-slate-800 rounded-xl text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
             </div>
           </div>
           
@@ -238,10 +238,10 @@ export default function ConsoleDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-800/50 bg-slate-900/30">
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Institution</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Endpoint</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cloud Matrix</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ops Area</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">School</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Domain</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Region</th>
                     <th className="px-6 py-4 text-right"></th>
                   </tr>
                 </thead>
@@ -256,12 +256,12 @@ export default function ConsoleDashboard() {
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center">
                         <p className="text-red-400 font-bold mb-2">{tenantsError}</p>
-                        <Button onClick={fetchData} variant="outline" size="sm" className="border-red-500/20 text-red-300">Retry Matrix Link</Button>
+                        <Button onClick={fetchData} variant="outline" size="sm" className="border-red-500/20 text-red-300">Try again</Button>
                       </td>
                     </tr>
                   ) : paginatedTenants.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">No nodes matching your query.</td>
+                       <td colSpan={5} className="px-6 py-12 text-center text-slate-500">No schools match your search.</td>
                     </tr>
                   ) : (
                     paginatedTenants.map((tenant) => (
@@ -283,7 +283,7 @@ export default function ConsoleDashboard() {
                               : "border-amber-500/20 text-amber-400 bg-amber-500/5"
                           )}>
                             {tenant.is_provisioned ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertTriangle className="w-3 h-3 mr-1" />}
-                            {tenant.is_provisioned ? 'HEALTHY' : 'PENDING'}
+                            {tenant.is_provisioned ? 'Active' : 'Setting up'}
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-xs text-slate-400 font-semibold uppercase tracking-wider">
@@ -335,9 +335,9 @@ export default function ConsoleDashboard() {
         {/* Global Activity Sidebar - Moved below/different row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
           <div className="lg:col-span-3 space-y-6">
-             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-purple-400" /> Command Log
-             </h2>
+                 <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2 mb-4">
+                    <Zap className="w-5 h-5 text-purple-400" /> Recent Activity
+                 </h2>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {isLogsLoading ? (
                   Array(4).fill(0).map((_, i) => (
@@ -345,7 +345,7 @@ export default function ConsoleDashboard() {
                   ))
                 ) : logs.length === 0 ? (
                    <div className="col-span-full py-6 text-center text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
-                      No system events logged in the current cycle.
+                      No recent activity.
                    </div>
                 ) : (
                   logs.map((log: any, i: number) => {
@@ -355,7 +355,7 @@ export default function ConsoleDashboard() {
                     let critical = false;
 
                     if (log.action.includes('REGISTER')) { type = 'Onboard'; colorClass = 'bg-emerald-500'; }
-                    if (log.action.includes('GATE') || log.action.includes('CODE')) { type = 'Gate'; colorClass = 'bg-amber-500'; }
+                     if (log.action.includes('GATE') || log.action.includes('CODE')) { type = 'Code'; colorClass = 'bg-amber-500'; }
                     if (log.action.includes('DELETE') || log.action.includes('FAIL')) { type = 'Alert'; colorClass = 'bg-red-500'; critical = true; }
 
                     return (
