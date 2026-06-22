@@ -53,7 +53,6 @@ export interface Exam {
   endAt: string;
   totalMarks: number;
   questionCount: number;
-  randomise: boolean;
   status: 'draft' | 'published' | 'ended';
 }
 

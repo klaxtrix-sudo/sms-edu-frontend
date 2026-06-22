@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
-import { QueryProvider } from '@/components/providers/query-provider';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -51,10 +50,8 @@ export default function RootLayout({
       </head>
       <body className={`${outfit.variable} ${plusJakartaSans.variable} font-sans antialiased text-foreground bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <QueryProvider>
-            {children}
-            <Toaster richColors position="top-right" />
-          </QueryProvider>
+          {children}
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>

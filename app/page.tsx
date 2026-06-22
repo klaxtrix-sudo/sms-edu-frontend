@@ -52,7 +52,7 @@ export default function RootPage() {
                <span className="font-heading font-bold text-lg">Klaxtrix</span>
             </div>
             <p className="text-sm text-muted-foreground">
-               © 2026 Klaxtrix Institution Management. All rights reserved.
+               © {new Date().getFullYear()} Klaxtrix Institution Management. All rights reserved.
             </p>
             <div className="flex gap-6">
                <Link href="#" className="text-sm text-primary hover:underline">Privacy Policy</Link>
