@@ -55,7 +55,7 @@ export default function TenantManagementPage() {
       }
     } catch (error) {
       console.error('Fetch Tenants Error:', error);
-      toast.error('Failed to sync with Institutional Matrix.');
+      toast.error("Couldn't load schools.");
     } finally {
       setIsLoading(false);
     }
@@ -67,8 +67,8 @@ export default function TenantManagementPage() {
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Information Captured', {
-      description: `${label} copied to the mission clipboard.`,
+    toast.success('Copied', {
+      description: `${label} copied to clipboard.`,
     });
   };
 
@@ -96,12 +96,12 @@ export default function TenantManagementPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-slate-800/50">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-cyan-500 mb-2">
-             <Globe className="w-4 h-4" />
-             <span className="text-[10px] font-black uppercase tracking-[0.3em]">School Registry</span>
-          </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">School Registry</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium">Global oversight and synchronization of all registered school environments.</p>
+           <div className="flex items-center gap-2 text-cyan-500 mb-2">
+              <Globe className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Schools</span>
+           </div>
+           <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Schools</h1>
+           <p className="text-slate-500 text-sm max-w-2xl font-medium">All schools registered on your platform.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -109,8 +109,8 @@ export default function TenantManagementPage() {
              onClick={fetchTenants}
              className="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 font-bold px-6 h-12 rounded-xl transition-all flex items-center gap-2"
            >
-              <Activity className={cn("w-4 h-4", isLoading && "animate-spin")} />
-              Sync Matrix
+               <Activity className={cn("w-4 h-4", isLoading && "animate-spin")} />
+               Refresh
            </Button>
         </div>
       </div>
@@ -118,9 +118,9 @@ export default function TenantManagementPage() {
       {/* Stats Quick View */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          {[
-           { label: 'Total Schools', value: tenants.length.toString(), color: 'cyan', icon: Globe },
-           { label: 'Operational', value: tenants.filter(t => t.is_provisioned).length.toString(), color: 'emerald', icon: Server },
-           { label: 'Pending setup', value: tenants.filter(t => !t.is_provisioned).length.toString(), color: 'amber', icon: Shield },
+            { label: 'Total Schools', value: tenants.length.toString(), color: 'cyan', icon: Globe },
+            { label: 'Active', value: tenants.filter(t => t.is_provisioned).length.toString(), color: 'emerald', icon: Server },
+            { label: 'Setting up', value: tenants.filter(t => !t.is_provisioned).length.toString(), color: 'amber', icon: Shield },
          ].map((stat, i) => (
            <Card key={i} className="p-6 bg-[#0c0c0c]/50 border-slate-800/50 relative overflow-hidden group hover:border-cyan-500/30 transition-all">
               <div className="space-y-2 relative z-10">
@@ -142,15 +142,15 @@ export default function TenantManagementPage() {
         <div className="p-6 border-b border-slate-800/50 flex flex-col md:flex-row gap-4 justify-between bg-slate-900/10">
            <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <Input 
-                placeholder="Filter nodes by name or endpoint..." 
-                className="bg-slate-900/50 border-slate-800 pl-10 h-11 text-sm text-slate-200 placeholder:text-slate-600 focus:border-cyan-500/50"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-           </div>
-           <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              <span>Showing {filteredTenants.length} Registered Schools</span>
+               <Input
+                 placeholder="Search by name or domain..."
+                 className="bg-slate-900/50 border-slate-800 pl-10 h-11 text-sm text-slate-200 placeholder:text-slate-600 focus:border-cyan-500/50"
+                 value={searchQuery}
+                 onChange={e => setSearchQuery(e.target.value)}
+               />
+            </div>
+            <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+               <span>Showing {filteredTenants.length} schools</span>
            </div>
         </div>
 
@@ -158,11 +158,11 @@ export default function TenantManagementPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800/50 bg-slate-900/20">
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">School Identity</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Service Status</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Access Link</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Joined Date</th>
-                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-right px-10">Interface</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">School</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-center">Status</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Domain</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest">Joined</th>
+                <th className="px-6 py-4 text-[10px] uppercase font-black text-slate-500 tracking-widest text-right px-10">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30">
@@ -171,7 +171,7 @@ export default function TenantManagementPage() {
                    <td colSpan={5} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center gap-4">
                          <div className="w-12 h-12 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin" />
-                         <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Querying Global Registry...</span>
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Loading schools...</span>
                       </div>
                    </td>
                 </tr>
@@ -180,7 +180,7 @@ export default function TenantManagementPage() {
                    <td colSpan={5} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <AlertCircle className="w-8 h-8 text-slate-700" />
-                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No matching school records identified.</span>
+                         <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No schools match your search.</span>
                       </div>
                    </td>
                 </tr>
@@ -205,7 +205,7 @@ export default function TenantManagementPage() {
                         : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                     )}>
                       {node.is_provisioned ? <CheckCircle2 className="w-3 h-3 mr-1.5 inline" /> : <Clock className="w-3 h-3 mr-1.5 inline" />}
-                      {node.is_provisioned ? 'Operational' : 'Sync Pending'}
+                      {node.is_provisioned ? 'Active' : 'Setting up'}
                     </Badge>
                   </td>
                   <td className="px-6 py-6">
@@ -225,7 +225,7 @@ export default function TenantManagementPage() {
                           className="h-9 px-4 bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-400 border border-slate-800 hover:border-cyan-500 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg overflow-hidden group/btn"
                         >
                            <ExternalLink className="w-3.5 h-3.5 mr-2 group-hover/btn:scale-110 transition-transform" />
-                           Open Portal
+                           Open school
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -235,11 +235,11 @@ export default function TenantManagementPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-[#0c0c0c] border border-slate-800 text-slate-300 w-48 shadow-2xl">
                              <DropdownMenuItem className="gap-2 cursor-pointer focus:bg-cyan-500/10 focus:text-cyan-400 font-bold text-xs" onClick={() => copyToClipboard(node.id, 'School ID')}>
-                                <Copy className="w-4 h-4" /> Copy Registry ID
+                                <Copy className="w-4 h-4" /> Copy school ID
                              </DropdownMenuItem>
                              <DropdownMenuSeparator className="bg-slate-800/50" />
                              <DropdownMenuItem className="gap-2 cursor-pointer focus:bg-red-500/10 focus:text-red-400 font-bold text-xs">
-                                <AlertCircle className="w-4 h-4" /> Deactivate School
+                                <AlertCircle className="w-4 h-4" /> Suspend school
                              </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -258,18 +258,18 @@ export default function TenantManagementPage() {
             <div className="size-12 rounded-xl bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center text-cyan-500 shadow-inner">
                <Shield className="w-6 h-6" />
             </div>
-            <div className="space-y-1">
-               <h4 className="text-cyan-400 text-xs font-black uppercase tracking-[0.2em]">Encryption Layer Active</h4>
-               <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-2xl">
-                  ALL SCHOOL DATA AND REGISTRY ACCESS ARE SECURED WITH AES-256-GCM. MASTER ORCHESTRATION KEYS ARE STORED IN A CLASSIFIED HARDENED ENVIRONMENT.
-               </p>
-            </div>
-         </div>
-         
-         <Card className="p-6 bg-slate-900/40 border-slate-800 flex items-center justify-between gap-8 min-w-[300px]">
-            <div className="space-y-1">
-               <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Matrix Integrity</p>
-                <h3 className="text-xl font-black text-white">100% ONLINE</h3>
+             <div className="space-y-1">
+                <h4 className="text-cyan-400 text-xs font-black uppercase tracking-[0.2em]">Encryption is active</h4>
+                <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-2xl">
+                   All school data is encrypted with AES-256-GCM. Platform keys are stored in a secured environment.
+                </p>
+             </div>
+          </div>
+
+          <Card className="p-6 bg-slate-900/40 border-slate-800 flex items-center justify-between gap-8 min-w-[300px]">
+             <div className="space-y-1">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">System status</p>
+                 <h3 className="text-xl font-black text-white">All systems online</h3>
             </div>
             <div className="flex gap-1">
                {[1,2,3,4,5].map(i => (
