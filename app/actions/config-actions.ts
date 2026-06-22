@@ -2,11 +2,22 @@
 
 import { createTenantServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
+import axios from "axios";
 
 export type ResendConfig = {
   apiKey: string;
   fromEmail: string;
   fromName: string;
+};
+
+export type TermiiConfig = {
+  apiKey: string;
+  senderId: string;
+};
+
+export type PaystackConfig = {
+  secretKey: string;
 };
 
 // Tenant credentials are ALWAYS required for these actions.
@@ -16,29 +27,137 @@ export type TenantCredentials = {
   supabaseAnonKey: string;
 };
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Verification Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+async function verifyResendKey(apiKey: string): Promise<void> {
+  const resend = new Resend(apiKey);
+  const { error } = await resend.domains.list();
+  if (error) {
+    // If the key is valid but restricted to sending only, it's perfect for our needs.
+    if (error.name === 'restricted_api_key') {
+      return;
+    }
+    throw new Error(`Resend verification failed: ${error.message}`);
+  }
+}
+
+async function verifyTermiiKey(apiKey: string): Promise<void> {
+  try {
+    const res = await axios.get(`https://api.ng.termii.com/api/get-balance?api_key=${apiKey}`);
+    if (res.data?.status === 'error' || res.data?.error) {
+      throw new Error(res.data?.message || "Invalid Termii API Key");
+    }
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.message || "Could not reach Termii API";
+    throw new Error(`Termii verification failed: ${msg}`);
+  }
+}
+
+async function verifyPaystackKey(secretKey: string): Promise<void> {
+  try {
+    await axios.get(`https://api.paystack.co/integration/payment_session_timeout`, {
+      headers: {
+        Authorization: `Bearer ${secretKey}`
+      }
+    });
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.message || "Could not reach Paystack API";
+    throw new Error(`Paystack verification failed: ${msg}`);
+  }
+}
+
+async function upsertConfig(
+  supabase: any,
+  schoolId: string,
+  configKey: string,
+  configValue: string,
+  isActive: boolean
+) {
+  const { data, error: selectError } = await supabase
+    .from('institutional_configs')
+    .select('id')
+    .eq('school_id', schoolId)
+    .eq('config_key', configKey)
+    .maybeSingle();
+
+  if (selectError) throw selectError;
+
+  if (data?.id) {
+    const { error: updateError } = await supabase
+      .from('institutional_configs')
+      .update({
+        config_value: configValue,
+        is_active: isActive,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', data.id);
+
+    if (updateError) throw updateError;
+  } else {
+    const { error: insertError } = await supabase
+      .from('institutional_configs')
+      .insert([
+        {
+          school_id: schoolId,
+          config_key: configKey,
+          config_value: configValue,
+          is_active: isActive,
+          updated_at: new Date().toISOString()
+        }
+      ]);
+
+    if (insertError) throw insertError;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Resend (Email)
+// ──────────────────────────────────────────────────────────────────────────────
+
 export async function saveResendConfig(
   schoolId: string,
   config: ResendConfig,
   tenantCreds: TenantCredentials
 ) {
-  // CRITICAL: Must use the tenant DB client — user authenticates against the tenant.
-  // Using the master client causes RLS to reject the insert since the session token
-  // belongs to the tenant project, not the master project.
   const supabase = createTenantServerClient(tenantCreds.supabaseUrl, tenantCreds.supabaseAnonKey);
 
   try {
-    const { error } = await supabase
-      .from('institutional_configs')
-      .upsert([
-        {
-          school_id: schoolId,
-          config_key: 'resend_settings',
-          config_value: JSON.stringify(config),
-          updated_at: new Date().toISOString()
-        }
-      ], { onConflict: 'school_id,config_key' });
+    let unmaskedKey = config.apiKey;
 
-    if (error) throw error;
+    // If key is masked, retrieve the unmasked key from the database
+    if (config.apiKey.includes('*')) {
+      const { data } = await supabase
+        .from('institutional_configs')
+        .select('config_value')
+        .eq('school_id', schoolId)
+        .eq('config_key', 'resend_settings')
+        .maybeSingle();
+
+      if (data?.config_value) {
+        const parsed = JSON.parse(data.config_value) as ResendConfig;
+        unmaskedKey = parsed.apiKey;
+      } else {
+        throw new Error("API Key is required to save configuration");
+      }
+    }
+
+    // Verify key before saving
+    await verifyResendKey(unmaskedKey);
+
+    const configToSave: ResendConfig = {
+      ...config,
+      apiKey: unmaskedKey
+    };
+
+    await upsertConfig(
+      supabase,
+      schoolId,
+      'resend_settings',
+      JSON.stringify(configToSave),
+      true
+    );
 
     revalidatePath("/dashboard/admin/settings/integrations");
     return { success: true };
@@ -57,18 +176,15 @@ export async function getResendConfig(
   try {
     const { data, error } = await supabase
       .from('institutional_configs')
-      .select('config_value')
+      .select('config_value, is_active')
       .eq('school_id', schoolId)
       .eq('config_key', 'resend_settings')
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows found'
-
-    if (!data) return { config: null };
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return { config: null, isActive: false };
 
     const config = JSON.parse(data.config_value) as ResendConfig;
-
-    // Mask the API key for security before sending to client
     const maskedKey = config.apiKey
       ? config.apiKey.replace(/^(.{4})(.*)(.{4})$/, "$1" + "*".repeat(12) + "$3")
       : '';
@@ -77,10 +193,212 @@ export async function getResendConfig(
       config: {
         ...config,
         apiKey: maskedKey
-      }
+      },
+      isActive: data.is_active ?? false
     };
   } catch (error: any) {
     console.error("Error fetching Resend config:", error);
     return { error: error.message || "Failed to fetch configuration" };
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Termii (SMS)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function saveTermiiConfig(
+  schoolId: string,
+  config: TermiiConfig,
+  tenantCreds: TenantCredentials
+) {
+  const supabase = createTenantServerClient(tenantCreds.supabaseUrl, tenantCreds.supabaseAnonKey);
+
+  try {
+    let unmaskedKey = config.apiKey;
+
+    if (config.apiKey.includes('*')) {
+      const { data } = await supabase
+        .from('institutional_configs')
+        .select('config_value')
+        .eq('school_id', schoolId)
+        .eq('config_key', 'termii_settings')
+        .maybeSingle();
+
+      if (data?.config_value) {
+        const parsed = JSON.parse(data.config_value) as TermiiConfig;
+        unmaskedKey = parsed.apiKey;
+      } else {
+        throw new Error("API Key is required to save configuration");
+      }
+    }
+
+    await verifyTermiiKey(unmaskedKey);
+
+    const configToSave: TermiiConfig = {
+      ...config,
+      apiKey: unmaskedKey
+    };
+
+    await upsertConfig(
+      supabase,
+      schoolId,
+      'termii_settings',
+      JSON.stringify(configToSave),
+      true
+    );
+
+    revalidatePath("/dashboard/admin/settings/integrations");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error saving Termii config:", error);
+    return { error: error.message || "Failed to save configuration" };
+  }
+}
+
+export async function getTermiiConfig(
+  schoolId: string,
+  tenantCreds: TenantCredentials
+) {
+  const supabase = createTenantServerClient(tenantCreds.supabaseUrl, tenantCreds.supabaseAnonKey);
+
+  try {
+    const { data, error } = await supabase
+      .from('institutional_configs')
+      .select('config_value, is_active')
+      .eq('school_id', schoolId)
+      .eq('config_key', 'termii_settings')
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return { config: null, isActive: false };
+
+    const config = JSON.parse(data.config_value) as TermiiConfig;
+    const maskedKey = config.apiKey
+      ? config.apiKey.replace(/^(.{4})(.*)(.{4})$/, "$1" + "*".repeat(12) + "$3")
+      : '';
+
+    return {
+      config: {
+        ...config,
+        apiKey: maskedKey
+      },
+      isActive: data.is_active ?? false
+    };
+  } catch (error: any) {
+    console.error("Error fetching Termii config:", error);
+    return { error: error.message || "Failed to fetch configuration" };
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Paystack (Payments)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function savePaystackConfig(
+  schoolId: string,
+  config: PaystackConfig,
+  tenantCreds: TenantCredentials
+) {
+  const supabase = createTenantServerClient(tenantCreds.supabaseUrl, tenantCreds.supabaseAnonKey);
+
+  try {
+    let unmaskedKey = config.secretKey;
+
+    if (config.secretKey.includes('*')) {
+      const { data } = await supabase
+        .from('institutional_configs')
+        .select('config_value')
+        .eq('school_id', schoolId)
+        .eq('config_key', 'paystack_settings')
+        .maybeSingle();
+
+      if (data?.config_value) {
+        const parsed = JSON.parse(data.config_value) as PaystackConfig;
+        unmaskedKey = parsed.secretKey;
+      } else {
+        throw new Error("Secret Key is required to save configuration");
+      }
+    }
+
+    await verifyPaystackKey(unmaskedKey);
+
+    const configToSave: PaystackConfig = {
+      secretKey: unmaskedKey
+    };
+
+    await upsertConfig(
+      supabase,
+      schoolId,
+      'paystack_settings',
+      JSON.stringify(configToSave),
+      true
+    );
+
+    revalidatePath("/dashboard/admin/settings/integrations");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error saving Paystack config:", error);
+    return { error: error.message || "Failed to save configuration" };
+  }
+}
+
+export async function getPaystackConfig(
+  schoolId: string,
+  tenantCreds: TenantCredentials
+) {
+  const supabase = createTenantServerClient(tenantCreds.supabaseUrl, tenantCreds.supabaseAnonKey);
+
+  try {
+    const { data, error } = await supabase
+      .from('institutional_configs')
+      .select('config_value, is_active')
+      .eq('school_id', schoolId)
+      .eq('config_key', 'paystack_settings')
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return { config: null, isActive: false };
+
+    const config = JSON.parse(data.config_value) as PaystackConfig;
+    const maskedKey = config.secretKey
+      ? config.secretKey.replace(/^(.{4})(.*)(.{4})$/, "$1" + "*".repeat(12) + "$3")
+      : '';
+
+    return {
+      config: {
+        secretKey: maskedKey
+      },
+      isActive: data.is_active ?? false
+    };
+  } catch (error: any) {
+    console.error("Error fetching Paystack config:", error);
+    return { error: error.message || "Failed to fetch configuration" };
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Activation / Deactivation toggle
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function toggleIntegrationActive(
+  schoolId: string,
+  configKey: string,
+  isActive: boolean,
+  tenantCreds: TenantCredentials
+) {
+  const supabase = createTenantServerClient(tenantCreds.supabaseUrl, tenantCreds.supabaseAnonKey);
+  try {
+    const { error } = await supabase
+      .from('institutional_configs')
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq('school_id', schoolId)
+      .eq('config_key', configKey);
+
+    if (error) throw error;
+    revalidatePath("/dashboard/admin/settings/integrations");
+    return { success: true };
+  } catch (error: any) {
+    console.error(`Error toggling active status for ${configKey}:`, error);
+    return { error: error.message || "Failed to update integration state" };
   }
 }

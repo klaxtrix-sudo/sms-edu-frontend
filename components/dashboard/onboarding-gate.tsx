@@ -136,11 +136,11 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
   const isVerifyDone = stage === 'password';
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-xl flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/20 overflow-hidden"
+        className="w-full max-w-md bg-white rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/20 overflow-hidden my-auto"
       >
         {/* Progress Header */}
         <div className="bg-slate-900 p-8 text-white relative overflow-hidden">

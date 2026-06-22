@@ -169,7 +169,7 @@ export default function AdminResultsPage() {
         .select(`
           id,
           admission_no,
-          profiles:user_id (
+          profiles!user_id (
             full_name
           )
         `)

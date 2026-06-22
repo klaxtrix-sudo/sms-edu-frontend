@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   Building2,
   Loader2,
-  Clock
+  Clock,
+  BookOpen
 } from "lucide-react";
 import { createTenantClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
@@ -33,6 +34,7 @@ interface TeacherProfileModalProps {
 
 export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfileModalProps) {
   const [assignedClasses, setAssignedClasses] = useState<any[]>([]);
+  const [assignedSubjects, setAssignedSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const supabase = createTenantClient();
 
@@ -41,13 +43,27 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
       const fetchAssignments = async () => {
         setLoading(true);
         try {
-          const { data, error } = await supabase
-            .from("classes")
-            .select("id, name")
-            .eq("class_teacher_id", teacher.id);
+          const [{ data: classesData, error: classesError }, { data: subjectsData, error: subjectsError }] = await Promise.all([
+            supabase
+              .from("classes")
+              .select("id, name")
+              .eq("class_teacher_id", teacher.id),
+            supabase
+              .from("class_subject_teachers")
+              .select(`
+                class_id,
+                subject_id,
+                classes:class_id ( name ),
+                subjects:subject_id ( name, code )
+              `)
+              .eq("teacher_id", teacher.id)
+          ]);
           
-          if (!error) {
-            setAssignedClasses(data || []);
+          if (!classesError) {
+            setAssignedClasses(classesData || []);
+          }
+          if (!subjectsError) {
+            setAssignedSubjects(subjectsData || []);
           }
         } catch (err) {
           console.error("Error fetching teacher assignments:", err);
@@ -130,43 +146,81 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Assignments Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 flex items-center gap-2">
-                    <Building2 className="size-3.5 text-primary" /> Class Assignments
-                  </h4>
-                  {loading && <Loader2 className="size-3 animate-spin text-primary/40" />}
-                </div>
-                
-                <div className="space-y-2 min-h-[140px]">
-                  {assignedClasses.length > 0 ? (
-                    assignedClasses.map((cls, idx) => (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }} 
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        key={cls.id} 
-                        className="flex items-center gap-4 p-4 bg-primary/5 rounded-[1.5rem] border border-primary/10 group hover:bg-primary/10 transition-all hover:translate-x-1"
-                      >
-                        <div className="size-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
-                          <Users className="size-5" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-black text-sm tracking-tight">{cls.name}</span>
-                          <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Main Educator</span>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : !loading ? (
-                    <div className="h-full flex flex-col items-center justify-center p-8 bg-muted/10 rounded-[1.5rem] border border-dashed border-border/50 text-center">
-                      <div className="size-12 rounded-full bg-muted/20 flex items-center justify-center mb-3">
-                        <Users className="size-5 text-muted-foreground/30" />
+              <div className="space-y-6">
+                {/* Form Classes */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 flex items-center gap-2">
+                      <Building2 className="size-3.5 text-primary" /> Class (Form Teacher)
+                    </h4>
+                    {loading && <Loader2 className="size-3 animate-spin text-primary/40" />}
+                  </div>
+                  
+                  <div className="space-y-2 min-h-[70px]">
+                    {assignedClasses.length > 0 ? (
+                      assignedClasses.map((cls, idx) => (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }} 
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          key={cls.id} 
+                          className="flex items-center gap-4 p-4 bg-primary/5 rounded-[1.5rem] border border-primary/10 group hover:bg-primary/10 transition-all hover:translate-x-1"
+                        >
+                          <div className="size-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
+                            <Users className="size-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-black text-sm tracking-tight">{cls.name}</span>
+                            <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Main Educator</span>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : !loading ? (
+                      <div className="flex flex-col items-center justify-center p-6 bg-muted/10 rounded-[1.5rem] border border-dashed border-border/50 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 italic leading-tight">
+                          No Form Class Assigned
+                        </p>
                       </div>
-                      <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/50 italic leading-tight">
-                        No Class Assignments Found
-                      </p>
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Subject Assignments */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 flex items-center gap-2">
+                    <BookOpen className="size-3.5 text-primary" /> Subject Assignments
+                  </h4>
+                  
+                  <div className="space-y-2 min-h-[120px] max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                    {assignedSubjects.length > 0 ? (
+                      assignedSubjects.map((sub, idx) => (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }} 
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          key={idx} 
+                          className="flex items-center gap-3 p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 group hover:bg-indigo-50 transition-all hover:translate-x-1"
+                        >
+                          <div className="size-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner">
+                            <BookOpen className="size-4" />
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <p className="font-bold text-xs text-slate-800 truncate">{sub.subjects?.name}</p>
+                            <p className="text-[9px] font-black text-indigo-500/75 uppercase tracking-widest leading-none mt-1">{sub.classes?.name}</p>
+                          </div>
+                          <Badge variant="outline" className="font-mono bg-white text-slate-500 border-slate-200 text-[8px] font-bold">
+                            {sub.subjects?.code}
+                          </Badge>
+                        </motion.div>
+                      ))
+                    ) : !loading ? (
+                      <div className="flex flex-col items-center justify-center p-8 bg-muted/10 rounded-[1.5rem] border border-dashed border-border/50 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 italic leading-tight">
+                          No Subject Assignments
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 

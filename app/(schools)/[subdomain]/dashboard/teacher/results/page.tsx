@@ -118,31 +118,46 @@ export default function TeacherResultsPage() {
           setCurrentTerm(school.current_term || 1);
         }
 
-        // Fetch ONLY class-subject assignments for this teacher from timetables
-        const { data: assignments, error: timetableError } = await supabase
-          .from("timetables")
-          .select(`
-            class_id,
-            subject_id,
-            classes:class_id ( id, name ),
-            subjects:subject_id ( id, name )
-          `)
-          .eq("teacher_id", user.id) as any;
+        // Fetch assignments from both class_subject_teachers and timetables
+        const [{ data: directAssignments, error: directError }, { data: timetableAssignments, error: timetableError }] = await Promise.all([
+          supabase
+            .from("class_subject_teachers")
+            .select(`
+              class_id,
+              subject_id,
+              classes:class_id ( id, name ),
+              subjects:subject_id ( id, name )
+            `)
+            .eq("teacher_id", user.id),
+          supabase
+            .from("timetables")
+            .select(`
+              class_id,
+              subject_id,
+              classes:class_id ( id, name ),
+              subjects:subject_id ( id, name )
+            `)
+            .eq("teacher_id", user.id)
+        ]) as any[];
 
+        if (directError) throw directError;
         if (timetableError) throw timetableError;
 
-        if (assignments) {
-          const uniqueClasses: Record<string, any> = {};
-          const uniqueSubjects: Record<string, any> = {};
+        const uniqueClasses: Record<string, any> = {};
+        const uniqueSubjects: Record<string, any> = {};
 
-          assignments.forEach((a: any) => {
+        const processAssignments = (arr: any[]) => {
+          arr?.forEach((a: any) => {
             if (a.classes) uniqueClasses[a.classes.id] = a.classes;
             if (a.subjects) uniqueSubjects[a.subjects.id] = a.subjects;
           });
+        };
 
-          setClasses(Object.values(uniqueClasses));
-          setSubjects(Object.values(uniqueSubjects));
-        }
+        processAssignments(directAssignments || []);
+        processAssignments(timetableAssignments || []);
+
+        setClasses(Object.values(uniqueClasses));
+        setSubjects(Object.values(uniqueSubjects));
       }
     } catch (error) {
       console.error("Error fetching initial teacher data:", error);
@@ -181,7 +196,7 @@ export default function TeacherResultsPage() {
         .select(`
           id,
           admission_no,
-          profiles:user_id (
+          profiles!user_id (
             full_name
           )
         `)

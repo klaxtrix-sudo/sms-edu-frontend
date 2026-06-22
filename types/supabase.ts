@@ -140,6 +140,7 @@ export type Database = {
           config_value: string
           created_at: string | null
           id: string
+          is_active: boolean | null
           school_id: string
           updated_at: string | null
         }
@@ -148,6 +149,7 @@ export type Database = {
           config_value: string
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           school_id: string
           updated_at?: string | null
         }
@@ -156,6 +158,7 @@ export type Database = {
           config_value?: string
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           school_id?: string
           updated_at?: string | null
         }

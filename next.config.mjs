@@ -33,7 +33,10 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: [],
     serverActions: {
-      allowedOrigins: ['*.localhost:3000', 'localhost:3000', '*.localhost'],
+      allowedOrigins: [
+        '*.localhost:3000', 'localhost:3000', '*.localhost',  // dev
+        'klaxtrix.site', '*.klaxtrix.site',                  // production
+      ],
     },
   },
   // Keep compiled pages alive longer in dev to prevent 404 on first hit after cache clear

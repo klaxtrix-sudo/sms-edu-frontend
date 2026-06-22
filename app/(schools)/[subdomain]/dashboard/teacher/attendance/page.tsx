@@ -98,7 +98,7 @@ export default function TeacherAttendancePage() {
         .select(`
           id,
           admission_no,
-          profiles:user_id(full_name)
+          profiles!user_id(full_name)
         `)
         .eq("class_id", selectedClass);
 

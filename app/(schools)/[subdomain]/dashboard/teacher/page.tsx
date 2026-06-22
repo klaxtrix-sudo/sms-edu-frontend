@@ -115,10 +115,17 @@ export default function TeacherDashboardPage() {
       const timetableList = scheduleSlots || [];
       setTimetableSlots(timetableList);
 
-      // 6. Gather all unique class IDs the teacher interacts with (form classes + teaching classes)
+      // 5b. Fetch direct subject teaching assignments
+      const { data: directAssignments } = await supabase
+        .from("class_subject_teachers")
+        .select("class_id")
+        .eq("teacher_id", user.id);
+
+      // 6. Gather all unique class IDs the teacher interacts with (form classes + teaching classes + subject classes)
       const classIds = new Set<string>();
       formClassesList.forEach(c => classIds.add(c.id));
       timetableList.forEach(t => classIds.add(t.class_id));
+      (directAssignments || []).forEach(d => classIds.add(d.class_id));
 
       // 7. Get total student headcount inside their managed form classes
       if (formClassesList.length > 0) {
