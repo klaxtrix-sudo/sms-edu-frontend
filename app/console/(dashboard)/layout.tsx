@@ -36,7 +36,7 @@ export default function ConsoleLayout({
         await new Promise(resolve => setTimeout(resolve, 300));
         setIsVerifying(false);
       } catch (err) {
-        setError('Security Protocol Failure. Re-authenticating...');
+        setError('Session expired. Returning to login…');
         setTimeout(() => router.push('/console'), 2000);
       }
     };
@@ -53,7 +53,7 @@ export default function ConsoleLayout({
           <Loader2 className="w-8 h-8 text-cyan-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
         </div>
         <div className="text-center space-y-2">
-          <p className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.4em]">Establishing Secure Link</p>
+          <p className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.4em]">Loading your dashboard…</p>
           {error && <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-bounce">{error}</p>}
         </div>
       </div>

@@ -68,9 +68,9 @@ export default function ConsoleLoginPage() {
 
       if (response.data.success) {
         setConsoleToken(response.data.data.token, response.data.data);
-        toast.success('Access Granted', {
-          description: 'Establishing orbital link to Mission Control.',
-        });
+         toast.success('Access Granted', {
+           description: 'Opening your dashboard…',
+         });
         router.push('/console/dashboard');
       } else {
         throw new Error(response.data.message || 'Access Denied');
@@ -89,7 +89,7 @@ export default function ConsoleLoginPage() {
       <div className={`${spaceGrotesk.className} dark min-h-screen bg-[#050505] flex items-center justify-center`}>
          <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Authorizing Session...</span>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Checking your session…</span>
          </div>
       </div>
     );
@@ -141,13 +141,13 @@ export default function ConsoleLoginPage() {
            
            <div className="space-y-2 flex flex-col items-center">
               <h1 className="text-3xl font-extrabold tracking-widest text-white uppercase font-heading">KLAXTRIX</h1>
-              <p className="text-[10px] font-bold text-cyan-400 tracking-[0.4em] uppercase">Secure Infrastructure Platform</p>
-              
-              {/* Security Status Indicator */}
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-2">
-                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                 <span className="text-[9px] font-bold tracking-[0.2em] uppercase">SYSTEM STATUS: OPERATIONAL</span>
-              </div>
+               <p className="text-[10px] font-bold text-cyan-400 tracking-[0.4em] uppercase">Admin Console</p>
+
+               {/* Security Status Indicator */}
+               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[9px] font-bold tracking-[0.2em] uppercase">System operational</span>
+               </div>
            </div>
         </div>
 
@@ -208,9 +208,9 @@ export default function ConsoleLoginPage() {
                 {/* Unauthorized Warning banner embedded inside card */}
                 <div className="flex gap-2.5 items-center justify-center p-3.5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400/80">
                    <Shield className="w-4 h-4 text-red-400 shrink-0" />
-                   <p className="text-[10px] font-bold text-red-200/90 uppercase tracking-wider leading-relaxed text-center">
-                      Login attempts are monitored.
-                   </p>
+                    <p className="text-[10px] font-bold text-red-200/90 uppercase tracking-wider leading-relaxed text-center">
+                       Login attempts are monitored for security.
+                    </p>
                 </div>
 
                 <Button 

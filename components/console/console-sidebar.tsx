@@ -26,11 +26,11 @@ interface ConsoleSidebarProps {
 }
 
 const MENU_ITEMS = [
-  { id: 'overview', title: 'Operations Hub', icon: LayoutDashboard, href: '/console/dashboard' },
-  { id: 'tenants', title: 'School Registry', icon: Globe, href: '/console/tenants' },
-  { id: 'access', title: 'Access', icon: Key, href: '/console/access' },
-  { id: 'infrastructure', title: 'System Infrastructure', icon: Server, href: '/console/infrastructure' },
-  { id: 'analytics', title: 'Platform Analytics', icon: Activity, href: '/console/analytics' },
+  { id: 'overview', title: 'Dashboard', icon: LayoutDashboard, href: '/console/dashboard' },
+  { id: 'tenants', title: 'Schools', icon: Globe, href: '/console/tenants' },
+  { id: 'access', title: 'Access Codes', icon: Key, href: '/console/access' },
+  { id: 'infrastructure', title: 'Infrastructure', icon: Server, href: '/console/infrastructure' },
+  { id: 'analytics', title: 'Analytics', icon: Activity, href: '/console/analytics' },
 ];
 
 export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
@@ -39,8 +39,8 @@ export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
 
   const handleLogout = () => {
     clearConsoleToken();
-    toast.info('Orbital Link Severed', {
-      description: 'Session terminated. Access denied.'
+    toast.info('Signed out', {
+      description: 'You have been securely logged out.'
     });
     router.push('/console');
   };
@@ -70,7 +70,6 @@ export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
       </div>
 
       <nav className="flex-1 p-6 space-y-2">
-        <div className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase mb-4 px-3">Primary Systems</div>
         {MENU_ITEMS.map((item) => (
           <Link
             key={item.id}
@@ -107,17 +106,16 @@ export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
           )}
         >
           <Settings className={cn("w-5 h-5", pathname === "/console/config" && "text-indigo-400")} />
-          Console Config
+          Settings
         </Link>
-        <div 
+        <div
           onClick={handleLogout}
           className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group cursor-pointer hover:bg-red-500/10 transition-all active:scale-95"
         >
           <div className="flex items-center gap-3">
             <LogOut className="w-5 h-5 text-red-400" />
-            <span className="text-sm font-bold text-red-200">Terminate</span>
+            <span className="text-sm font-bold text-red-200">Log out</span>
           </div>
-          <Badge variant="outline" className="text-[9px] border-red-500/20 text-red-400">Secure</Badge>
         </div>
       </div>
     </aside>
