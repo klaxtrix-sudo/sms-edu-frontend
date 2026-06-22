@@ -110,7 +110,7 @@ export default function ConfigPage() {
       setCurrentUser(user);
     } catch (error) {
       console.error('Config Fetch Error:', error);
-      toast.error('Failed to load administrative parameters.');
+      toast.error("Couldn't load settings.");
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +138,7 @@ export default function ConfigPage() {
       setIsCreating(true);
       const response = await axios.post(`${BACKEND_URL}/console/admins`, newAdmin, getConsoleAuthHeaders());
       if (response.data.success) {
-        toast.success('Administrative node established successfully.');
+        toast.success('Admin created successfully.');
         fetchData();
         resetCreateForm();
         setIsDialogOpen(false);
@@ -150,7 +150,7 @@ export default function ConfigPage() {
         const firstField = Object.keys(fieldErrors)[0];
         toast.error(fieldErrors[firstField]?.[0] || 'Validation failed.');
       } else {
-        toast.error(msg || 'Failed to create admin.');
+        toast.error(msg || "Couldn't create the admin. Please try again.");
       }
     } finally {
       setIsCreating(false);
@@ -171,7 +171,7 @@ export default function ConfigPage() {
       setIsUpdating(true);
       const response = await axios.patch(`${BACKEND_URL}/console/admins/${currentUser.id}`, profileUpdate, getConsoleAuthHeaders());
       if (response.data.success) {
-        toast.success('Your profile parameters have been updated.');
+        toast.success('Profile updated successfully.');
         setProfileUpdate({ email: '', password: '', creatorPassword: '' });
       }
     } catch (error: any) {
@@ -181,7 +181,7 @@ export default function ConfigPage() {
         const firstField = Object.keys(fieldErrors)[0];
         toast.error(fieldErrors[firstField]?.[0] || 'Validation failed.');
       } else {
-        toast.error(msg || 'Failed to update your profile.');
+        toast.error(msg || "Couldn't update your profile. Please try again.");
       }
     } finally {
       setIsUpdating(false);
@@ -191,11 +191,11 @@ export default function ConfigPage() {
   const handleDeleteAdmin = async () => {
     if (!deleteTarget) return;
     if (deleteTarget.id === currentUser?.id) {
-      toast.error('Security Protocol: You cannot purge your own administrative node.');
+      toast.error("You can't delete your own account.");
       setDeleteTarget(null);
       return;
     }
-    if (!deleteCreatorPassword) { toast.error('Confirm with your password to authorize this purge.'); return; }
+    if (!deleteCreatorPassword) { toast.error('Confirm with your password to authorize this deletion.'); return; }
 
     try {
       setIsDeleting(true);
@@ -204,7 +204,7 @@ export default function ConfigPage() {
         data: { creatorPassword: deleteCreatorPassword },
       });
       if (response.data.success) {
-        toast.success(`Node ${deleteTarget.username} has been purged from the registry.`);
+        toast.success(`${deleteTarget.username} has been deleted.`);
         setDeleteTarget(null);
         setDeleteCreatorPassword('');
         fetchData();
@@ -216,7 +216,7 @@ export default function ConfigPage() {
         const firstField = Object.keys(fieldErrors)[0];
         toast.error(fieldErrors[firstField]?.[0] || 'Validation failed.');
       } else {
-        toast.error(msg || 'Purge protocol failed.');
+        toast.error(msg || "Couldn't delete the admin. Please try again.");
       }
     } finally {
       setIsDeleting(false);
@@ -228,11 +228,11 @@ export default function ConfigPage() {
       const newValue = { ...config?.maintenance_mode, enabled };
       const response = await axios.patch(`${BACKEND_URL}/console/settings/maintenance_mode`, { value: newValue }, getConsoleAuthHeaders());
       if (response.data.success) {
-        toast.success(enabled ? 'Maintenance Matrix Engaged.' : 'Maintenance Matrix Rescinded.');
+        toast.success(enabled ? 'Maintenance mode enabled.' : 'Maintenance mode disabled.');
         fetchData();
       }
     } catch (error) {
-       toast.error('Security Protocol Failure: Cannot toggle maintenance mode.');
+       toast.error("Couldn't change maintenance mode. Please try again.");
     }
   };
 
@@ -243,10 +243,10 @@ export default function ConfigPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-indigo-400 mb-2">
              <Settings className="w-4 h-4" />
-             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Console Management</span>
-          </div>
-          <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Configuration</h1>
-          <p className="text-slate-500 text-sm max-w-2xl font-medium">Advanced governance for master administrators and platform-wide security protocols.</p>
+             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Settings</span>
+           </div>
+           <h1 className="text-4xl font-heading font-black tracking-tight text-white uppercase text-glow">Settings</h1>
+           <p className="text-slate-500 text-sm max-w-2xl font-medium">Manage admins and platform settings.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -257,13 +257,13 @@ export default function ConfigPage() {
       <Tabs defaultValue="admins" className="space-y-6">
         <TabsList className="bg-[#0b0b0b] border border-slate-800 p-1 h-14 rounded-2xl gap-2">
           <TabsTrigger value="admins" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
-            <Users className="w-4 h-4" /> Administrative Team
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
-            <UserCircle className="w-4 h-4" /> My Profile
-          </TabsTrigger>
-          <TabsTrigger value="governance" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
-            <Shield className="w-4 h-4" /> Platform Governance
+            <Users className="w-4 h-4" /> Admins
+           </TabsTrigger>
+           <TabsTrigger value="profile" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
+             <UserCircle className="w-4 h-4" /> My Profile
+           </TabsTrigger>
+           <TabsTrigger value="governance" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
+             <Shield className="w-4 h-4" /> Platform
           </TabsTrigger>
         </TabsList>
 
@@ -271,23 +271,23 @@ export default function ConfigPage() {
         <TabsContent value="admins" className="space-y-6">
           <Card className="bg-[#0c0c0c]/50 border-slate-800 p-0 overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-800/50 flex items-center justify-between">
-               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-indigo-400" /> Active Master Nodes
-               </h2>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                   <Users className="w-5 h-5 text-indigo-400" /> Admins
+                </h2>
                {currentUser?.role === 'super-admin' ? (
                 <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetCreateForm(); }}>
                    <DialogTrigger asChild>
-                     <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl gap-2 h-10 px-4">
-                        <Plus className="w-4 h-4" /> Create Admin
+                      <Button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl gap-2 h-10 px-4">
+                        <Plus className="w-4 h-4" /> Add admin
                      </Button>
                    </DialogTrigger>
                    <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white max-h-[85vh] flex flex-col overflow-hidden p-0">
                      <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-800/60">
-                       <DialogTitle className="text-xl font-black uppercase tracking-tight">Access Escalation</DialogTitle>
+                       <DialogTitle className="text-xl font-black uppercase tracking-tight">Add a new admin</DialogTitle>
                      </DialogHeader>
                      <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-5 space-y-5 min-h-0">
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Admin Username</label>
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Username</label>
                            <Input
                              placeholder="e.g. solomon.admin"
                              className="bg-slate-900 border-slate-800 h-12 rounded-xl"
@@ -296,7 +296,7 @@ export default function ConfigPage() {
                            />
                         </div>
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Primary Email</label>
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Email</label>
                            <Input
                              type="email"
                              placeholder="orbital@klaxtrix.com"
@@ -306,7 +306,7 @@ export default function ConfigPage() {
                            />
                         </div>
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Secure Passphrase</label>
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Password</label>
                            <Input
                              type="password"
                              placeholder="Min. 8 characters"
@@ -316,7 +316,7 @@ export default function ConfigPage() {
                            />
                         </div>
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Clearance Level</label>
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Role</label>
                            <Select value={newAdmin.role} onValueChange={(v) => setNewAdmin({ ...newAdmin, role: v })}>
                              <SelectTrigger className="bg-slate-900 border-slate-800 h-12 rounded-xl text-sm">
                                <SelectValue />
@@ -332,12 +332,12 @@ export default function ConfigPage() {
                           <div className="flex gap-2.5 items-center p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300">
                             <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
                             <p className="text-[10px] font-bold uppercase tracking-wider leading-relaxed">
-                              Super-admin grants full privileges, including the ability to create more super-admins. This action is audited.
+                              Super admins have full access and can create other super admins. This action is logged.
                             </p>
                           </div>
                         )}
                         <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
-                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Confirm With Your Password</label>
+                           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Your password (confirm)</label>
                            <Input
                              type="password"
                              placeholder="••••••••"
@@ -361,7 +361,7 @@ export default function ConfigPage() {
                           {isCreating ? (
                             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Provisioning…</>
                           ) : (
-                            newAdmin.role === 'super-admin' ? 'Initialize Super-Admin Node' : 'Initialize Node'
+                            newAdmin.role === 'super-admin' ? 'Create super admin' : 'Create admin'
                           )}
                         </Button>
                      </DialogFooter>
@@ -374,7 +374,7 @@ export default function ConfigPage() {
                 <TableRow className="border-slate-800 hover:bg-transparent">
                   <TableHead className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Administrator</TableHead>
                   <TableHead className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Role</TableHead>
-                  <TableHead className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Last Telemetry</TableHead>
+                   <TableHead className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Last login</TableHead>
                   <TableHead className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -427,17 +427,17 @@ export default function ConfigPage() {
            <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteCreatorPassword(''); } }}>
               <DialogContent className="bg-[#0c0c0c] border-slate-800 text-white max-h-[85vh] flex flex-col overflow-hidden p-0">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-800/60">
-                  <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-400">Purge Administrative Node</DialogTitle>
+                  <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-400">Delete admin</DialogTitle>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-5 space-y-5 min-h-0">
                  <div className="flex gap-2.5 items-center p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300">
                    <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
-                   <p className="text-[11px] font-bold leading-relaxed">
-                     You are about to permanently purge <strong className="text-white">{deleteTarget?.username}</strong>. This action is irreversible and audited.
-                   </p>
+                    <p className="text-[11px] font-bold leading-relaxed">
+                      You're about to permanently delete <strong className="text-white">{deleteTarget?.username}</strong>. This action can't be undone.
+                    </p>
                  </div>
                  <div className="space-y-1.5">
-                   <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Confirm With Your Password</label>
+                   <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Your password (confirm)</label>
                    <Input
                      type="password"
                      placeholder="••••••••"
@@ -463,7 +463,7 @@ export default function ConfigPage() {
                      onClick={handleDeleteAdmin}
                      disabled={isDeleting || !deleteCreatorPassword}
                    >
-                     {isDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Purging…</> : 'Purge Node'}
+                     {isDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Deleting…</> : 'Delete admin'}
                    </Button>
                  </div>
                </DialogFooter>
@@ -475,23 +475,23 @@ export default function ConfigPage() {
         <TabsContent value="profile" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
            <Card className="bg-[#0c0c0c]/50 border-slate-800 p-8 space-y-6">
               <div className="space-y-1">
-                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-indigo-400" /> Identity Lockdown
-                 </h2>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                     <Lock className="w-5 h-5 text-indigo-400" /> Update your profile
+                  </h2>
                  <p className="text-xs text-slate-500">Update your master administrative credentials.</p>
               </div>
 
               <div className="space-y-4 pt-4 border-t border-slate-800/50">
                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Institutional Email</label>
-                    <Input 
-                      className="bg-slate-900 border-slate-800 h-12 rounded-xl"
-                      value={profileUpdate.email}
-                      onChange={(e) => setProfileUpdate({ ...profileUpdate, email: e.target.value })}
-                    />
+                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Email</label>
+                     <Input
+                       className="bg-slate-900 border-slate-800 h-12 rounded-xl"
+                       value={profileUpdate.email}
+                       onChange={(e) => setProfileUpdate({ ...profileUpdate, email: e.target.value })}
+                     />
                  </div>
                   <div className="space-y-1.5">
-                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">New Secure Passphrase</label>
+                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">New password</label>
                      <Input
                        type="password"
                        placeholder="Leave blank to keep current"
@@ -501,7 +501,7 @@ export default function ConfigPage() {
                      />
                   </div>
                   <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
-                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Confirm With Your Password</label>
+                     <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Your password (confirm)</label>
                      <Input
                        type="password"
                        placeholder="••••••••"
@@ -515,7 +515,7 @@ export default function ConfigPage() {
                     disabled={isUpdating}
                     className="w-full bg-slate-100 hover:bg-white text-black font-black uppercase rounded-xl h-12 mt-4"
                   >
-                    {isUpdating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating…</> : 'Update Node Credentials'}
+                    {isUpdating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving…</> : 'Save changes'}
                   </Button>
               </div>
            </Card>
@@ -525,8 +525,8 @@ export default function ConfigPage() {
                  <Shield className="w-10 h-10 text-indigo-400" />
               </div>
               <div className="space-y-1">
-                 <h3 className="text-white font-bold underline decoration-indigo-500">Level 5 Clearance</h3>
-                 <p className="text-xs text-slate-500 font-medium">Authentication session expires in 24 hours.</p>
+                  <h3 className="text-white font-bold underline decoration-indigo-500">Full access</h3>
+                  <p className="text-xs text-slate-500 font-medium">Your session expires in 24 hours.</p>
               </div>
            </Card>
         </TabsContent>
@@ -537,10 +537,10 @@ export default function ConfigPage() {
               <Card className="bg-[#0c0c0c]/50 border-slate-800 p-8 space-y-6">
                  <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                       <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                          <Power className="w-5 h-5 text-red-500" /> Maintenance Matrix
-                       </h2>
-                       <p className="text-xs text-slate-500">Toggle platform-wide access restriction.</p>
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                           <Power className="w-5 h-5 text-red-500" /> Maintenance Mode
+                        </h2>
+                        <p className="text-xs text-slate-500">Block all non-admin users from logging in.</p>
                     </div>
                     <Switch 
                        checked={config?.maintenance_mode.enabled || false} 
@@ -549,15 +549,15 @@ export default function ConfigPage() {
                     />
                  </div>
                  <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-[10px] font-bold text-red-400 leading-relaxed uppercase tracking-tighter">
-                    WARNING: Engaging the maintenance matrix will immediately restrict access for all school portal users except master administrators.
+                     WARNING: When enabled, only admin console users can log in. School staff and students will be locked out.
                  </div>
               </Card>
 
               <Card className="bg-[#0c0c0c]/50 border-slate-800 p-8 space-y-6">
                  <div className="space-y-1">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                       <Palette className="w-5 h-5 text-indigo-400" /> Platform Branding
-                    </h2>
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                           <Palette className="w-5 h-5 text-indigo-400" /> Branding
+                        </h2>
                     <p className="text-xs text-slate-500">Global UI visual parameters.</p>
                  </div>
                  <div className="space-y-4">
