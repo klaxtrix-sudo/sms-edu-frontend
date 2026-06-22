@@ -59,6 +59,7 @@ export default function TakeExamPage() {
 
   // Login form state
   const [admissionNo, setAdmissionNo] = useState("");
+  const [examPin, setExamPin] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
 
   // Exam state
@@ -80,6 +81,10 @@ export default function TakeExamPage() {
   const [isOnline, setIsOnline] = useState(true);
   const [pendingSync, setPendingSync] = useState(false);
 
+  // Submit confirmation dialog state
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [unansweredCount, setUnansweredCount] = useState(0);
+
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,15 +102,15 @@ export default function TakeExamPage() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // Check if session exists in localStorage
-    const stored = localStorage.getItem(`exam_sess_${examId}`);
+    // Check if session exists in sessionStorage (cleared on tab close for XSS protection)
+    const stored = sessionStorage.getItem(`exam_sess_${examId}`);
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as StudentSession;
         setSession(parsed);
         setScreen('lobby');
       } catch (_) {
-        localStorage.removeItem(`exam_sess_${examId}`);
+        sessionStorage.removeItem(`exam_sess_${examId}`);
       }
     }
     setCheckingSession(false);
@@ -195,7 +200,7 @@ export default function TakeExamPage() {
       const res = await fetch(`${getBackendUrl()}/attempts/verify-student`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admissionNo, examId, subdomain })
+        body: JSON.stringify({ admissionNo, examId, subdomain, pin: examPin })
       });
       const result = await res.json();
       if (!result.success) throw new Error(result.message || "Failed to verify credentials");
@@ -205,7 +210,7 @@ export default function TakeExamPage() {
         student: result.data.student
       };
 
-      localStorage.setItem(`exam_sess_${examId}`, JSON.stringify(studentSession));
+      sessionStorage.setItem(`exam_sess_${examId}`, JSON.stringify(studentSession));
       setSession(studentSession);
       setScreen('lobby');
       toast.success(`Welcome, ${result.data.student.name}`);
@@ -328,12 +333,10 @@ export default function TakeExamPage() {
 
   const handleSubmit = async (confirmSubmit = true) => {
     if (confirmSubmit) {
-      const unansweredCount = questions.length - Object.keys(answers).length;
-      const confirmMsg = unansweredCount > 0 
-        ? `You have ${unansweredCount} unanswered questions. Are you sure you want to submit?`
-        : "Are you sure you want to submit your exam?";
-      
-      if (!confirm(confirmMsg)) return;
+      const unanswered = questions.length - Object.keys(answers).length;
+      setUnansweredCount(unanswered);
+      setShowSubmitDialog(true);
+      return;
     }
 
     setSubmitting(true);
@@ -357,8 +360,8 @@ export default function TakeExamPage() {
       const result = await res.json();
       if (!result.success) throw new Error(result.message || "Failed to submit exam");
 
-      // Clean up storage
-      localStorage.removeItem(`exam_sess_${examId}`);
+      // Clean up storage (token in sessionStorage, answer backup in localStorage)
+      sessionStorage.removeItem(`exam_sess_${examId}`);
       localStorage.removeItem(`exam_backup_${attemptId}`);
       
       // Exit fullscreen
@@ -385,9 +388,47 @@ export default function TakeExamPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(`exam_sess_${examId}`);
+    sessionStorage.removeItem(`exam_sess_${examId}`);
     setSession(null);
     setScreen('login');
+  };
+
+  const confirmSubmit = async () => {
+    setShowSubmitDialog(false);
+    setSubmitting(true);
+    try {
+      const payloadAnswers = Object.entries(answers).map(([qId, sIdx]) => ({
+        questionId: qId,
+        selected: sIdx
+      }));
+
+      const res = await fetch(`${getBackendUrl()}/attempts/${attemptId}/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session!.token}`
+        },
+        body: JSON.stringify({
+          answers: payloadAnswers,
+          timeExpired: false
+        })
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to submit exam");
+
+      sessionStorage.removeItem(`exam_sess_${examId}`);
+      localStorage.removeItem(`exam_backup_${attemptId}`);
+
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setScreen('submitted');
+      toast.success("Exam submitted successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit exam");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const formatTimer = (secs: number) => {
@@ -419,7 +460,7 @@ export default function TakeExamPage() {
               <Lock className="size-8" />
             </div>
             <CardTitle className="text-2xl font-black tracking-tight text-white">MCQ Exam Portal</CardTitle>
-            <CardDescription className="text-zinc-400">Enter your Admission Number to enter the exam session lobby.</CardDescription>
+            <CardDescription className="text-zinc-400">Enter your Admission Number and Exam PIN to enter the exam session lobby.</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             <form onSubmit={handleLogin} className="space-y-4">
@@ -434,9 +475,21 @@ export default function TakeExamPage() {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Exam PIN</label>
+                <Input
+                  type="password"
+                  placeholder="Enter the PIN provided by your teacher"
+                  value={examPin}
+                  onChange={(e) => setExamPin(e.target.value)}
+                  className="bg-white/5 border-white/10 h-12 text-white placeholder-zinc-600 rounded-xl focus-visible:ring-primary focus-visible:border-primary text-center font-mono tracking-widest text-lg"
+                  disabled={loggingIn}
+                  required
+                />
+              </div>
               <Button
                 type="submit"
-                disabled={loggingIn || !admissionNo.trim()}
+                disabled={loggingIn || !admissionNo.trim() || !examPin.trim()}
                 className="w-full h-12 bg-primary hover:bg-primary/90 rounded-xl text-white font-bold transition-all shadow-lg shadow-primary/25"
               >
                 {loggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Access Exam Room"}
@@ -785,5 +838,39 @@ export default function TakeExamPage() {
     );
   }
 
-  return null;
+  return (
+    <>
+      {showSubmitDialog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-md border-white/10 bg-zinc-950/90 backdrop-blur-xl rounded-3xl p-6 shadow-2xl">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-xl font-black text-white">Confirm Submission</CardTitle>
+              <CardDescription className="text-zinc-400">
+                {unansweredCount > 0
+                  ? `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? 's' : ''}. Are you sure you want to submit?`
+                  : 'Are you sure you want to submit your exam? This action cannot be undone.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-3">
+              <Button
+                onClick={confirmSubmit}
+                disabled={submitting}
+                className="w-full h-12 bg-primary hover:bg-primary/90 rounded-xl text-white font-bold"
+              >
+                {submitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Yes, Submit Exam'}
+              </Button>
+              <Button
+                onClick={() => setShowSubmitDialog(false)}
+                variant="ghost"
+                className="w-full h-12 rounded-xl text-zinc-400 hover:text-white"
+              >
+                Cancel
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      return null;
+    </>
+  );
 }

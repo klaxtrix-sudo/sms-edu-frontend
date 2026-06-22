@@ -30,20 +30,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   }
 
   const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
-  let { data: { user } } = await supabase.auth.getUser();
-
-  // DEVELOPMENT BYPASS for a seamless PoC Review
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!user && isDev) {
-    user = {
-      id: 'a0000000-0000-0000-0000-000000000000',
-      user_metadata: {
-        full_name: 'System Administrator',
-        role: 'admin',
-        school_id: '00000000-0000-0000-0000-000000000000'
-      }
-    } as any;
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user || user.user_metadata?.role !== 'admin') redirect('/login');
 
@@ -60,7 +47,12 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   // Fetch performance trend from backend
   let performanceData = [];
   try {
-    const response = await fetch(`${getBackendUrl()}/stats/school/${schoolId}/performance`);
+    const { data: session } = await supabase.auth.getSession();
+    const response = await fetch(`${getBackendUrl()}/stats/school/${schoolId}/performance`, {
+      headers: session.session?.access_token
+        ? { Authorization: `Bearer ${session.session.access_token}` }
+        : {},
+    });
     const result = await response.json();
     if (result.success) {
       performanceData = result.data;
@@ -151,7 +143,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
           <h3 className="text-xl font-bold">Quick Actions</h3>
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start gap-3 h-14 rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group" asChild>
-              <Link href="/dashboard/admin/academics/students">
+              <Link href="/dashboard/admin/users/students">
                 <Plus className="size-5" />
                 Enroll Student
               </Link>

@@ -49,6 +49,7 @@ const examSchema = z.object({
   randomiseOptions: z.boolean().default(true),
   startAt: z.string().min(1, "Start date is required"),
   endAt: z.string().min(1, "End date is required"),
+  studentPin: z.string().min(4, "PIN must be at least 4 characters").max(8, "PIN must be at most 8 characters"),
 });
 
 type ExamFormValues = z.infer<typeof examSchema>;
@@ -77,6 +78,7 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
       randomiseOptions: true,
       startAt: "",
       endAt: "",
+      studentPin: "",
     },
   });
 
@@ -378,6 +380,29 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                     <FormControl>
                       <Input type="datetime-local" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="studentPin"
+                render={({ field }: { field: any }) => (
+                  <FormItem className="col-span-1 md:col-span-2">
+                    <FormLabel>Student Exam PIN</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="e.g. 4827"
+                        maxLength={8}
+                        className="font-mono tracking-widest"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Students must enter this PIN alongside their admission number to access the exam. Share it with students before the exam begins.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

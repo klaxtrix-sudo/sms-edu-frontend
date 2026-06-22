@@ -20,10 +20,11 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { getBackendUrl } from "@/lib/utils";
+import { completeSchoolSetup } from "@/app/actions/tenant-actions";
 import { useTenant } from '@/components/providers/tenant-provider';
 import { NIGERIA_STATES, STATE_LGA_MAP } from '@/lib/constants/nigeria-locations';
 import { useRouter, useParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const STEPS = [
   { id: 'identity', title: 'Identity', icon: Building2 },
@@ -131,24 +132,15 @@ export default function SetupWizardPage() {
       setIsSubmitting(true);
       toast.loading('Synchronizing institutional protocols...', { id: 'setup' });
 
-      // 1. Perform a secure synchronized setup via the backend
+      // 1. Perform a secure synchronized setup via the backend server action
       // This bypasses RLS recursion issues by using Service Role Keys server-side.
-      const response = await fetch(`${getBackendUrl()}/tenant/setup-complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          subdomain: subdomain,
-          schoolId: tenant.id,
-          formData: {
-            ...formData,
-            logoUrl: logoPreview // Pass the base64 or URL for server-side processing
-          }
-        }),
+      const result = await completeSchoolSetup(subdomain, tenant.id, {
+        ...formData,
+        logoUrl: logoPreview
       });
 
-      if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        throw new Error(errBody.message || 'Central database synchronization failed');
+      if (!result.success) {
+        throw new Error(result.error || 'Central database synchronization failed');
       }
 
       toast.success('Institutional protocols synchronized successfully!', { id: 'setup' });
@@ -503,8 +495,4 @@ export default function SetupWizardPage() {
       </div>
     </div>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }

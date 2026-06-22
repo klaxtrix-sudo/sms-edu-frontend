@@ -13,8 +13,8 @@ import * as z from 'zod';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import { syncSchoolSettingsToMaster } from '@/app/actions/tenant-sync-actions';
+import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { useTenant } from '@/components/providers/tenant-provider';
-import { getBackendUrl } from '@/lib/utils';
 
 const schoolSchema = z.object({
   name: z.string().min(3, 'School name must be at least 3 characters'),
@@ -54,16 +54,8 @@ export default function GeneralSettings() {
 
     async function loadSchoolData() {
       try {
-        // Use the secure backend proxy which uses the service role key to bypass RLS
-        const res = await fetch(`${getBackendUrl()}/tenant/school-data?subdomain=${subdomain}`);
-        
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ message: 'Unknown error' }));
-          throw new Error(err.message || `Backend error: ${res.status}`);
-        }
-
-        const json = await res.json();
-        const school = json.data;
+        // Use the secure server action which adds the internal secret header server-side
+        const school = await getSchoolData(subdomain);
 
         if (school?.id) {
           setSchoolId(school.id);
@@ -108,27 +100,18 @@ export default function GeneralSettings() {
     }
     setSaving(true);
     try {
-      // Use the secure backend proxy to save (service role key bypasses RLS)
-      const res = await fetch(`${getBackendUrl()}/tenant/school-data`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subdomain,
-          schoolId,
-          updates: {
-            name: values.name,
-            motto: values.motto,
-            address: values.address,
-            official_phone: values.official_phone,
-            official_website: values.official_website,
-            logo_url: values.logo_url,
-          },
-        }),
+      // Use the secure server action to save (internal secret added server-side)
+      const result = await updateSchoolData(subdomain, schoolId, {
+        name: values.name,
+        motto: values.motto,
+        address: values.address,
+        official_phone: values.official_phone,
+        official_website: values.official_website,
+        logo_url: values.logo_url,
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(err.message || 'Failed to update');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update settings');
       }
 
       // Sync name and logo to master registry for global header/avatar

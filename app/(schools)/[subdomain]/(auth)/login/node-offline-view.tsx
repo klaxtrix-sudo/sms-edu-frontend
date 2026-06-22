@@ -39,7 +39,7 @@ export function NodeOfflineView({ subdomain }: NodeOfflineViewProps) {
 
       {/* Primary Actions */}
       <div className="flex justify-center pt-4">
-        <Link href="http://localhost:3000">
+        <Link href={process.env.NEXT_PUBLIC_APP_URL || '/'}>
           <Button className="h-12 px-10 bg-black hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest gap-3 transition-all rounded-xl shadow-xl hover:shadow-2xl active:scale-[0.98]">
              <ArrowLeft className="size-4" /> Return to Core Hub
           </Button>

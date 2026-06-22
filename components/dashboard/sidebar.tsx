@@ -107,14 +107,15 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {items.map((item) => {
-          const Icon = iconMap[item.icon as keyof typeof iconMap];
+        {(() => {
           const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
           const rootDomainHost = rootDomain.split(':')[0];
-          const isCustomSubdomain = typeof window !== 'undefined' && 
-            window.location.hostname !== rootDomainHost && 
+          const isCustomSubdomain = typeof window !== 'undefined' &&
+            window.location.hostname !== rootDomainHost &&
             window.location.hostname !== `www.${rootDomainHost}`;
 
+          return items.map((item) => {
+          const Icon = iconMap[item.icon as keyof typeof iconMap];
           const fullHref = (subdomain && !isCustomSubdomain) ? `/${subdomain}${item.href}` : item.href;
           const isActive = pathname === fullHref || pathname === item.href;
 
@@ -137,7 +138,8 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
               {isActive && <ChevronRight className="size-4" />}
             </Link>
           );
-        })}
+          });
+        })()}
       </nav>
 
       <div className="p-4 border-t">

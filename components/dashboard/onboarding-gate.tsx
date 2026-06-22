@@ -8,6 +8,7 @@ import {
   finalizeTeacherAccount 
 } from '@/app/actions/onboarding-actions';
 import { signOutAction } from '@/app/actions/auth-actions';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -344,8 +345,4 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
       </motion.div>
     </div>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }

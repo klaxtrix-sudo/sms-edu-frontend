@@ -1,11 +1,46 @@
 import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { createServerClient } from "@/lib/supabase/server";
+import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
+import { redirect } from "next/navigation";
 
-export default function ParentLayout({
+export default async function ParentLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: { subdomain: string };
 }) {
+  const { subdomain } = params;
+
+  const tenantKeys = await resolveTenantKeys(subdomain);
+  if (!tenantKeys) {
+    redirect("/login");
+  }
+
+  const supabase = createServerClient(tenantKeys.supabaseUrl, tenantKeys.supabaseAnonKey);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const role = user.user_metadata?.role;
+  if (role !== "parent") {
+    redirect("/login");
+  }
+
+  // Check for account suspension
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_active")
+    .eq("id", user.id)
+    .single() as { data: { is_active: boolean } | null };
+
+  if (profile && !profile.is_active) {
+    redirect("/dashboard/suspended");
+  }
+
   const parentNavItems: readonly SidebarItem[] = [
     { label: "Household Overview", href: "/dashboard/parent", icon: "LayoutDashboard" },
     { label: "My Children", href: "/dashboard/parent/children", icon: "Users" },

@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { useParams, useRouter } from 'next/navigation';
-import { getBackendUrl } from '@/lib/utils';
+import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { toast } from 'sonner';
 import { getResultMetrics, saveResultMetrics } from '@/app/actions/admin-actions';
 
@@ -65,14 +65,8 @@ export default function AcademicSettings() {
 
     async function loadSchoolData() {
       try {
-        const res = await fetch(`${getBackendUrl()}/tenant/school-data?subdomain=${subdomain}`);
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ message: 'Unknown error' }));
-          throw new Error(err.message || `Backend error: ${res.status}`);
-        }
-
-        const json = await res.json();
-        const school = json.data;
+        const school = await getSchoolData(subdomain);
+        if (!school) throw new Error('No data returned');
 
         if (school) {
           setSchoolId(school.id);
@@ -116,24 +110,15 @@ export default function AcademicSettings() {
 
     setSaving(true);
     try {
-      const res = await fetch(`${getBackendUrl()}/tenant/school-data`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subdomain,
-          schoolId,
-          updates: {
-            academic_year: academicYear,
-            current_term: Number(currentTerm),
-            term_begins: termBegins,
-            term_ends: termEnds,
-          },
-        }),
+      const result = await updateSchoolData(subdomain, schoolId, {
+        academic_year: academicYear,
+        current_term: Number(currentTerm),
+        term_begins: termBegins,
+        term_ends: termEnds,
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(err.message || 'Failed to update academic settings');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update academic settings');
       }
 
       toast.success('Academic cycle updated successfully');

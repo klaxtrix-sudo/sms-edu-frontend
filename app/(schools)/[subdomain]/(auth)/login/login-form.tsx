@@ -8,6 +8,9 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { Eye, EyeOff } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 const loginSchema = z.object({
   identifier: z.string().min(3, 'Email or Admission Number is required'),
@@ -43,13 +46,6 @@ export function LoginForm() {
     let email = values.identifier.trim();
     const password = values.password.trim();
 
-    // TEMPORARY: Admin Login Bypass for "Executive Edition" PoC Review
-    if (email === 'admin@klaxtrix.com' && password === 'admin123') {
-      console.log('PoC Bypass active for admin user');
-      router.push('/dashboard/admin');
-      return;
-    }
-
     // STUDENT LOGIN DETECTION: If identifier is an admission number (does not contain @)
     if (!email.includes('@')) {
       const cleanedAdmissionNo = email.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -71,7 +67,7 @@ export function LoginForm() {
       student: '/dashboard/student',
       parent: '/dashboard/parent',
     };
-    
+
     // Use hard redirect to guarantee cookies are committed before dashboard initialization
     window.location.href = roleRoutes[role] ?? '/dashboard/student';
   };
@@ -85,29 +81,30 @@ export function LoginForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Email or Admission Number</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="identifier">Email or Admission Number</Label>
+            <Input
+              id="identifier"
               {...register('identifier')}
               type="text"
               autoComplete="username"
               disabled={!!tenantError}
               placeholder="you@school.edu.ng or STD/2026/001"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
             />
             {errors.identifier && <p className="text-destructive text-xs mt-1">{errors.identifier.message}</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
             <div className="relative group">
-              <input
+              <Input
+                id="password"
                 {...register('password')}
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 disabled={!!tenantError}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition disabled:opacity-50"
+                className="pr-10"
               />
               <button
                 type="button"
@@ -115,6 +112,7 @@ export function LoginForm() {
                 disabled={!!tenantError}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                 tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -127,32 +125,32 @@ export function LoginForm() {
           </div>
 
           {activeError && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-destructive text-sm font-medium"
             >
               <div className="flex items-center gap-2 text-left">
-                <span className="shrink-0 text-lg">⚠️</span>
+                <span className="shrink-0 text-lg">!</span>
                 <span>{activeError}</span>
               </div>
             </motion.div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading || !!tenantError}
-            className="w-full py-2.5 px-4 bg-primary text-primary-foreground font-semibold rounded-xl shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-12"
           >
             {loading ? (
               <>
-                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                Signing in…
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                Signing in...
               </>
             ) : (
               'Sign in'
             )}
-          </button>
+          </Button>
         </form>
       )}
     </div>

@@ -66,9 +66,12 @@ export function NotificationDrawer() {
   useEffect(() => {
     fetchNotifications(true);
 
+    // Poll for new notifications, but only when the tab is visible
     const interval = setInterval(() => {
-      fetchNotifications(false);
-    }, 20000); // 20s background polling
+      if (document.visibilityState === 'visible') {
+        fetchNotifications(false);
+      }
+    }, 20000);
 
     return () => clearInterval(interval);
   }, []);

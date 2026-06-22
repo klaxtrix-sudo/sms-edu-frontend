@@ -73,7 +73,7 @@ export default function SuspendedPage() {
         </div>
 
         <p className="mt-8 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-loose">
-          Powerd by Klaxtrix SMS &mdash; Secure Core v2.0<br/>
+          Powered by Klaxtrix SMS &mdash; Secure Core v2.0<br/>
           &copy; {new Date().getFullYear()} All Rights Reserved
         </p>
       </motion.div>

@@ -54,7 +54,7 @@ export default function AdminLayout({
     { label: "Classes & Subjects", href: "/dashboard/admin/academics", icon: "BookOpen" },
     { label: "Academic Timetable", href: "/dashboard/admin/academics/timetable", icon: "CalendarDays" },
     { label: "Students", href: "/dashboard/admin/users/students", icon: "GraduationCap" },
-    { label: "Staff", href: "/dashboard/admin/users/staff", icon: "UserCog" },
+    { label: "Staff", href: "/dashboard/admin/users/teachers", icon: "UserCog" },
     { label: "Attendance Intel", href: "/dashboard/admin/attendance", icon: "ClipboardCheck" },
     { label: "Executive Analytics", href: "/dashboard/admin/analytics", icon: "BarChart3" },
     { label: "Announcements", href: "/dashboard/admin/communications", icon: "Megaphone" },
