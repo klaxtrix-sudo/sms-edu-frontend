@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const pathname = usePathname();
-  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register');
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname?.endsWith('/login');
 
   return (
     <NextThemesProvider {...props} forcedTheme={isAuthPage ? 'light' : undefined}>

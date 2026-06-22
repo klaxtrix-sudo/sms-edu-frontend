@@ -51,6 +51,29 @@ export async function middleware(request: NextRequest) {
       console.log(`[Security Guard] Unauthenticated access to ${url.pathname}. Redirecting to /login.`);
       return NextResponse.redirect(new URL('/login', request.url));
     }
+
+    // Role-based route enforcement: prevent cross-role access
+    const role = user.user_metadata?.role || 'student';
+    const dashboardRoleMatch = url.pathname.match(/^\/dashboard\/(admin|teacher|student|parent)/);
+    if (dashboardRoleMatch && dashboardRoleMatch[1] !== role) {
+      const correctDashboard = new URL(`/dashboard/${role}`, request.url);
+      console.log(`[Security Guard] Role mismatch: ${role} accessing ${url.pathname}. Redirecting to ${correctDashboard.pathname}.`);
+      const roleRedirect = NextResponse.redirect(correctDashboard);
+      updatedResponse.cookies.getAll().forEach((cookie) => {
+        roleRedirect.cookies.set(cookie);
+      });
+      return roleRedirect;
+    }
+  }
+
+  // 7. Console Guard: Protect Master Admin Console routes
+  // The console uses a separate JWT stored in an httpOnly cookie (set by /console login).
+  // If no console cookie exists, redirect to the console login page.
+  if (url.pathname.startsWith('/console/') && url.pathname !== '/console') {
+    const consoleToken = request.cookies.get('klaxtrix_console_token')?.value;
+    if (!consoleToken) {
+      return NextResponse.redirect(new URL('/console', request.url));
+    }
   }
 
   // 7. Auto-Navigation: Authenticated users away from /login

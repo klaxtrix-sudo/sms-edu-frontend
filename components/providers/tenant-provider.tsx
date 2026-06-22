@@ -142,7 +142,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         };
 
         setTenant(prev => {
-          if (JSON.stringify(prev) === JSON.stringify(newTenant)) return prev;
+          if (prev && prev.id === newTenant.id && prev.name === newTenant.name && prev.subdomain === newTenant.subdomain) return prev;
           return newTenant;
         });
 
