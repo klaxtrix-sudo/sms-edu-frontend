@@ -272,6 +272,19 @@ export async function createTeacher(data: CreateUserData) {
         ? `https://${subdomain}.${rootDomain}/login`
         : `http://${subdomain}.${rootDomain}/login`;
 
+      // 5. Generate a one-time magic link for secure account setup (no plaintext password in email)
+      const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+        options: { redirectTo: loginUrl },
+      });
+
+      const setupLink = linkError ? loginUrl : (linkData?.properties?.action_link || loginUrl);
+
+      if (linkError) {
+        console.error('[createTeacher] Magic link generation failed:', linkError.message);
+      }
+
       if (resendApiKey) {
         const resend = new Resend(resendApiKey);
         const emailHtml = `
@@ -279,14 +292,16 @@ export async function createTeacher(data: CreateUserData) {
             <h2 style="color: #4f46e5; margin-bottom: 24px;">Welcome to Klaxtrix!</h2>
             <p>Hello <strong>${fullName}</strong>,</p>
             <p>An administrator has registered your teacher account at the school portal.</p>
-            <p>Please use the following credentials to access the portal:</p>
-            <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; margin: 20px 0; border: 1px solid #f1f5f9;">
-              <p style="margin: 4px 0;"><strong>Portal Login URL:</strong> <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a></p>
-              <p style="margin: 4px 0;"><strong>Username / Email:</strong> ${email}</p>
-              <p style="margin: 4px 0;"><strong>Temporary Password:</strong> ${password}</p>
+            <p>Click the button below to securely set up your account and choose your password:</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Set Up My Account</a>
             </div>
             <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
-              <strong>Important Onboarding Action:</strong> upon your first login, you will be prompted to pass an OTP verification and change your temporary password to secure your account.
+              If the button doesn't work, copy and paste this link into your browser: <br />
+              <a href="${setupLink}" target="_blank" rel="noopener noreferrer">${setupLink}</a>
+            </p>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+              This link is one-time use and will expire shortly. Upon setup, you will be prompted to verify your email via OTP and choose your own password.
             </p>
             <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
             <p style="color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply directly to this email.</p>
@@ -297,14 +312,14 @@ export async function createTeacher(data: CreateUserData) {
           const { error: sendError } = await resend.emails.send({
             from: `${resendFromName} <${resendFromEmail}>`,
             to: email,
-            subject: 'Your Teacher Account Credentials — Klaxtrix Portal',
+            subject: 'Set Up Your Teacher Account — Klaxtrix Portal',
             html: emailHtml
           });
 
           if (sendError) {
-            console.error('[createTeacher] Resend error sending credentials:', sendError);
+            console.error('[createTeacher] Resend error sending setup link:', sendError);
           } else {
-            console.log('[createTeacher] Welcome email sent successfully to:', email);
+            console.log('[createTeacher] Setup link email sent successfully to:', email);
           }
         } catch (err: any) {
           console.error('[createTeacher] Failed to dispatch welcome email:', err.message);
@@ -313,10 +328,8 @@ export async function createTeacher(data: CreateUserData) {
         console.log('==================================================');
         console.log('[createTeacher] MOCK EMAIL DISPATCH LOG (No Resend Key Found)');
         console.log('To:', email);
-        console.log('Subject: Your Teacher Account Credentials — Klaxtrix Portal');
-        console.log('Login URL:', loginUrl);
-        console.log('Username:', email);
-        console.log('Password:', password);
+        console.log('Subject: Set Up Your Teacher Account — Klaxtrix Portal');
+        console.log('Setup Link:', setupLink);
         console.log('==================================================');
       }
     }
@@ -711,15 +724,29 @@ export async function resendTeacherCredentials(
       return { error: 'Teacher profile not found or email is missing.' };
     }
 
-    // 2. Generate a new secure temporary password
-    const randomSuffix = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const tempPassword = `Klaxtrix-${randomSuffix}!`;
+    // 2. Compute login URL (needed for magic link redirect)
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+    const loginUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/login`
+      : `http://${subdomain}.${rootDomain}/login`;
 
-    // 3. Update auth password in Supabase
-    const { error: authError } = await tenantSupabase.auth.admin.updateUserById(
+    // 3. Generate a one-time magic link for secure account re-setup
+    const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: profile.email,
+      options: { redirectTo: loginUrl },
+    });
+
+    if (linkError) {
+      return { error: `Failed to generate setup link: ${linkError.message}` };
+    }
+
+    const setupLink = linkData?.properties?.action_link || loginUrl;
+
+    // 4. Reset onboarding flags so the teacher goes through OTP + password change
+    await tenantSupabase.auth.admin.updateUserById(
       teacherId,
       {
-        password: tempPassword,
         user_metadata: {
           must_change_password: true,
           email_onboarding_verified: false
@@ -727,11 +754,7 @@ export async function resendTeacherCredentials(
       }
     );
 
-    if (authError) {
-      return { error: `Failed to update teacher credentials: ${authError.message}` };
-    }
-
-    // 4. Look up Resend configuration
+    // 5. Look up Resend configuration
     let resendApiKey: string | null = null;
     let resendFromEmail: string | null = null;
     let resendFromName = 'Klaxtrix Portal';
@@ -760,26 +783,23 @@ export async function resendTeacherCredentials(
       resendFromName = 'Klaxtrix Portal';
     }
 
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-    const loginUrl = process.env.NODE_ENV === 'production'
-      ? `https://${subdomain}.${rootDomain}/login`
-      : `http://${subdomain}.${rootDomain}/login`;
-
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
       const emailHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-          <h2 style="color: #4f46e5; margin-bottom: 24px;">Welcome to Klaxtrix!</h2>
+          <h2 style="color: #4f46e5; margin-bottom: 24px;">Account Re-Setup — Klaxtrix Portal</h2>
           <p>Hello <strong>${profile.full_name}</strong>,</p>
-          <p>An administrator has resent your teacher account credentials for the school portal.</p>
-          <p>Please use the following updated credentials to access the portal:</p>
-          <div style="background-color: #f8fafc; padding: 16px; border-radius: 12px; margin: 20px 0; border: 1px solid #f1f5f9;">
-            <p style="margin: 4px 0;"><strong>Portal Login URL:</strong> <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a></p>
-            <p style="margin: 4px 0;"><strong>Username / Email:</strong> ${profile.email}</p>
-            <p style="margin: 4px 0;"><strong>New Temporary Password:</strong> ${tempPassword}</p>
+          <p>An administrator has reset your teacher account credentials for the school portal.</p>
+          <p>Click the button below to securely set up your account and choose a new password:</p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Set Up My Account</a>
           </div>
           <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
-            <strong>Important Onboarding Action:</strong> upon your first login with these new credentials, you will be prompted to pass an OTP verification and change your temporary password to secure your account.
+            If the button doesn't work, copy and paste this link into your browser: <br />
+            <a href="${setupLink}" target="_blank" rel="noopener noreferrer">${setupLink}</a>
+          </p>
+          <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+            This link is one-time use and will expire shortly. Upon setup, you will be prompted to verify your email via OTP and choose your own password.
           </p>
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
           <p style="color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply directly to this email.</p>
@@ -789,7 +809,7 @@ export async function resendTeacherCredentials(
       const { error: sendError } = await resend.emails.send({
         from: `${resendFromName} <${resendFromEmail}>`,
         to: profile.email,
-        subject: 'Your Teacher Account Credentials — Klaxtrix Portal',
+        subject: 'Set Up Your Teacher Account — Klaxtrix Portal',
         html: emailHtml
       });
 
@@ -800,10 +820,8 @@ export async function resendTeacherCredentials(
       console.log('==================================================');
       console.log('[resendTeacherCredentials] MOCK EMAIL DISPATCH LOG');
       console.log('To:', profile.email);
-      console.log('Subject: Your Teacher Account Credentials — Klaxtrix Portal');
-      console.log('Login URL:', loginUrl);
-      console.log('Username:', profile.email);
-      console.log('New Temp Password:', tempPassword);
+      console.log('Subject: Set Up Your Teacher Account — Klaxtrix Portal');
+      console.log('Setup Link:', setupLink);
       console.log('==================================================');
     }
 

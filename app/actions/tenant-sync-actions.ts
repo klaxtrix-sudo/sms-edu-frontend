@@ -12,6 +12,7 @@ export async function syncSchoolSettingsToMaster(subdomain: string, payload: { n
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_AUTH_SECRET || "",
       },
       body: JSON.stringify({
         subdomain,
