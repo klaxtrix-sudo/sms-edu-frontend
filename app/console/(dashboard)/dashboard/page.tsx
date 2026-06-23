@@ -112,7 +112,7 @@ export default function ConsoleDashboard() {
       }
 
       if (logsRes.data.success) {
-        setLogs(logsRes.data.logs.slice(0, 4)); // Only show top 4 for the dashboard
+        setLogs((logsRes.data.data ?? []).slice(0, 4)); // Only show top 4 for the dashboard
       }
 
       setIsLoading(false);

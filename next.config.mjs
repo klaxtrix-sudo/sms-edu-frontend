@@ -37,7 +37,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://api.paystack.co https://api.termii.com",
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'} https://*.supabase.co https://api.paystack.co https://api.termii.com`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self' https://paystack.com",

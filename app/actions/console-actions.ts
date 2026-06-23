@@ -67,7 +67,7 @@ export async function getConsoleTokenFromCookie(): Promise<string | null> {
  * Returns the user data if valid, null otherwise.
  */
 export async function verifyConsoleSessionServer(): Promise<{ id: string; username: string; role: string } | null> {
-  const token = getConsoleTokenFromCookie();
+  const token = await getConsoleTokenFromCookie();
   if (!token) return null;
 
   try {
