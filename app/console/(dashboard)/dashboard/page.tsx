@@ -120,6 +120,10 @@ export default function ConsoleDashboard() {
       setIsLogsLoading(false);
     } catch (err: any) {
       console.error('Data Fetch Error:', err);
+      if (err.response?.status === 401) {
+        window.location.href = '/console';
+        return;
+      }
       setError("Couldn't load data");
       setTenantsError("Couldn't load schools.");
       setIsLoading(false);
