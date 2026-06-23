@@ -279,7 +279,22 @@ export async function createTeacher(data: CreateUserData) {
         options: { redirectTo: loginUrl },
       });
 
-      const setupLink = linkError ? loginUrl : (linkData?.properties?.action_link || loginUrl);
+      let setupLink = loginUrl;
+      if (!linkError && linkData?.properties?.action_link) {
+        try {
+          const urlObj = new URL(linkData.properties.action_link);
+          const token = urlObj.searchParams.get('token');
+          const type = urlObj.searchParams.get('type') || 'magiclink';
+          
+          // Reconstruct the URL to point to our new custom frontend mask route
+          const customUrl = new URL('/api/auth/confirm', loginUrl); // loginUrl already has correct subdomain and protocol
+          if (token) customUrl.searchParams.set('token_hash', token);
+          customUrl.searchParams.set('type', type);
+          setupLink = customUrl.toString();
+        } catch (e) {
+          setupLink = linkData.properties.action_link;
+        }
+      }
 
       if (linkError) {
         console.error('[createTeacher] Magic link generation failed:', linkError.message);
