@@ -33,3 +33,34 @@ export async function syncSchoolSettingsToMaster(subdomain: string, payload: { n
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Uploads a base64-encoded logo to the master Supabase Storage bucket
+ * and returns a publicly accessible HTTPS URL.
+ * This replaces the previous approach of storing raw base64 data URIs,
+ * which are blocked by email clients.
+ */
+export async function uploadSchoolLogo(schoolId: string, base64DataUri: string): Promise<{ success: boolean; publicUrl?: string; error?: string }> {
+  try {
+    const res = await fetch(`${getBackendUrl()}/tenant/upload-logo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_AUTH_SECRET || "",
+      },
+      body: JSON.stringify({ schoolId, base64DataUri }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`[Sync Engine] Logo upload failed: ${errorText}`);
+      return { success: false, error: "Failed to upload logo" };
+    }
+
+    const data = await res.json();
+    return { success: true, publicUrl: data.publicUrl };
+  } catch (error: any) {
+    console.error(`[Sync Engine] Logo upload exception:`, error);
+    return { success: false, error: error.message };
+  }
+}

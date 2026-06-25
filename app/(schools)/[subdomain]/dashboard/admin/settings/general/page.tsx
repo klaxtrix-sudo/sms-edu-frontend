@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
-import { syncSchoolSettingsToMaster } from '@/app/actions/tenant-sync-actions';
+import { syncSchoolSettingsToMaster, uploadSchoolLogo } from '@/app/actions/tenant-sync-actions';
 import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { useTenant } from '@/components/providers/tenant-provider';
 
@@ -100,6 +100,16 @@ export default function GeneralSettings() {
     }
     setSaving(true);
     try {
+      // If the logo is still a base64 data URI, upload it to storage first
+      let finalLogoUrl = values.logo_url;
+      if (finalLogoUrl && finalLogoUrl.startsWith('data:image/') && schoolId) {
+        const uploadResult = await uploadSchoolLogo(schoolId, finalLogoUrl);
+        if (uploadResult.success && uploadResult.publicUrl) {
+          finalLogoUrl = uploadResult.publicUrl;
+          form.setValue('logo_url', finalLogoUrl);
+        }
+      }
+
       // Use the secure server action to save (internal secret added server-side)
       const result = await updateSchoolData(subdomain, schoolId, {
         name: values.name,
@@ -107,7 +117,7 @@ export default function GeneralSettings() {
         address: values.address,
         official_phone: values.official_phone,
         official_website: values.official_website,
-        logo_url: values.logo_url,
+        logo_url: finalLogoUrl,
       });
 
       if (!result.success) {
@@ -117,7 +127,7 @@ export default function GeneralSettings() {
       // Sync name and logo to master registry for global header/avatar
       await syncSchoolSettingsToMaster(subdomain, {
         name: values.name,
-        logoUrl: values.logo_url,
+        logoUrl: finalLogoUrl,
       });
 
       toast.success('Institutional identity updated successfully');

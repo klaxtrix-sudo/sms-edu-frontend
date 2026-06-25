@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Upload, X, Loader2 } from "lucide-react";
-import Image from "next/image";
 import { toast } from "sonner";
+import { uploadSchoolLogo } from "@/app/actions/tenant-sync-actions";
 
 interface SchoolLogoUploadProps {
   value?: string;
@@ -34,13 +33,24 @@ export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUpload
 
       setUploading(true);
 
-      // Convert to Base64 String to bypass multi-tenant storage bucket requirements
+      // Convert to Base64 first, then upload to Storage via the backend
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64String = reader.result as string;
-        onChange(base64String);
-        toast.success("Logo processed successfully");
-        setUploading(false);
+
+        try {
+          const result = await uploadSchoolLogo(schoolId, base64String);
+          if (result.success && result.publicUrl) {
+            onChange(result.publicUrl);
+            toast.success("Logo uploaded successfully");
+          } else {
+            toast.error(result.error || "Failed to upload logo");
+          }
+        } catch (err: any) {
+          toast.error(err.message || "Failed to upload logo");
+        } finally {
+          setUploading(false);
+        }
       };
       
       reader.onerror = () => {
@@ -90,7 +100,7 @@ export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUpload
         {uploading && (
           <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-10">
             <Loader2 className="size-6 animate-spin text-primary mb-2" />
-            <span className="text-[10px] font-medium uppercase tracking-tighter">Processing</span>
+            <span className="text-[10px] font-medium uppercase tracking-tighter">Uploading</span>
           </div>
         )}
       </div>

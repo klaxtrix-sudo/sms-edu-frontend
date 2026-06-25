@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { completeSchoolSetup } from "@/app/actions/tenant-actions";
+import { uploadSchoolLogo } from "@/app/actions/tenant-sync-actions";
 import { useTenant } from '@/components/providers/tenant-provider';
 import { NIGERIA_STATES, STATE_LGA_MAP } from '@/lib/constants/nigeria-locations';
 import { useRouter, useParams } from 'next/navigation';
@@ -130,13 +131,25 @@ export default function SetupWizardPage() {
 
     try {
       setIsSubmitting(true);
-      toast.loading('Synchronizing institutional protocols...', { id: 'setup' });
+      // 1. If logo was selected, upload it to Storage first to get a public URL
+      let logoUrl = logoPreview;
+      if (logoPreview && logoPreview.startsWith('data:image/')) {
+        toast.loading('Uploading institutional logo...', { id: 'setup' });
+        const uploadResult = await uploadSchoolLogo(tenant.id, logoPreview);
+        if (uploadResult.success && uploadResult.publicUrl) {
+          logoUrl = uploadResult.publicUrl;
+        } else {
+          console.error('[Setup] Logo upload failed, proceeding without logo:', uploadResult.error);
+          logoUrl = null;
+        }
+      }
 
-      // 1. Perform a secure synchronized setup via the backend server action
+      // 2. Perform a secure synchronized setup via the backend server action
       // This bypasses RLS recursion issues by using Service Role Keys server-side.
+      toast.loading('Synchronizing institutional protocols...', { id: 'setup' });
       const result = await completeSchoolSetup(subdomain, tenant.id, {
         ...formData,
-        logoUrl: logoPreview
+        logoUrl
       });
 
       if (!result.success) {
