@@ -580,7 +580,7 @@ export default function TeachersPage() {
                                 className="gap-2 text-xs font-bold text-red-600 focus:text-red-600 focus:bg-red-500/10 cursor-pointer"
                                 onClick={() => handleDeletePendingTeacher(teacher.id)}
                               >
-                                <Trash2 className="size-3.5" /> Delete Pending Teacher
+                                <Trash2 className="size-3.5" /> Delete
                               </DropdownMenuItem>
                             </>
                           ) : (
