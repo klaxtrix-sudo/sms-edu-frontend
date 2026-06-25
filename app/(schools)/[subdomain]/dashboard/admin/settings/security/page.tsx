@@ -27,8 +27,8 @@ export default function SecuritySettings() {
               <ShieldCheck className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-extrabold text-slate-900">Internal Security</h2>
-              <p className="text-sm text-slate-500 font-medium tracking-tight">Configure institutional access policies and user-onboarding rules.</p>
+              <h2 className="text-2xl font-heading font-extrabold text-slate-900">Security</h2>
+              <p className="text-sm text-slate-500 font-medium tracking-tight">Control who can sign up and how logins work.</p>
             </div>
           </div>
 
@@ -81,7 +81,7 @@ export default function SecuritySettings() {
                <div className="p-2 bg-blue-100 rounded-xl">
                   <History className="w-4 h-4 text-blue-600" />
                </div>
-               <span className="text-sm font-bold text-slate-900">Real-time Audits</span>
+               <span className="text-sm font-bold text-slate-900">Recent Activity</span>
             </div>
 
             <div className="space-y-4">
@@ -104,7 +104,7 @@ export default function SecuritySettings() {
             </div>
 
             <Button variant="ghost" className="w-full text-xs font-bold text-slate-400 group hover:text-blue-600 py-6">
-                View Full Forensic Log <ArrowRight className="w-3 h-3 ml-2 transition-transform group-hover:translate-x-1" />
+                View Full Log <ArrowRight className="w-3 h-3 ml-2 transition-transform group-hover:translate-x-1" />
             </Button>
           </div>
 

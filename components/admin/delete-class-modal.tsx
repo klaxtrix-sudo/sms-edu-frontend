@@ -38,7 +38,7 @@ export function DeleteClassModal({ isOpen, onClose, onSuccess, classData }: Dele
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(`Class "${classData.name}" deleted successfully!`);
+        toast.success(`Class "${classData.name}" deleted.`);
         onSuccess();
         onClose();
       }

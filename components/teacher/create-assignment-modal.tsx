@@ -127,13 +127,13 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="font-black h-12 px-8 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-          <Plus className="mr-2 size-5" /> Design Classwork
+          <Plus className="mr-2 size-5" /> Create Assignment
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl">
         <DialogHeader className="p-8 pb-0 space-y-2">
           <DialogTitle className="text-4xl font-black tracking-tighter text-primary">New Assignment</DialogTitle>
-          <DialogDescription className="text-base font-medium">Outline the tasks, set the deadline, and broadcast to your class.</DialogDescription>
+          <DialogDescription className="text-base font-medium">Add the tasks, set a deadline, and send to your class.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -145,7 +145,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                   name="classId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Target Classroom</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Class</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner transition-all hover:ring-primary/50">
@@ -168,7 +168,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                   name="subjectId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Academic Subject</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Subject</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-bold shadow-inner transition-all hover:ring-primary/50">
@@ -206,10 +206,10 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Brief & Instructions</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Instructions</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Detail the requirements, deliverables, and reading materials..." 
+                        placeholder="Describe what students need to do..." 
                         className="min-h-[120px] bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
                         {...field} 
                       />
@@ -225,7 +225,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Submission Deadline</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Due Date</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary opacity-50" />
@@ -242,7 +242,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                   name="totalPoints"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Point Value</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Total Points</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Target className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary opacity-50" />

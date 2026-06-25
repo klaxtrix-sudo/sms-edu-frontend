@@ -81,7 +81,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess, schoolId }: AddClass
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Class created successfully!");
+        toast.success("Class created.");
         form.reset();
         onSuccess();
         onClose();

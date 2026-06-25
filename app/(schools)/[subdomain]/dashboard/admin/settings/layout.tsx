@@ -55,7 +55,7 @@ export default function SettingsLayout({
           Settings
         </h1>
         <p className="text-slate-500 font-medium">
-          Configure institutional identity, academic cycles, and global system integration.
+          Manage your school profile, academic year, and integrations.
         </p>
       </div>
 

@@ -92,7 +92,7 @@ export function NotificationDrawer() {
         setNotifications(notifications.map(n => n._id === id ? { ...n, read: true } : n));
       }
     } catch (error) {
-      toast.error("Error marking as read");
+      toast.error("Couldn't mark as read.");
     }
   };
 
@@ -106,7 +106,7 @@ export function NotificationDrawer() {
       setNotifications(notifications.map(n => ({ ...n, read: true })));
       toast.success("Everything caught up!");
     } catch (error) {
-      toast.error("Cleanup failed");
+      toast.error("Couldn't mark all as read.");
     }
   };
 

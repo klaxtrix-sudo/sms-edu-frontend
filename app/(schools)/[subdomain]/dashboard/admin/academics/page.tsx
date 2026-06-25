@@ -64,7 +64,7 @@ export default function AcademicsPage() {
       setClassAssignments(assignmentsRes.data || []);
     } catch (error: any) {
       console.error("Error fetching academics data:", error);
-      toast.error(error.message || "Failed to load academic records");
+      toast.error(error.message || "Failed to load classes and subjects.");
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function AcademicsPage() {
     try {
       const res = await deleteSubject(subjectId, subdomain as string);
       if (res.error) throw new Error(res.error);
-      toast.success(`Subject "${subjectName}" deleted successfully`);
+      toast.success(`Subject "${subjectName}" deleted.`);
       fetchData();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete subject");
@@ -111,7 +111,7 @@ export default function AcademicsPage() {
             Academic Structure
           </h1>
           <p className="text-slate-500 font-medium tracking-tight text-base sm:text-lg">
-            Configure classrooms, assign class teachers, and manage the curriculum master.
+            Set up classes, assign class teachers, and manage subjects.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -249,8 +249,8 @@ export default function AcademicsPage() {
                 <div className="size-16 rounded-3xl bg-indigo-50 border border-indigo-100/50 flex items-center justify-center text-indigo-500 mb-4 shadow-sm">
                   <Users className="w-7 h-7" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800">No Active Classes</h3>
-                <p className="text-slate-400 text-sm max-w-sm mt-1">Configure your institution's grade levels and classrooms to start registering students.</p>
+                <h3 className="text-lg font-black text-slate-800">No classes yet</h3>
+                <p className="text-slate-400 text-sm max-w-sm mt-1">Add your classes and grade levels so you can start enrolling students.</p>
                 <Button 
                   onClick={() => setIsClassModalOpen(true)}
                   className="mt-6 bg-white hover:bg-slate-50 text-indigo-600 border border-slate-200 shadow-sm font-extrabold rounded-xl px-5 h-11"
@@ -375,8 +375,8 @@ export default function AcademicsPage() {
                 <div className="size-16 rounded-3xl bg-emerald-50 border border-emerald-100/50 flex items-center justify-center text-emerald-500 mb-4 shadow-sm">
                   <BookOpen className="w-7 h-7" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800">No Subjects Configured</h3>
-                <p className="text-slate-400 text-sm max-w-sm mt-1">Add courses and curriculum modules to build your school's official subject registry.</p>
+                <h3 className="text-lg font-black text-slate-800">No subjects yet</h3>
+                <p className="text-slate-400 text-sm max-w-sm mt-1">Add the subjects your school offers.</p>
                 <Button 
                   onClick={() => setIsSubjectModalOpen(true)}
                   className="mt-6 bg-white hover:bg-slate-50 text-emerald-600 border border-slate-200 shadow-sm font-extrabold rounded-xl px-5 h-11"
@@ -410,7 +410,7 @@ export default function AcademicsPage() {
                         <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <Button 
                             onClick={() => {
-                              toast.info("Subject updating can be performed directly through curriculum modals.");
+                              toast.info("You can edit a subject from its class settings.");
                             }}
                             variant="ghost" 
                             size="icon" 

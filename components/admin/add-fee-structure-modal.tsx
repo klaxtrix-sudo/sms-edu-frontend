@@ -92,7 +92,7 @@ export function AddFeeStructureModal({ onSuccess }: AddFeeStructureModalProps) {
 
       if (error) throw error;
 
-      toast.success("Fee structure created successfully");
+      toast.success("Fee added.");
       setOpen(false);
       form.reset();
       onSuccess();

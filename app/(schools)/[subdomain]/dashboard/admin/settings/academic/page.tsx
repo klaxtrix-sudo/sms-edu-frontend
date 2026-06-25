@@ -121,7 +121,7 @@ export default function AcademicSettings() {
         throw new Error(result.error || 'Failed to update academic settings');
       }
 
-      toast.success('Academic cycle updated successfully');
+      toast.success('Academic year saved.');
       
       // Refresh global context so header updates instantly
       await refreshAcademicCycle();
@@ -179,7 +179,7 @@ export default function AcademicSettings() {
       const res = await saveResultMetrics(payload, subdomain);
       if (res.error) throw new Error(res.error);
       
-      toast.success("Default assessment metrics saved successfully!");
+      toast.success("Default weights saved.");
       setIsEditingMetrics(false);
       loadMetrics(schoolId!);
     } catch (err: any) {
@@ -240,7 +240,7 @@ export default function AcademicSettings() {
               className="h-12 px-7 rounded-2xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-bold gap-2 shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/30 active:scale-[0.98]"
             >
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Sync Academic Cycle
+              Save Changes
             </Button>
           </div>
 
@@ -354,7 +354,7 @@ export default function AcademicSettings() {
             <div className="space-y-0.5">
               <p className="text-xs font-black text-amber-800 uppercase tracking-wider">Important Notice</p>
               <p className="text-sm text-amber-700/80 font-medium leading-relaxed">
-                Changing the active session or term will affect GPA calculations and report card generation across all classes. Ensure all results for the previous term are finalized before syncing.
+                Changing the session or term affects GPA and report cards for all classes. Make sure last term's results are done before you change this.
               </p>
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function AcademicSettings() {
             </div>
             <div>
               <h2 className="text-2xl font-heading font-extrabold text-slate-900">Default Result Assessment Metrics</h2>
-              <p className="text-sm text-slate-500 font-medium tracking-tight">Configure default school-wide result components (e.g. Tests, Assignments, Exams) that must sum to 100.</p>
+              <p className="text-sm text-slate-500 font-medium tracking-tight">Set the default result components (e.g. Tests, Assignments, Exams) for the whole school. They must add up to 100.</p>
             </div>
           </div>
           
@@ -379,7 +379,7 @@ export default function AcademicSettings() {
               onClick={() => setIsEditingMetrics(true)} 
               className="h-12 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
             >
-              Configure Default Weights
+              Edit Default Weights
             </Button>
           ) : (
             <div className="flex gap-2">
@@ -455,7 +455,7 @@ export default function AcademicSettings() {
 
             <div className="flex items-center justify-between border-t pt-6">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-500">Cumulative Weight Sum:</span>
+                <span className="text-sm font-semibold text-slate-500">Total Weight:</span>
                 <Badge className={totalWeight === 100 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}>
                   {totalWeight} / 100
                 </Badge>
@@ -562,8 +562,8 @@ export default function AcademicSettings() {
             {metrics.length === 0 && (
               <div className="text-center py-12 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
                 <Award className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 font-semibold text-sm">No default metrics configured</p>
-                <p className="text-slate-400 text-xs mt-1">Fallback system defaults (Tests, Assignment, Exam) are currently active.</p>
+                <p className="text-slate-500 font-semibold text-sm">No custom weights set</p>
+                <p className="text-slate-400 text-xs mt-1">The defaults (Tests, Assignment, Exam) are in use.</p>
               </div>
             )}
           </div>

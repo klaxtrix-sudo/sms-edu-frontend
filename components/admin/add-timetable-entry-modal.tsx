@@ -178,7 +178,7 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
 
       if (error) throw error;
 
-      toast.success("Schedule slot reserved successfully");
+      toast.success("Timetable slot saved.");
       setOpen(false);
       form.reset();
       onSuccess?.();

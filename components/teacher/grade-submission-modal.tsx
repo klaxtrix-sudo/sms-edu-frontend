@@ -61,7 +61,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.grade > maxPoints) {
-      toast.error(`Grade cannot exceed maximum points (${maxPoints})`);
+      toast.error(`Grade can't be more than ${maxPoints} points.`);
       return;
     }
 
@@ -99,18 +99,18 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
       <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-2 bg-primary" />
         <DialogHeader className="pt-6">
-          <DialogTitle className="text-3xl font-black tracking-tighter text-primary">Evaluate Submission</DialogTitle>
-          <DialogDescription className="text-base font-medium">Review student's work and provide academic feedback.</DialogDescription>
+          <DialogTitle className="text-3xl font-black tracking-tighter text-primary">Grade Submission</DialogTitle>
+          <DialogDescription className="text-base font-medium">Review the student's work and leave feedback.</DialogDescription>
         </DialogHeader>
 
         <div className="bg-muted/30 p-6 rounded-3xl border border-border/50 space-y-4 max-h-[300px] overflow-y-auto mt-4">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-60 mb-2">
                 <FileText className="size-3" /> Student Response
             </div>
-            <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed italic">"{submission.content || "No textual content provided."}"</p>
+            <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed italic">"{submission.content || "No written answer."}"</p>
             {submission.attachments?.length > 0 && (
                 <div className="pt-4 border-t border-border/30">
-                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Attached Assets</span>
+                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Attachments</span>
                      <div className="flex flex-wrap gap-2">
                         {submission.attachments.map((url: string, idx: number) => (
                             <a 
@@ -119,7 +119,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
                                 target="_blank" 
                                 className="px-3 py-1.5 bg-background/50 rounded-xl text-[10px] font-bold border border-border/50 hover:bg-primary/10 transition-colors"
                             >
-                                Asset {idx + 1}
+                                File {idx + 1}
                             </a>
                         ))}
                      </div>
@@ -135,7 +135,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Award Points</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Score</FormLabel>
                     <span className="text-[10px] font-black uppercase text-primary">Max {maxPoints} pts</span>
                   </div>
                   <FormControl>
@@ -159,12 +159,12 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
               name="feedback"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Constructive Feedback</FormLabel>
+                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Feedback</FormLabel>
                   <FormControl>
                     <div className="relative">
                        <MessageSquare className="absolute left-4 top-4 size-4 text-primary opacity-50" />
                        <Textarea 
-                        placeholder="Provide detailed feedback to help the student improve..." 
+                        placeholder="Leave feedback to help the student improve..." 
                         className="min-h-[100px] pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
                         {...field} 
                        />
@@ -182,7 +182,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
                 disabled={loading}
               >
                 {loading ? <Loader2 className="mr-3 size-6 animate-spin" /> : <CheckCircle2 className="mr-3 size-6" />}
-                Finalize Grade
+                Save Grade
               </Button>
             </DialogFooter>
           </form>

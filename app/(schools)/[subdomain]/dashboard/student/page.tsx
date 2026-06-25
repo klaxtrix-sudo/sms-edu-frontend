@@ -106,7 +106,7 @@ export default function StudentDashboard() {
           )}>
             {bulletins.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-xs font-semibold w-full col-span-3">
-                No active announcements posted.
+                No announcements yet.
               </div>
             ) : (
               bulletins.slice(0, 6).map((bulletin) => {

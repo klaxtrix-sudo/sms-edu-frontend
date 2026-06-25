@@ -96,9 +96,9 @@ export default function ParentDashboardPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter text-primary italic uppercase">Household Intelligence</h1>
+          <h1 className="text-5xl font-black tracking-tighter text-primary italic uppercase">Family Overview</h1>
           <p className="text-muted-foreground mt-2 text-xl font-medium max-w-2xl opacity-80">
-            Welcome back, {parentName}. Monitor your children's educational progress and financial status.
+            Welcome back, {parentName}. Here's how your children are doing in school.
           </p>
         </div>
         <div className="size-20 rounded-[2.5rem] bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-2xl animate-pulse">
@@ -109,13 +109,13 @@ export default function ParentDashboardPage() {
       {loading ? (
         <div className="py-40 flex flex-col items-center gap-4">
            <Loader2 className="size-16 animate-spin text-primary/20" />
-           <p className="font-black text-muted-foreground animate-pulse tracking-widest uppercase text-xs">Syncing Household Records...</p>
+           <p className="font-black text-muted-foreground animate-pulse tracking-widest uppercase text-xs">Loading...</p>
         </div>
       ) : children.length === 0 ? (
         <Card className="border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-[3rem] p-20 text-center">
            <Users className="size-20 mx-auto text-muted-foreground opacity-10 mb-6" />
-           <h3 className="text-2xl font-black">No Linked Students Found</h3>
-           <p className="text-muted-foreground mt-2 font-medium">Please contact the school administrator to link your children to your account.</p>
+           <h3 className="text-2xl font-black">No children linked yet</h3>
+           <p className="text-muted-foreground mt-2 font-medium">Please contact the school to link your children to your account.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
@@ -129,8 +129,8 @@ export default function ParentDashboardPage() {
               <Card className="border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-[3rem] overflow-hidden">
                  <CardHeader className="p-10 pb-0 flex flex-row items-center justify-between">
                     <div>
-                       <CardTitle className="text-3xl font-black tracking-tighter uppercase italic text-primary">Academic Trajectory</CardTitle>
-                       <CardDescription className="text-base font-medium opacity-80">Aggregate performance trends across all enrolled children.</CardDescription>
+                       <CardTitle className="text-3xl font-black tracking-tighter uppercase italic text-primary">Performance Trends</CardTitle>
+                       <CardDescription className="text-base font-medium opacity-80">How all your children are doing overall.</CardDescription>
                     </div>
                     <Button variant="ghost" size="icon" className="rounded-2xl border border-border shadow-md">
                        <TrendingUp className="size-5 text-primary" />
@@ -161,7 +161,7 @@ export default function ParentDashboardPage() {
                     <div className="text-6xl font-black tabular-nums tracking-tighter">₦125,400</div>
                     <Button asChild className="w-full h-16 bg-white text-primary hover:bg-white/90 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all active:scale-95 uppercase tracking-tighter italic">
                        <Link href="/dashboard/parent/finance">
-                          Settle Fees
+                          Pay Fees
                        </Link>
                     </Button>
                  </div>
@@ -175,7 +175,7 @@ export default function ParentDashboardPage() {
                  <div className="space-y-6">
                     {bulletins.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground text-xs font-black uppercase tracking-widest opacity-45">
-                         No Active Bulletins
+                         No notices yet
                       </div>
                     ) : (
                       bulletins.slice(0, 3).map((bulletin) => {
@@ -263,14 +263,14 @@ function ChildOverviewCard({ child }: { child: any }) {
             <div className="p-4 bg-muted/30 rounded-2xl border border-border/50 text-left">
                <div className="flex items-center gap-2 mb-1 justify-start">
                   <TrendingUp className="size-3 text-primary" />
-                  <span className="text-[9px] font-black uppercase text-muted-foreground opacity-50 tracking-widest">Avg Grid</span>
+                  <span className="text-[9px] font-black uppercase text-muted-foreground opacity-50 tracking-widest">Avg Grade</span>
                </div>
                <p className="text-lg font-black text-foreground">B+</p>
             </div>
          </div>
          <Button asChild variant="ghost" className="w-full mt-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] text-primary group-hover:bg-primary/5">
             <Link href={`/dashboard/parent/children/${child.id}`}>
-               Examine Profile <ChevronRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
+               View Profile <ChevronRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
             </Link>
          </Button>
       </CardContent>

@@ -87,7 +87,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
             Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl font-medium">
-             Everything is on track. {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} teachers are active across {classesCount.count ?? 0} class levels today.
+             {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} teachers across {classesCount.count ?? 0} classes today.
           </p>
         </div>
         
@@ -113,7 +113,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
                   <TrendingUp className="size-5 text-primary" />
                   Academic Performance
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">Institutional cumulative growth & trends</p>
+                <p className="text-sm text-muted-foreground mt-1">Performance over time</p>
               </div>
               <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
                 Live Analytics

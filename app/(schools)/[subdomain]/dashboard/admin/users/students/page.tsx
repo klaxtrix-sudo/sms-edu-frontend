@@ -156,7 +156,7 @@ export default function StudentsPage() {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(`Password updated successfully for ${selectedStudent.name}`);
+        toast.success(`Password updated for ${selectedStudent.name}.`);
         setIsResetPasswordOpen(false);
         setNewPassword("");
       }
@@ -232,7 +232,7 @@ export default function StudentsPage() {
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No students found.</p>
+              <p className="text-muted-foreground">No students yet.</p>
             </div>
           ) : (
             <div className="rounded-md border overflow-hidden">

@@ -174,7 +174,7 @@ export default function ParentFinancePage() {
           setPayingId(null);
         },
         callback: (response: any) => {
-          toast.success("Payment initiated! Verification in progress...");
+          toast.success("Payment received! We're confirming it...");
           fetchChildFinanceData(selectedChildId); // Refresh history
           setPayingId(null);
         }
@@ -327,7 +327,7 @@ export default function ParentFinancePage() {
                     {loadingData ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-20 animate-pulse text-muted-foreground font-medium italic">
-                          Synchronizing ledger...
+                          Loading payments...
                         </TableCell>
                       </TableRow>
                     ) : history.length === 0 ? (

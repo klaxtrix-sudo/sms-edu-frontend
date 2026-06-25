@@ -59,7 +59,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess, schoolId }: AddSub
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Subject added successfully!");
+        toast.success("Subject added.");
         form.reset();
         onSuccess();
         onClose();

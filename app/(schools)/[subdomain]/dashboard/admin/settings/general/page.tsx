@@ -130,7 +130,7 @@ export default function GeneralSettings() {
         logoUrl: finalLogoUrl,
       });
 
-      toast.success('Institutional identity updated successfully');
+      toast.success('School profile saved.');
       router.refresh();
 
       setTimeout(() => {
@@ -161,7 +161,7 @@ export default function GeneralSettings() {
               <Building2 className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-extrabold text-slate-900">Institutional Identity</h2>
+              <h2 className="text-2xl font-heading font-extrabold text-slate-900">School Profile</h2>
               <p className="text-sm text-slate-500 font-medium tracking-tight">Manage your school's official brand and contact details.</p>
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function GeneralSettings() {
                 onChange={(url) => form.setValue('logo_url', url)}
               />
               <div className="flex flex-col text-center md:text-left space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">Institutional Mark</h3>
+                <h3 className="text-lg font-bold text-slate-900">School Logo</h3>
                 <p className="text-sm text-slate-500 max-w-sm">
                   Upload your official school logo. This will be displayed across all student, teacher, and parent portals.
                 </p>
@@ -202,7 +202,7 @@ export default function GeneralSettings() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-slate-400">Physical / Institutional Address</Label>
+                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-slate-400">Address</Label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-6 w-4 h-4 text-slate-400" />
                   <Textarea id="address" {...form.register('address')} className="pl-12 pt-4 min-h-[100px] bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 text-slate-700" />
@@ -229,7 +229,7 @@ export default function GeneralSettings() {
             <div className="pt-8 flex justify-end">
               <Button type="submit" disabled={saving} className="h-14 px-10 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold gap-2 shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
                 {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                {saving ? 'Synchronizing...' : 'Update Institutional Identity'}
+                {saving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </form>

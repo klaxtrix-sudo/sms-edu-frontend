@@ -116,7 +116,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Student enrolled successfully!");
+        toast.success("Student enrolled.");
         form.reset();
         onSuccess();
         onClose();

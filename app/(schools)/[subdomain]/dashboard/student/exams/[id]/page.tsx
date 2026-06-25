@@ -83,10 +83,10 @@ export default function ExamPortalPage() {
       if (data.success) {
         setResults(data.data);
         setFinished(true);
-        toast.success(isAuto ? "Time up! Exam auto-submitted." : "Exam submitted successfully!");
+        toast.success(isAuto ? "Time's up! Your exam was submitted." : "Exam submitted!");
       }
     } catch (error) {
-      toast.error("Critical: Failed to submit exam. Please contact your invigilator.");
+      toast.error("We couldn't submit your exam. Please tell your invigilator.");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,7 +119,7 @@ export default function ExamPortalPage() {
           router.push("/dashboard/student/exams");
         }
       } catch (error) {
-        toast.error("Failed to start session");
+        toast.error("Couldn't start the exam.");
         router.push("/dashboard/student/exams");
       }
     }
@@ -150,7 +150,7 @@ export default function ExamPortalPage() {
       if (!supabase) return;
       if (document.visibilityState === "hidden") {
         flagCount.current += 1;
-        toast.warning(`Warning ${flagCount.current}: Please do not switch tabs! This is recorded as a suspicion level flag.`);
+        toast.warning(`Warning ${flagCount.current}: Please don't switch tabs. This is logged as possible cheating.`);
         
         // Log to backend
         const { data: { session } } = await supabase.auth.getSession();
@@ -185,8 +185,8 @@ export default function ExamPortalPage() {
     <div className="h-screen flex items-center justify-center bg-background">
       <div className="text-center animate-pulse">
         <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-        <h3 className="text-xl font-bold">Initialising Security Protocol...</h3>
-        <p className="text-muted-foreground">Preparing your unique exam environment.</p>
+        <h3 className="text-xl font-bold">Starting your exam...</h3>
+        <p className="text-muted-foreground">Getting everything ready.</p>
       </div>
     </div>
   );
@@ -199,8 +199,8 @@ export default function ExamPortalPage() {
           <div className="size-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="size-10 text-green-600" />
           </div>
-          <h2 className="text-3xl font-bold mb-2">Examination Completed!</h2>
-          <p className="text-muted-foreground mb-8">Your attempt has been securely saved and graded.</p>
+          <h2 className="text-3xl font-bold mb-2">Exam Finished!</h2>
+          <p className="text-muted-foreground mb-8">Your answers have been saved and graded.</p>
           
           <div className="bg-accent/30 rounded-2xl p-8 mb-8">
             <div className="text-6xl font-black text-primary mb-2">
@@ -356,8 +356,8 @@ export default function ExamPortalPage() {
                 <AlertTriangle className="size-5 text-primary" />
               </div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-primary">STABILITY ALERT</div>
-                <div className="text-[10px] text-primary/60">Do not refresh your browser during the exam.</div>
+                <div className="text-xs font-bold text-primary">Heads up</div>
+                <div className="text-[10px] text-primary/60">Don't refresh your browser during the exam.</div>
               </div>
             </CardContent>
           </Card>

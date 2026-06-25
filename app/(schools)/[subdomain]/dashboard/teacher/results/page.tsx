@@ -336,7 +336,7 @@ export default function TeacherResultsPage() {
       const result = await saveResults(dataToSave, subdomain);
       if (result.error) throw new Error(result.error);
       
-      toast.success("Results updated successfully!");
+      toast.success("Results saved.");
       loadMetricsAndResults();
     } catch (error: any) {
       toast.error(error.message || "Failed to save results");
@@ -394,7 +394,7 @@ export default function TeacherResultsPage() {
       const res = await saveResultMetrics(payload, subdomain);
       if (res.error) throw new Error(res.error);
 
-      toast.success("Custom class grading metrics updated successfully!");
+      toast.success("Class grading weights saved.");
       setIsConfigOpen(false);
       loadMetricsAndResults();
     } catch (error: any) {

@@ -146,7 +146,7 @@ export function ScheduleExamModal({ open, onOpenChange, onSuccess }: ScheduleExa
       const result = await response.json();
       if (!result.success) throw new Error(result.message || "Failed to schedule exam");
 
-      toast.success("Exam successfully added to the timetable!");
+      toast.success("Exam added to the timetable.");
       onSuccess();
       onOpenChange(false);
       form.reset();

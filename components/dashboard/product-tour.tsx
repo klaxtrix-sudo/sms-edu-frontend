@@ -17,32 +17,32 @@ interface TourStep {
 const TOUR_STEPS: TourStep[] = [
   {
     targetId: 'sidebar-overview',
-    title: 'Command Center',
-    content: 'This is your mission control. Monitor student enrollment, academic growth trends, and daily school metrics at a glance.',
+    title: 'Dashboard',
+    content: 'Here\'s your dashboard. See student enrollment, growth trends, and daily stats at a glance.',
     position: 'right',
   },
   {
     targetId: 'sidebar-teachers',
-    title: 'Professional Personnel',
-    content: 'Manage your faculty records here. Add new teachers, track their assignments, and manage their portal credentials.',
+    title: 'Teachers',
+    content: 'Manage your teachers here. Add new teachers, see their classes, and update their login details.',
     position: 'right',
   },
   {
     targetId: 'sidebar-classes-&-subjects',
-    title: 'Academic Structure',
-    content: 'Define your classes and subjects. This is the foundation where sections are created and subjects are assigned to levels.',
+    title: 'Classes & Subjects',
+    content: 'Set up your classes and subjects here, then assign subjects to each class.',
     position: 'right',
   },
   {
     targetId: 'sidebar-academic-timetable',
-    title: 'Master Scheduling',
-    content: 'Organize the school pulse. Create and manage the weekly lecture schedules for all classes and subjects.',
+    title: 'Timetable',
+    content: 'Build the weekly timetable for all your classes and subjects.',
     position: 'right',
   },
   {
     targetId: 'sidebar-students',
-    title: 'Student Lifecycle',
-    content: 'The heart of your school. Enroll new students, manage student profiles, and track their academic journey.',
+    title: 'Students',
+    content: 'Enroll new students, manage their profiles, and follow their progress.',
     position: 'right',
   },
 ];

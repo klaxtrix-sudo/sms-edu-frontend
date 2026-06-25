@@ -31,7 +31,7 @@ export default function SuspendedPage() {
                 <ShieldAlert className="size-10 text-white" />
               </div>
               <h1 className="text-3xl font-black tracking-tight text-center leading-tight">Access Restricted</h1>
-              <p className="text-red-100/80 text-[10px] uppercase font-black mt-2 tracking-[0.2em]">Institutional Security Protocol</p>
+              <p className="text-red-100/80 text-[10px] uppercase font-black mt-2 tracking-[0.2em]">Account Suspended</p>
             </div>
             
             {/* Background elements */}
@@ -44,12 +44,12 @@ export default function SuspendedPage() {
             <div className="space-y-4 text-center">
               <p className="text-slate-600 font-medium leading-relaxed">
                 Your account access has been <span className="text-red-500 font-black">suspended</span> by the school administration. 
-                This may be due to administrative updates, security reviews, or institutional policy adjustments.
+                This usually happens during account updates or policy changes.
               </p>
               
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 inline-flex items-center gap-3">
                 <HelpCircle className="size-4 text-slate-400" />
-                <span className="text-[11px] font-bold text-slate-500 italic">Please contact your administrator for restoration steps.</span>
+                <span className="text-[11px] font-bold text-slate-500 italic">Please contact your school administrator to restore your account.</span>
               </div>
             </div>
 
@@ -73,7 +73,7 @@ export default function SuspendedPage() {
         </div>
 
         <p className="mt-8 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-loose">
-          Powered by Klaxtrix SMS &mdash; Secure Core v2.0<br/>
+          Powered by Klaxtrix<br/>
           &copy; {new Date().getFullYear()} All Rights Reserved
         </p>
       </motion.div>

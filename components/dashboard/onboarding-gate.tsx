@@ -84,7 +84,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
     try {
       const result = await resendOnboardingOTP(initialUser.email);
       if (result.success) {
-        toast.success('Identity validation code dispatched to your email.');
+        toast.success('We\'ve sent a verification code to your email.');
         setCountdown(60);
       } else {
         toast.error(result.error);
@@ -115,7 +115,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
   const handleFinalize = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwords.new !== passwords.confirm) {
-      return toast.error("Password confirmation mismatch.");
+      return toast.error("Passwords don't match.");
     }
     if (passwords.new.length < 8) {
       return toast.error("Password must be at least 8 characters.");
@@ -123,7 +123,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
     setIsSubmitting(true);
     const result = await finalizeTeacherAccount(passwords.new);
     if (result.success) {
-      toast.success("Security protocols initialized. Welcome aboard.");
+      toast.success("You're all set. Welcome!");
       setStage('ready');
       window.location.reload();
     } else {
@@ -151,8 +151,8 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                 <ShieldCheck className="size-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-black tracking-tight leading-tight">Institutional Gate</h2>
-                <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">Security Clearance Required</p>
+                <h2 className="text-xl font-black tracking-tight leading-tight">Verify Your Account</h2>
+                <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">Almost there</p>
               </div>
             </div>
 
@@ -209,16 +209,15 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                 className="space-y-6"
               >
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Identity Validation</h3>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Verify Your Email</h3>
                   <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                    We need to confirm your email address before you can access the faculty portal.
-                    Click the arrow to receive a 6-digit code.
+                    Let's confirm your email before you sign in. Click the arrow to get a 6-digit code.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Institutional Email</Label>
+                    <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
                       <Input 
@@ -231,7 +230,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
 
                   <div className="flex gap-3 items-end">
                     <div className="flex-1 space-y-2">
-                      <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">6-Digit Access PIN</Label>
+                      <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">6-Digit Code</Label>
                       <Input 
                         maxLength={6}
                         placeholder="000000"
@@ -264,7 +263,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                   disabled={otp.length !== 6 || isSubmitting}
                   className="w-full h-14 rounded-2xl gradient-brand font-bold text-white shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
                 >
-                  {isSubmitting ? "Validating…" : "Confirm Email"}
+                  {isSubmitting ? "Checking…" : "Confirm Email"}
                 </Button>
               </motion.div>
             )}
@@ -279,9 +278,9 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                 className="space-y-6"
               >
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Security Handover</h3>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Set Your Password</h3>
                   <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                    Email confirmed ✓ Your institution requires you to set a personal password before proceeding.
+                    Email confirmed ✓ Now set a password you'll use to sign in.
                   </p>
                 </div>
 
@@ -326,7 +325,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex gap-3">
                     <ShieldAlert className="size-4 text-slate-400 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-slate-500 leading-relaxed font-medium italic">
-                      Password must be minimum 8 characters and include capital letters & numbers for institutional compliance.
+                      Use at least 8 characters, with capital letters and numbers.
                     </p>
                   </div>
 
@@ -335,7 +334,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                     disabled={isSubmitting || passwords.new.length < 8 || passwords.new !== passwords.confirm}
                     className="w-full h-14 rounded-2xl bg-slate-900 font-bold text-white shadow-xl shadow-slate-900/20 hover:scale-[1.02] transition-all"
                   >
-                    {isSubmitting ? "Updating…" : "Initialize Profile"}
+                    {isSubmitting ? "Saving…" : "Set Password"}
                   </Button>
                 </form>
               </motion.div>

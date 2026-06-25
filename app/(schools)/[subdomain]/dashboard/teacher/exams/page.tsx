@@ -219,7 +219,7 @@ export default function TeacherExamsPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success("Exam deleted successfully");
+        toast.success("Exam deleted.");
         fetchExams();
       } else {
         throw new Error(result.message || "Failed to delete exam");

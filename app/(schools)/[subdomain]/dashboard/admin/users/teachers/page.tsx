@@ -126,7 +126,7 @@ export default function TeachersPage() {
     });
 
     if (result.success) {
-      toast.success("Teacher account protocols initialized.");
+      toast.success("Teacher account created.");
       setIsAddModalOpen(false);
       setFormData({ firstName: '', lastName: '', email: '', password: '', phone: '' });
       fetchTeachers();
@@ -163,14 +163,14 @@ export default function TeachersPage() {
       }
     } catch (err: any) {
       console.error(`[TeachersPage] Catch error archiving teacher:`, err);
-      toast.error(err.message || "An unexpected error occurred during archiving.");
+      toast.error(err.message || "Something went wrong while archiving.");
     }
   };
 
   const handleUnarchiveTeacher = async (userId: string) => {
     const result = await unarchiveTeacher(userId, subdomain as string);
     if (result.success) {
-      toast.success("Teacher account restored to active status.");
+      toast.success("Teacher restored.");
       fetchTeachers();
     } else {
       toast.error(result.error);
@@ -201,7 +201,7 @@ export default function TeachersPage() {
     setIsResetting(true);
     const result = await resetUserPassword(selectedTeacher.id, newPassword, subdomain as string);
     if (result.success) {
-      toast.success(`Password for ${selectedTeacher.full_name} has been updated.`);
+      toast.success(`Password updated for ${selectedTeacher.full_name}.`);
       setIsResetModalOpen(false);
       setNewPassword('');
       setConfirmPassword('');
@@ -232,7 +232,7 @@ export default function TeachersPage() {
     
     const result = await deletePendingTeacher(userId, subdomain as string);
     if (result.success) {
-      toast.success("Pending teacher has been permanently deleted.");
+      toast.success("Pending teacher deleted.");
       fetchTeachers();
     } else {
       toast.error(result.error || "Failed to delete pending teacher");
@@ -251,8 +251,8 @@ export default function TeachersPage() {
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-glow">Professional Teachers</h1>
-          <p className="text-muted-foreground mt-1">Manage teaching staff and institutional access levels.</p>
+          <h1 className="text-3xl font-black tracking-tighter text-glow">Teachers</h1>
+          <p className="text-muted-foreground mt-1">Manage your teaching staff and their access.</p>
         </div>
 
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -267,7 +267,7 @@ export default function TeachersPage() {
               <DialogHeader className="p-6 pb-0">
                 <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Register New Teacher</DialogTitle>
                 <DialogDescription className="text-slate-500">
-                  Configure login credentials and personal records for the new teacher.
+                  Set up the new teacher's login and contact details.
                 </DialogDescription>
               </DialogHeader>
               
@@ -335,7 +335,7 @@ export default function TeachersPage() {
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
                   <AlertCircle className="size-5 text-primary shrink-0 mt-0.5" />
                   <div className="text-[11px] leading-relaxed text-slate-600">
-                    <span className="font-bold text-primary italic">Note:</span> Subject and Class assignments can be configured from the <Link href="/dashboard/admin/academics" className="text-primary hover:underline font-bold">Academics Portal</Link> or the teacher's individual profile once subjects are established.
+                    <span className="font-bold text-primary italic">Note:</span> You can assign subjects and classes from the <Link href="/dashboard/admin/academics" className="text-primary hover:underline font-bold">Academics</Link> or the teacher's profile after adding subjects.
                   </div>
                 </div>
               </div>
@@ -346,7 +346,7 @@ export default function TeachersPage() {
                   disabled={isSubmitting}
                   className="w-full h-12 rounded-xl gradient-brand font-bold text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
                 >
-                  {isSubmitting ? "Initializing Account..." : "Confirm Teacher Addition"}
+                  {isSubmitting ? "Adding teacher..." : "Add Teacher"}
                 </Button>
               </DialogFooter>
             </form>
@@ -360,7 +360,7 @@ export default function TeachersPage() {
               <DialogHeader className="p-6 pb-0">
                 <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">Reset Password</DialogTitle>
                 <DialogDescription>
-                  Updating access credentials for <span className="font-bold text-primary">{selectedTeacher?.full_name}</span>.
+                  Set a new password for <span className="font-bold text-primary">{selectedTeacher?.full_name}</span>.
                 </DialogDescription>
               </DialogHeader>
 
@@ -495,7 +495,7 @@ export default function TeachersPage() {
                 <TableCell colSpan={5} className="h-64 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <Users className="size-12 text-muted/20" />
-                    <p className="text-muted-foreground font-medium italic">No teachers found matching your search.</p>
+                    <p className="text-muted-foreground font-medium italic">No teachers match your search.</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -554,7 +554,7 @@ export default function TeachersPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 border-primary/20 glass-panel">
-                          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Teacher Management</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black text-primary/70">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator className="bg-primary/10" />
                           <DropdownMenuItem 
                             className="gap-2 text-xs font-medium cursor-pointer"

@@ -226,7 +226,7 @@ export function ManageSubjectTeachersModal({
       const res = await saveClassSubjectAssignments(classData.id, payload, schoolId, subdomain);
       if (res.error) throw new Error(res.error);
 
-      toast.success("Subject teacher assignments updated successfully!");
+      toast.success("Subject teachers updated.");
       onSuccess?.();
       onClose();
     } catch (error: any) {

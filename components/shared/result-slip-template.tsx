@@ -241,7 +241,7 @@ export const ResultSlipPDF = ({ student, results, term, year }: ResultSlipPDFPro
         color: "#94a3b8",
         fontStyle: "italic" 
       }}>
-        This is a digitally generated document. Verified by Klaxtrix Academy Internal Ledger.
+        This is a generated document. Verified by Klaxtrix Academy.
       </Text>
     </Page>
   </Document>

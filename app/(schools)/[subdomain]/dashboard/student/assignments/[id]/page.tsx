@@ -81,12 +81,12 @@ export default function StudentAssignmentDetailsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <Loader2 className="size-16 animate-spin text-primary/30" />
-        <p className="text-muted-foreground font-black animate-pulse uppercase tracking-[0.2em]">Briefing Mission...</p>
+        <p className="text-muted-foreground font-black animate-pulse uppercase tracking-[0.2em]">Loading assignment...</p>
       </div>
     );
   }
 
-  if (!assignment) return <div className="p-20 text-center">Task unavailable.</div>;
+  if (!assignment) return <div className="p-20 text-center">Couldn't load this assignment.</div>;
 
   const isGraded = submission?.status === 'graded';
   const isPastDue = new Date(assignment.dueDate) < new Date();
@@ -103,7 +103,7 @@ export default function StudentAssignmentDetailsPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div>
-           <h1 className="text-4xl font-black tracking-tight text-primary uppercase italic">Mission Brief</h1>
+           <h1 className="text-4xl font-black tracking-tight text-primary uppercase italic">Assignment</h1>
            <p className="text-muted-foreground font-bold opacity-80 uppercase tracking-widest text-[10px]">Assignment ID: {params.id}</p>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function StudentAssignmentDetailsPage() {
               <div className="h-3 bg-primary" />
               <CardHeader className="p-10 pb-0">
                  <div className="flex items-center justify-between gap-4 mb-6">
-                    <Badge className="rounded-full px-4 py-1.5 bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">Instruction Set</Badge>
+                    <Badge className="rounded-full px-4 py-1.5 bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest">Instructions</Badge>
                     <div className="flex items-center gap-2 text-xs font-black text-muted-foreground uppercase opacity-40">
                        <Target className="size-4" /> {assignment.totalPoints} Points Available
                     </div>
@@ -142,7 +142,7 @@ export default function StudentAssignmentDetailsPage() {
                        </div>
                        <div>
                           <p className="text-[9px] font-black uppercase text-muted-foreground opacity-50">Status</p>
-                          <p className="text-sm font-bold uppercase tracking-tight">{submission ? submission.status : "Awaiting Submission"}</p>
+                          <p className="text-sm font-bold uppercase tracking-tight">{submission ? submission.status : "Not submitted"}</p>
                        </div>
                     </div>
                  </div>
@@ -153,7 +153,7 @@ export default function StudentAssignmentDetailsPage() {
              <Card className="border-none shadow-3xl bg-card/40 backdrop-blur-xl rounded-[3rem] p-10 space-y-8">
                 <div className="flex items-center justify-between">
                    <h3 className="text-2xl font-black uppercase tracking-tighter">My Submission</h3>
-                   <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black px-4 py-1.5 rounded-full uppercase tracking-widest text-[9px]">Deployed</Badge>
+                   <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black px-4 py-1.5 rounded-full uppercase tracking-widest text-[9px]">Submitted</Badge>
                 </div>
                 <div className="p-8 bg-background/50 rounded-[2rem] border border-border/50 relative">
                    <div className="absolute top-6 right-8 opacity-10">
@@ -168,8 +168,8 @@ export default function StudentAssignmentDetailsPage() {
                            <Trophy className="size-8" />
                         </div>
                         <div>
-                           <h4 className="text-2xl font-black tracking-tight">Academic Grade</h4>
-                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Faculty Evaluation Complete</p>
+                           <h4 className="text-2xl font-black tracking-tight">Your Grade</h4>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Marked by your teacher</p>
                         </div>
                      </div>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -182,7 +182,7 @@ export default function StudentAssignmentDetailsPage() {
                               <MessageSquare className="size-4 text-primary opacity-60" />
                               <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Instructor Feedback</span>
                            </div>
-                           <p className="text-sm font-bold italic opacity-90 leading-relaxed">"{submission.feedback || "Great work, continue the momentum!"}"</p>
+                           <p className="text-sm font-bold italic opacity-90 leading-relaxed">"{submission.feedback || "Great work!"}"</p>
                         </div>
                      </div>
                   </div>
@@ -197,8 +197,8 @@ export default function StudentAssignmentDetailsPage() {
                 <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:scale-125 transition-transform duration-1000">
                    <Send size={200} />
                 </div>
-                <h3 className="text-3xl font-black tracking-tighter leading-tight italic">Ready to Execute?</h3>
-                <p className="mt-4 text-white/80 font-bold text-sm leading-relaxed mb-10">Deploy your findings before the deadline to ensure your grade is registered in the system.</p>
+                <h3 className="text-3xl font-black tracking-tighter leading-tight italic">Ready to submit?</h3>
+                <p className="mt-4 text-white/80 font-bold text-sm leading-relaxed mb-10">Submit your work before the deadline so it counts toward your grade.</p>
                 
                 {isPastDue ? (
                   <div className="p-4 bg-rose-500/20 backdrop-blur-md rounded-2xl border border-rose-500/30 flex items-center gap-3">
@@ -218,7 +218,7 @@ export default function StudentAssignmentDetailsPage() {
 
            <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl p-8 rounded-[2.5rem] space-y-6">
               <div>
-                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Integrity Guide</h4>
+                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Before you submit</h4>
                  <div className="space-y-4">
                     <div className="flex gap-4">
                        <div className="size-2 rounded-full bg-primary mt-1.5" />
@@ -226,7 +226,7 @@ export default function StudentAssignmentDetailsPage() {
                     </div>
                     <div className="flex gap-4">
                        <div className="size-2 rounded-full bg-primary mt-1.5" />
-                       <p className="text-xs font-bold opacity-70">All work is scanned for academic integrity.</p>
+                       <p className="text-xs font-bold opacity-70">Your work is checked for plagiarism.</p>
                     </div>
                     <div className="flex gap-4">
                        <div className="size-2 rounded-full bg-primary mt-1.5" />

@@ -150,7 +150,7 @@ export default function AdminCommunicationsPage() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Announcement posted successfully!");
+        toast.success("Announcement posted.");
         setTitle("");
         setMessage("");
         fetchHistory();
@@ -199,7 +199,7 @@ export default function AdminCommunicationsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Announcement updated successfully!");
+        toast.success("Announcement updated.");
         setEditingItem(null);
         fetchHistory();
       } else {
@@ -228,7 +228,7 @@ export default function AdminCommunicationsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Announcement deleted successfully!");
+        toast.success("Announcement deleted.");
         setDeletingId(null);
         fetchHistory();
       } else {
@@ -249,7 +249,7 @@ export default function AdminCommunicationsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Announcements</h1>
           <p className="text-muted-foreground mt-1.5 text-base font-normal max-w-2xl">
-            Dispatch official announcements and notice board updates to the school ecosystem.
+            Send announcements and notice board updates to your school.
           </p>
         </div>
         <div className="size-12 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10 shadow-sm">
@@ -273,7 +273,7 @@ export default function AdminCommunicationsPage() {
                 <Input 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Mid-Term Break Commencement"
+                  placeholder="e.g. Mid-Term Break Starts"
                   className="h-11 rounded-lg border-border focus-visible:ring-primary focus-visible:border-primary text-sm font-medium px-4 bg-background"
                 />
               </div>
@@ -313,7 +313,7 @@ export default function AdminCommunicationsPage() {
                   {!isSMSConfigured && (
                     <div className="flex items-center gap-1.5 text-[10px] font-medium text-amber-600 mt-1">
                       <AlertTriangle className="size-3" />
-                      SMS Gateway is not configured. Direct SMS options are disabled.
+                      SMS isn't set up yet, so direct SMS options are turned off.
                     </div>
                   )}
                 </div>
@@ -364,7 +364,7 @@ export default function AdminCommunicationsPage() {
               ) : history.length === 0 ? (
                 <div className="py-20 text-center opacity-30">
                   <MessageSquare className="size-12 mx-auto mb-3 text-muted-foreground" />
-                  <p className="font-semibold text-xs text-muted-foreground">No announcement records</p>
+                  <p className="font-semibold text-xs text-muted-foreground">No announcements yet</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
@@ -388,7 +388,7 @@ export default function AdminCommunicationsPage() {
         <DialogContent className="max-w-lg rounded-2xl border bg-card p-6 shadow-lg">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl font-bold text-foreground">Edit Announcement</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">Modify the announcement details. Changes will propagate system-wide.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Edit the announcement. Changes apply everywhere it was sent.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -459,7 +459,7 @@ export default function AdminCommunicationsPage() {
         <DialogContent className="max-w-md rounded-2xl border bg-card p-6 shadow-lg">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl font-bold text-foreground">Confirm Deletion</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">Are you sure you want to delete this announcement? This action will cascade and remove all in-app notifications sent to target users, and cannot be undone.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Are you sure you want to delete this announcement? This will also remove the notifications already sent to people, and it can't be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-3 mt-4 justify-end">
             <Button variant="outline" onClick={() => setDeletingId(null)} className="h-11 rounded-lg font-medium text-sm px-6">

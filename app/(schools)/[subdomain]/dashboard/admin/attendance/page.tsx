@@ -140,8 +140,8 @@ export default function AdminAttendanceDashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden relative">
         <div className="z-10">
-          <h1 className="text-5xl font-black tracking-tighter text-primary">Attendance Intelligence</h1>
-          <p className="text-muted-foreground mt-2 text-xl font-medium">School-wide presence monitoring and trend analysis.</p>
+          <h1 className="text-5xl font-black tracking-tighter text-primary">Attendance</h1>
+          <p className="text-muted-foreground mt-2 text-xl font-medium">See attendance across the whole school.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-4 z-10">
@@ -161,7 +161,7 @@ export default function AdminAttendanceDashboard() {
           </div>
 
           <div className="space-y-1.5 font-bold">
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">Archive Date</label>
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">Date</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input 
@@ -198,7 +198,7 @@ export default function AdminAttendanceDashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <CardTitle className="text-3xl font-black tracking-tight">Daily Roll Call</CardTitle>
-              <CardDescription className="text-lg font-medium opacity-80">Roster for {new Date(date).toDateString()} (Total Records: {summary.length})</CardDescription>
+              <CardDescription className="text-lg font-medium opacity-80">Roster for {new Date(date).toDateString()} • {summary.length} students</CardDescription>
             </div>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
@@ -215,7 +215,7 @@ export default function AdminAttendanceDashboard() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 gap-6">
               <Loader2 className="size-16 animate-spin text-primary opacity-20" />
-              <p className="text-muted-foreground font-bold text-xl animate-pulse">Analyzing roll call...</p>
+              <p className="text-muted-foreground font-bold text-xl animate-pulse">Loading roll call...</p>
             </div>
           ) : (
             <Table>
@@ -232,7 +232,7 @@ export default function AdminAttendanceDashboard() {
                 {filteredSummary.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="py-32 text-center text-muted-foreground italic text-xl">
-                      No attendance records discovered for this session.
+                      No attendance taken on this date.
                     </TableCell>
                   </TableRow>
                 ) : (

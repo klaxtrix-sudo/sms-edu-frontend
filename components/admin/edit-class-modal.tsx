@@ -95,7 +95,7 @@ export function EditClassModal({ isOpen, onClose, onSuccess, schoolId, initialDa
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Class updated successfully!");
+        toast.success("Class updated.");
         onSuccess();
         onClose();
       }

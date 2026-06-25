@@ -227,7 +227,7 @@ export default function TeacherDashboardPage() {
         console.error("Failed to fetch bulletins:", e);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to sync teacher dashboard");
+      toast.error(error.message || "Failed to load your dashboard.");
     } finally {
       setLoading(false);
     }
@@ -277,7 +277,7 @@ export default function TeacherDashboardPage() {
         <div className="py-40 flex flex-col items-center gap-4">
           <Loader2 className="size-16 animate-spin text-primary/20" />
           <p className="font-semibold text-muted-foreground animate-pulse tracking-wider text-xs">
-            Syncing Teacher Intelligence...
+            Loading your dashboard...
           </p>
         </div>
       ) : (
@@ -394,7 +394,7 @@ export default function TeacherDashboardPage() {
                     Quick Actions
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">
-                    Access common administrative tasks.
+                    Quick links to everyday tasks.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 pt-0 space-y-3 flex-1 flex flex-col justify-start">
@@ -437,8 +437,8 @@ export default function TeacherDashboardPage() {
             <CardContent className="p-6 pt-0">
               {formClasses.length === 0 ? (
                 <div className="p-6 border border-dashed border-border/80 rounded-xl text-center text-muted-foreground">
-                  <p className="font-semibold text-sm">You are not designated as Form Teacher for any classes.</p>
-                  <p className="text-xs text-muted-foreground/80 mt-0.5">Contact the administrator to assign you a form classroom.</p>
+                  <p className="font-semibold text-sm">You're not the form teacher for any classes yet.</p>
+                  <p className="text-xs text-muted-foreground/80 mt-0.5">Ask an admin to assign you a class.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -462,7 +462,7 @@ export default function TeacherDashboardPage() {
                         </div>
                         <h4 className="text-base font-semibold mb-1">Daily Attendance Tracker</h4>
                         <p className="text-xs text-muted-foreground mb-4">
-                          Check student presence logs for the school calendar day.
+                          See who was present today.
                         </p>
                         
                         {status.marked ? (
@@ -505,7 +505,7 @@ export default function TeacherDashboardPage() {
             )}>
               {recentAssignments.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-xs font-medium w-full col-span-3">
-                  No active assignments listed.
+                  No assignments yet.
                 </div>
               ) : (
                 recentAssignments.map((task) => (
@@ -548,7 +548,7 @@ export default function TeacherDashboardPage() {
             )}>
               {bulletins.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-xs font-medium w-full col-span-3">
-                  No active notices listed.
+                  No notices yet.
                 </div>
               ) : (
                 bulletins.slice(0, 3).map((bulletin) => (

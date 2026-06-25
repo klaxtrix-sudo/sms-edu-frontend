@@ -104,14 +104,14 @@ export default function SetupWizardPage() {
     // Phase-based validation
     if (currentStep === 0) {
       if (!formData.state || !formData.lga || !formData.officialEmail) {
-        toast.error("Please complete all mandatory Identity fields (State, LGA, Email).");
+        toast.error("Please fill in State, LGA, and Email.");
         return;
       }
     }
     
     if (currentStep === 1) {
       if (!formData.schoolType || !formData.academicYear || !formData.currentTerm) {
-        toast.error("Please select all mandatory Academic configurations.");
+        toast.error("Please pick a school type, year, and term.");
         return;
       }
     }
@@ -125,7 +125,7 @@ export default function SetupWizardPage() {
 
   const handleCompleteSetup = async () => {
     if (!supabase || !tenant) {
-      toast.error('System synchronization error. Please try again.');
+      toast.error('Something went wrong. Please try again.');
       return;
     }
 
@@ -134,7 +134,7 @@ export default function SetupWizardPage() {
       // 1. If logo was selected, upload it to Storage first to get a public URL
       let logoUrl = logoPreview;
       if (logoPreview && logoPreview.startsWith('data:image/')) {
-        toast.loading('Uploading institutional logo...', { id: 'setup' });
+        toast.loading('Uploading logo...', { id: 'setup' });
         const uploadResult = await uploadSchoolLogo(tenant.id, logoPreview);
         if (uploadResult.success && uploadResult.publicUrl) {
           logoUrl = uploadResult.publicUrl;
@@ -146,17 +146,17 @@ export default function SetupWizardPage() {
 
       // 2. Perform a secure synchronized setup via the backend server action
       // This bypasses RLS recursion issues by using Service Role Keys server-side.
-      toast.loading('Synchronizing institutional protocols...', { id: 'setup' });
+      toast.loading('Saving your school details...', { id: 'setup' });
       const result = await completeSchoolSetup(subdomain, tenant.id, {
         ...formData,
         logoUrl
       });
 
       if (!result.success) {
-        throw new Error(result.error || 'Central database synchronization failed');
+        throw new Error(result.error || 'We couldn\'t finish setup. Please try again.');
       }
 
-      toast.success('Institutional protocols synchronized successfully!', { id: 'setup' });
+      toast.success('Setup complete! Your school is ready.', { id: 'setup' });
       
       // Use a hard navigation so the middleware re-fetches is_setup_completed: true
       // from the backend cleanly, rather than re-running against a stale client-side cache.
@@ -189,7 +189,7 @@ export default function SetupWizardPage() {
           >
             <div className="space-y-1">
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Identity</h2>
-              <p className="text-slate-500 font-medium">Define your school's brand and physical presence.</p>
+              <p className="text-slate-500 font-medium">Add your school's logo and contact details.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
@@ -267,7 +267,7 @@ export default function SetupWizardPage() {
                           <>
                             <Camera className="size-6 text-slate-400 group-hover:text-primary transition-colors mb-1" />
                             <div className="text-center space-y-1">
-                              <span className="text-[10px] font-black uppercase text-slate-900 block">Capture Brand Asset</span>
+                              <span className="text-[10px] font-black uppercase text-slate-900 block">Upload School Logo</span>
                               <div className="flex flex-col gap-0.5 opacity-60">
                                 <p className="text-[8px] font-bold uppercase text-slate-500">• Max 500 KB • Min 200px</p>
                                 <p className="text-[8px] font-bold uppercase text-slate-500">• PNG, SVG or WebP</p>
@@ -292,7 +292,7 @@ export default function SetupWizardPage() {
           >
             <div className="space-y-1">
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Academic</h2>
-              <p className="text-slate-500 font-medium">Configure your institution's operational scope.</p>
+              <p className="text-slate-500 font-medium">Tell us about your school's academic year.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
@@ -307,7 +307,7 @@ export default function SetupWizardPage() {
                       <SelectItem value="nursery">Early Childhood (Nursery/Pre-school)</SelectItem>
                       <SelectItem value="primary">Lower Basic (Primary)</SelectItem>
                       <SelectItem value="secondary">Middle/Upper Basic (Secondary)</SelectItem>
-                      <SelectItem value="all-in-one">Comprehensive (All-in-one)</SelectItem>
+                      <SelectItem value="all-in-one">All-in-one</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -354,7 +354,7 @@ export default function SetupWizardPage() {
           >
             <div className="space-y-1">
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Financial</h2>
-              <p className="text-slate-500 font-medium">Standardize your institutional billing protocols.</p>
+              <p className="text-slate-500 font-medium">Add your school's bank details (optional).</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
@@ -371,7 +371,7 @@ export default function SetupWizardPage() {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Name (Optional)</Label>
                   <Input 
-                    placeholder="Institutional Account Title" 
+                    placeholder="e.g. Klaxtrix Academy" 
                     value={formData.accountName}
                     onChange={e => update('accountName', e.target.value)}
                     className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"
@@ -410,14 +410,14 @@ export default function SetupWizardPage() {
               />
             </div>
             <div className="space-y-2">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Institutional Sync Ready</h2>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Ready to Finish</h2>
               <p className="text-slate-500 font-medium max-w-md mx-auto">
-                Your school's protocols have been mapped. Finalize the synchronization to activate your executive command center.
+                Everything looks good. Click below to finish and open your dashboard.
               </p>
             </div>
             
             <Badge variant="outline" className="py-2 px-6 border-slate-200 bg-white shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-600 gap-2">
-              <Sparkles className="size-3 text-amber-500" /> All protocols verified
+              <Sparkles className="size-3 text-amber-500" /> All set
             </Badge>
           </motion.div>
         );
@@ -485,7 +485,7 @@ export default function SetupWizardPage() {
                        {isSubmitting ? (
                          <Loader2 className="size-4 animate-spin" />
                        ) : (
-                         <>Synchronize & Launch <Save className="size-4 group-hover:translate-x-1 transition-transform" /></>
+                         <>Finish Setup <Save className="size-4 group-hover:translate-x-1 transition-transform" /></>
                        )}
                      </Button>
                    ) : (
@@ -493,7 +493,7 @@ export default function SetupWizardPage() {
                        onClick={handleNext}
                        className="px-10 h-14 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg gap-3 active:scale-95 group"
                      >
-                       Proceed to {STEPS[currentStep + 1].title} <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                       Continue to {STEPS[currentStep + 1].title} <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                      </Button>
                    )}
                 </div>
@@ -503,7 +503,7 @@ export default function SetupWizardPage() {
 
         {/* Support Section */}
         <p className="text-center mt-10 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] opacity-60">
-           Need assistance? Contact Klaxtrix Protocol Support • protocol@klaxtrix.com
+           Need help? Contact support@klaxtrix.com
         </p>
       </div>
     </div>

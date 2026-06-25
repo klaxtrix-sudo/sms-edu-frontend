@@ -55,9 +55,9 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter text-primary italic uppercase">Executive Intelligence</h1>
+          <h1 className="text-5xl font-black tracking-tighter text-primary italic uppercase">School Analytics</h1>
           <p className="text-muted-foreground mt-2 text-xl font-medium max-w-2xl opacity-80">
-            Real-time institutional performance metrics across attendance, academics, and financial operations.
+            See how your school is doing across attendance, academics, and fees.
           </p>
         </div>
         
@@ -116,14 +116,14 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-[3rem] overflow-hidden">
            <CardHeader className="p-10 pb-0">
-              <CardTitle className="text-4xl font-black tracking-tighter uppercase italic text-primary">Performance Trajectory</CardTitle>
-              <CardDescription className="text-lg font-medium opacity-80">Institutional growth and metric scaling over current term.</CardDescription>
+              <CardTitle className="text-4xl font-black tracking-tighter uppercase italic text-primary">Performance Trends</CardTitle>
+              <CardDescription className="text-lg font-medium opacity-80">How your school has grown this term.</CardDescription>
            </CardHeader>
            <CardContent className="p-10 pt-10 h-[400px] flex items-center justify-center bg-gradient-to-t from-primary/5 to-transparent">
               {loading ? (
                 <div className="flex flex-col items-center gap-4">
                    <Loader2 className="size-16 animate-spin text-primary opacity-20" />
-                   <span className="text-xl font-black text-muted-foreground animate-pulse tracking-widest uppercase">Synthesizing Data...</span>
+                   <span className="text-xl font-black text-muted-foreground animate-pulse tracking-widest uppercase">Loading chart...</span>
                 </div>
               ) : (
                 <div className="w-full h-full flex items-end justify-around gap-4 pb-10">
@@ -148,7 +148,7 @@ export default function AdminAnalyticsPage() {
         <Card className="lg:col-span-1 border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-[3rem] p-10 flex flex-col justify-between">
            <div>
               <CardTitle className="text-3xl font-black tracking-tighter uppercase italic text-primary mb-2">Priority Alerts</CardTitle>
-              <CardDescription className="text-base font-medium opacity-80 mb-10">Metrics requiring immediate administrative oversight.</CardDescription>
+              <CardDescription className="text-base font-medium opacity-80 mb-10">Things that may need your attention.</CardDescription>
               
               <div className="space-y-6">
                  <div className="p-6 bg-rose-500/10 rounded-3xl border border-rose-500/20 flex items-start gap-4 animate-pulse">
@@ -167,13 +167,13 @@ export default function AdminAnalyticsPage() {
                     </div>
                     <div>
                        <h5 className="text-sm font-black text-amber-600 uppercase tracking-widest">Fee Collection</h5>
-                       <p className="text-xs font-bold text-amber-500 mt-1">85% of Term 2 fees successfully processed via Paystack.</p>
+                       <p className="text-xs font-bold text-amber-500 mt-1">85% of Term 2 fees paid via Paystack.</p>
                     </div>
                  </div>
               </div>
            </div>
 
-           <Button className="w-full h-16 rounded-[1.5rem] font-black text-xl shadow-2xl shadow-primary/20 mt-10 uppercase italic">Deploy Term Report</Button>
+           <Button className="w-full h-16 rounded-[1.5rem] font-black text-xl shadow-2xl shadow-primary/20 mt-10 uppercase italic">Generate Term Report</Button>
         </Card>
       </div>
     </div>

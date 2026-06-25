@@ -122,7 +122,7 @@ export default function StudentFinancePage() {
           setPayingId(null);
         },
         callback: (response: any) => {
-          toast.success("Payment initiated! Verification in progress...");
+          toast.success("Payment received! We're confirming it...");
           fetchData(); // Refresh history
           setPayingId(null);
         }
@@ -139,7 +139,7 @@ export default function StudentFinancePage() {
     <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700">
       <div>
         <h1 className="text-4xl font-black tracking-tight text-primary">Fees & Payments</h1>
-        <p className="text-muted-foreground mt-2 text-lg font-medium italic">Manage your school obligations and view billing history.</p>
+        <p className="text-muted-foreground mt-2 text-lg font-medium italic">See your fees and payment history.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -160,7 +160,7 @@ export default function StudentFinancePage() {
                     <CheckCircle2 className="size-8 text-muted-foreground opacity-50" />
                   </div>
                   <h3 className="text-lg font-bold">You're all clear!</h3>
-                  <p className="text-muted-foreground mt-1 px-10">No pending fee structures found for your class this term.</p>
+                  <p className="text-muted-foreground mt-1 px-10">No fees due for your class this term.</p>
                 </div>
               ) : (
                 feeStructures.map((fs) => {
@@ -177,7 +177,7 @@ export default function StudentFinancePage() {
                           </Badge>
                           {isPaid && (
                             <Badge className="bg-green-500 hover:bg-green-600 text-white font-bold tracking-tight rounded-full px-2 py-0 border-none animate-in zoom-in">
-                              SUCCESSFUL
+                               Paid
                             </Badge>
                           )}
                         </div>
@@ -198,7 +198,7 @@ export default function StudentFinancePage() {
                           ) : (
                             <ShieldCheck className="size-5 mr-2" />
                           )}
-                          {isPaid ? "Payment Receipted" : "Pay School Fees"}
+                          {isPaid ? "Paid" : "Pay School Fees"}
                           {!isPaid && !payingId && <ArrowRight className="size-4 ml-auto opacity-50 group-hover:translate-x-1 transition-transform" />}
                         </Button>
                       </CardContent>
@@ -227,9 +227,9 @@ export default function StudentFinancePage() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 animate-pulse text-muted-foreground font-medium italic">Synchronizing ledger...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 animate-pulse text-muted-foreground font-medium italic">Loading payments...</TableCell></TableRow>
                   ) : history.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic opacity-50 font-medium">No prior transactions found.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic opacity-50 font-medium">No payments yet.</TableCell></TableRow>
                   ) : (
                     history.map((h) => (
                       <TableRow key={h.id} className="hover:bg-accent/30 transition-colors group">
@@ -284,7 +284,7 @@ export default function StudentFinancePage() {
           
           <div className="p-1 px-4 bg-accent/20 rounded-full flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-muted-foreground border border-border/50">
             <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
-            Live Billing Server Status: Optimal
+            Payments online
           </div>
         </div>
       </div>

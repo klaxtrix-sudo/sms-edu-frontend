@@ -159,7 +159,7 @@ export default function TeacherAssignmentsPage() {
           <div className="size-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
             <BookOpen className="size-10 text-primary opacity-40" />
           </div>
-          <h3 className="text-2xl font-black tracking-tight">No Assignments Found</h3>
+          <h3 className="text-2xl font-black tracking-tight">No assignments yet</h3>
           <p className="text-muted-foreground mt-2 max-w-xs mx-auto font-medium">Your course list is currently empty. Start by creating a new assignment!</p>
           <Button className="mt-8 rounded-2xl font-bold px-8 h-12 shadow-xl shadow-primary/20" onClick={() => fetchAssignments()}>Refresh Hub</Button>
         </div>

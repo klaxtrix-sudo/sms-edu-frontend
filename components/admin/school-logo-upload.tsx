@@ -42,7 +42,7 @@ export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUpload
           const result = await uploadSchoolLogo(schoolId, base64String);
           if (result.success && result.publicUrl) {
             onChange(result.publicUrl);
-            toast.success("Logo uploaded successfully");
+            toast.success("Logo uploaded.");
           } else {
             toast.error(result.error || "Failed to upload logo");
           }

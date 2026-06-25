@@ -167,7 +167,7 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
       const result = await response.json();
       if (!result.success) throw new Error(result.message || "Failed to create exam");
 
-      toast.success("Exam created successfully in draft mode!");
+      toast.success("Exam created as a draft.");
       onSuccess();
       onOpenChange(false);
       form.reset();

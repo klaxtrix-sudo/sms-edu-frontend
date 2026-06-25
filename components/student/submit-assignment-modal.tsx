@@ -78,7 +78,7 @@ export function SubmitAssignmentModal({ assignmentId, isOpen, onClose, onSuccess
       const result = await res.json();
       if (!result.success) throw new Error(result.message);
 
-      toast.success("Mission accomplished! Your work has been submitted.");
+      toast.success("Submitted! Your work is in.");
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -96,8 +96,8 @@ export function SubmitAssignmentModal({ assignmentId, isOpen, onClose, onSuccess
               <Send size={150} color="white" />
            </div>
            <div>
-              <DialogTitle className="text-3xl font-black tracking-tighter text-white uppercase italic">Deploy Submission</DialogTitle>
-              <DialogDescription className="text-white/70 font-bold mt-1 uppercase tracking-widest text-[10px]">Uploading work for evaluation...</DialogDescription>
+              <DialogTitle className="text-3xl font-black tracking-tighter text-white uppercase italic">Submit Assignment</DialogTitle>
+              <DialogDescription className="text-white/70 font-bold mt-1 uppercase tracking-widest text-[10px]">Send your work to your teacher.</DialogDescription>
            </div>
         </div>
 
@@ -109,10 +109,10 @@ export function SubmitAssignmentModal({ assignmentId, isOpen, onClose, onSuccess
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Project Detail / Response</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Your Answer</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Draft your solution, explain your methodology, or paste your findings here..." 
+                        placeholder="Write your answer here..." 
                         className="min-h-[250px] bg-background/50 border-none ring-1 ring-border rounded-3xl font-medium shadow-inner p-6 leading-relaxed resize-none focus:ring-primary"
                         {...field} 
                       />
@@ -126,7 +126,7 @@ export function SubmitAssignmentModal({ assignmentId, isOpen, onClose, onSuccess
                   <div className="size-12 rounded-full bg-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       <Paperclip className="size-6 text-primary" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-widest opacity-40">Drop additional assets (Coming Soon)</span>
+                  <span className="text-xs font-black uppercase tracking-widest opacity-40">Add attachments (Coming soon)</span>
               </div>
 
               <DialogFooter>
@@ -140,7 +140,7 @@ export function SubmitAssignmentModal({ assignmentId, isOpen, onClose, onSuccess
                   ) : (
                     <Send className="mr-3 size-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                   )}
-                  Execute Submission
+                  Submit
                 </Button>
               </DialogFooter>
             </form>

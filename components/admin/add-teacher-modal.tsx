@@ -64,7 +64,7 @@ export function AddTeacherModal({ isOpen, onClose, onSuccess, schoolId, subdomai
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Teacher account created successfully!");
+        toast.success("Teacher account created.");
         form.reset();
         onSuccess();
         onClose();

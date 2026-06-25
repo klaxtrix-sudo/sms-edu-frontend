@@ -84,7 +84,7 @@ export default function FinanceDashboard() {
 
       setStats(calculatedStats);
     } catch (error) {
-      toast.error("Failed to load financial records");
+      toast.error("Failed to load payments.");
     } finally {
       setLoading(false);
     }
@@ -107,13 +107,13 @@ export default function FinanceDashboard() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider mb-2">
-              Revenue Alpha
+              Finance
             </Badge>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
               Fee <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Management</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl font-medium">
-              Overseeing the financial health of your institution. Track revenue trends and manage academic fee structures with precision.
+              Track school fees, revenue, and pending payments.
             </p>
           </div>
           <AddFeeStructureModal onSuccess={fetchFinanceData} />
@@ -148,7 +148,7 @@ export default function FinanceDashboard() {
         <MetricCard 
           title="Pending Collections" 
           value={formatNGN(stats.pendingAmount)} 
-          subText={`Potential collections from ${stats.totalCount - stats.successCount} pending records`}
+          subText={`From ${stats.totalCount - stats.successCount} pending payments`}
           icon={Clock}
           color="orange"
         />
@@ -156,7 +156,7 @@ export default function FinanceDashboard() {
         <MetricCard 
           title="Success Rate" 
           value={`${stats.totalCount > 0 ? Math.round((stats.successCount / stats.totalCount) * 100) : 0}%`} 
-          subText="Transaction completion fidelity"
+          subText="Share of payments that completed"
           icon={CheckCircle2}
           color="green"
         />
@@ -164,7 +164,7 @@ export default function FinanceDashboard() {
         <MetricCard 
           title="Active Payees" 
           value={stats.successCount.toString()} 
-          subText="Unique fee payment records"
+          subText="Students who have paid"
           icon={Users}
           color="blue"
         />
@@ -177,8 +177,8 @@ export default function FinanceDashboard() {
               <Activity className="size-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-black">Transaction Ledger</h2>
-              <p className="text-sm text-muted-foreground font-medium italic opacity-70">A real-time log of administrative academic collections.</p>
+              <h2 className="text-2xl font-black">Payment History</h2>
+              <p className="text-sm text-muted-foreground font-medium italic opacity-70">Every payment your school has received.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export default function FinanceDashboard() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 className="size-12 animate-spin text-primary" />
-            <p className="text-muted-foreground animate-pulse font-medium">Synchronizing transaction data...</p>
+            <p className="text-muted-foreground animate-pulse font-medium">Loading transactions...</p>
           </div>
         ) : (
             <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
@@ -219,7 +219,7 @@ export default function FinanceDashboard() {
                   {filteredPayments.length === 0 ? (
                     <TableRow className="border-white/5">
                       <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic font-medium">
-                        No financial transactions found matching your audit criteria.
+                        No payments match your search.
                       </TableCell>
                     </TableRow>
                   ) : (

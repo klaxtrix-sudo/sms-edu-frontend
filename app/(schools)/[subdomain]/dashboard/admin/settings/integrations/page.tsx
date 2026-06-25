@@ -131,8 +131,8 @@ export default function IntegrationSettings() {
     const result = await saveResendConfig(tenant.id, resendConfig, tenantCreds);
 
     if (result.success) {
-      toast.success("Institutional Email Configured", {
-        description: "Branded delivery has been verified and is now active."
+      toast.success("Email set up", {
+        description: "Your branded email is now active."
       });
       setIsResendExpanded(true);
       setSavedResendConfig(resendConfig);
@@ -158,8 +158,8 @@ export default function IntegrationSettings() {
     const result = await saveTermiiConfig(tenant.id, termiiConfig, tenantCreds);
 
     if (result.success) {
-      toast.success("Termii SMS Gateway Configured", {
-        description: "Credentials verified and active."
+      toast.success("SMS set up", {
+        description: "Your SMS credentials are verified and active."
       });
       setIsSmsEnabled(true);
       setSavedTermiiConfig(termiiConfig);
@@ -185,8 +185,8 @@ export default function IntegrationSettings() {
     const result = await savePaystackConfig(tenant.id, paystackConfig, tenantCreds);
 
     if (result.success) {
-      toast.success("Paystack Payment Engine Configured", {
-        description: "Secret key verified and active."
+      toast.success("Paystack set up", {
+        description: "Your secret key is verified and active."
       });
       setIsPaymentEnabled(true);
       setSavedPaystackConfig(paystackConfig);
@@ -265,7 +265,7 @@ export default function IntegrationSettings() {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-4">
         <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-        <p className="text-slate-400 font-medium text-sm animate-pulse">Fetching integrations status...</p>
+        <p className="text-slate-400 font-medium text-sm animate-pulse">Loading integrations...</p>
       </div>
     );
   }
@@ -279,7 +279,7 @@ export default function IntegrationSettings() {
           Platform Integrations
         </h1>
         <p className="text-slate-500 font-medium tracking-tight text-base sm:text-lg">
-          Configure institutional identity, academic cycles, and global system integration.
+          Manage your school profile, academic year, and integrations.
         </p>
       </div>
 
@@ -300,7 +300,7 @@ export default function IntegrationSettings() {
                   <Badge variant="outline" className="bg-indigo-50/50 text-indigo-600 border-indigo-100 font-extrabold text-[10px] px-2 py-0.5">Termii</Badge>
                 </div>
                 <p className="text-sm text-slate-500 font-medium tracking-tight">
-                  Power instant notifications, parent alerts, and otp deliveries via Termii SMS Gateway.
+                  Send parent alerts and OTPs via Termii SMS.
                 </p>
               </div>
             </div>
@@ -349,7 +349,7 @@ export default function IntegrationSettings() {
                 : "bg-slate-50 text-slate-400 border-slate-200"
             }`}>
               <CheckCircle2 className={`w-3.5 h-3.5 ${isSmsEnabled ? "text-emerald-500" : "text-slate-300"}`} />
-              {isSmsEnabled ? "Connected & Active" : "Config Inactive"}
+              {isSmsEnabled ? "Connected & Active" : "Not Set Up"}
             </Badge>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button 
@@ -358,7 +358,7 @@ export default function IntegrationSettings() {
                 className="w-full sm:w-auto h-12 bg-indigo-600 hover:bg-indigo-700 text-white px-6 rounded-2xl font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 active:scale-[0.98] transition-all"
               >
                 {loadingSms ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save & Verify Config
+                Save & Verify
               </Button>
               {isSmsEnabled && (
                 <Button variant="ghost" className="text-xs font-black text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all gap-2 rounded-xl px-4 py-2">
@@ -380,11 +380,11 @@ export default function IntegrationSettings() {
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Payment Engine</h2>
+                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Payments (Paystack)</h2>
                   <Badge variant="outline" className="bg-emerald-50/50 text-emerald-600 border-emerald-100 font-extrabold text-[10px] px-2 py-0.5">Paystack</Badge>
                 </div>
                 <p className="text-sm text-slate-500 font-medium tracking-tight">
-                  Collect institution tuition fees, audit financial transactions, and process payouts securely.
+                  Collect school fees and track payments securely.
                 </p>
               </div>
             </div>
@@ -419,7 +419,7 @@ export default function IntegrationSettings() {
               <div className="flex items-start gap-3 p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-2xl">
                 <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-emerald-800 font-medium leading-relaxed">
-                  Financial transactions are encrypted and audited through Paystack Infrastructure.
+                  Payments are encrypted and handled securely by Paystack.
                 </p>
               </div>
             </div>
@@ -457,7 +457,7 @@ export default function IntegrationSettings() {
                 : "bg-slate-50 text-slate-400 border-slate-200"
             }`}>
               <CheckCircle2 className={`w-3.5 h-3.5 ${isPaymentEnabled ? "text-emerald-500" : "text-slate-300"}`} />
-              {isPaymentEnabled ? "Active (Live/Test)" : "Config Inactive"}
+              {isPaymentEnabled ? "Active (Live/Test)" : "Not Set Up"}
             </Badge>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button 
@@ -466,7 +466,7 @@ export default function IntegrationSettings() {
                 className="w-full sm:w-auto h-12 bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-2xl font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 active:scale-[0.98] transition-all"
               >
                 {loadingPaystack ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save & Verify Config
+                Save & Verify
               </Button>
               {isPaymentEnabled && (
                 <Button className="h-12 bg-slate-900 hover:bg-slate-800 text-white px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
@@ -488,11 +488,11 @@ export default function IntegrationSettings() {
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Email Cloud</h2>
+                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Email (Resend)</h2>
                   <Badge variant="outline" className="bg-blue-50/50 text-blue-600 border-blue-100 font-extrabold text-[10px] px-2 py-0.5">Resend</Badge>
                 </div>
                 <p className="text-sm text-slate-500 font-medium tracking-tight">
-                  Configure custom domain emails to send branded student results, report sheets, and portal invitations.
+                  Send branded emails for results, report cards, and portal invitations from your own domain.
                 </p>
               </div>
             </div>
@@ -526,7 +526,7 @@ export default function IntegrationSettings() {
 
             {/* Institutional Sender Name */}
             <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Institutional Sender Name</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Name</Label>
               <Input 
                 value={resendConfig.fromName}
                 onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
@@ -554,7 +554,7 @@ export default function IntegrationSettings() {
                 : "bg-slate-50 text-slate-400 border-slate-200"
             }`}>
               <CheckCircle2 className={`w-3.5 h-3.5 ${isResendExpanded ? "text-blue-500" : "text-slate-300"}`} />
-              {isResendExpanded ? "Email Gateway Active" : "Config Inactive"}
+              {isResendExpanded ? "Email Gateway Active" : "Not Set Up"}
             </Badge>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button 
@@ -563,7 +563,7 @@ export default function IntegrationSettings() {
                 className="w-full sm:w-auto h-12 bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-2xl font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all"
               >
                 {loadingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save & Verify Config
+                Save & Verify
               </Button>
             </div>
           </div>

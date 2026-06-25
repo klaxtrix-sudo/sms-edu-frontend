@@ -310,7 +310,7 @@ export default function AdminResultsPage() {
       const result = await saveResults(dataToSave, subdomain);
       if (result.error) throw new Error(result.error);
       
-      toast.success("Results updated successfully!");
+      toast.success("Results saved.");
       loadMetricsAndResults(); // reload to fetch newly assigned result IDs
     } catch (error: any) {
       toast.error(error.message || "Failed to save results");
@@ -417,7 +417,7 @@ export default function AdminResultsPage() {
               className="border-primary/20 bg-background/50 hover:bg-accent"
             >
               <Settings className="mr-2 h-4 w-4 text-primary" />
-              Configure Metrics
+              Edit Weights
             </Button>
           )}
           <Button 
@@ -580,7 +580,7 @@ export default function AdminResultsPage() {
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Configure Assessment Metrics</DialogTitle>
+            <DialogTitle>Edit Grading Components</DialogTitle>
             <DialogDescription>
               Customize the distribution of evaluation marks for this class and subject. Total weight must sum to exactly 100.
             </DialogDescription>
