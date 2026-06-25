@@ -10,7 +10,8 @@ import {
   resetUserPassword,
   archiveTeacher,
   unarchiveTeacher,
-  resendTeacherCredentials
+  resendTeacherCredentials,
+  deletePendingTeacher
 } from '@/app/actions/admin-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +50,8 @@ import {
   ShieldCheck,
   Archive,
   ArchiveRestore,
-  UserX
+  UserX,
+  Trash2
 } from 'lucide-react';
 import { TeacherProfileModal } from "@/components/admin/teacher-profile-modal";
 import { toast } from 'sonner';
@@ -223,6 +225,18 @@ export default function TeachersPage() {
     }
     
     setIsResending(prev => ({ ...prev, [teacher.id]: false }));
+  };
+
+  const handleDeletePendingTeacher = async (userId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this pending teacher? This action cannot be undone.')) return;
+    
+    const result = await deletePendingTeacher(userId, subdomain as string);
+    if (result.success) {
+      toast.success("Pending teacher has been permanently deleted.");
+      fetchTeachers();
+    } else {
+      toast.error(result.error || "Failed to delete pending teacher");
+    }
   };
 
   const filteredTeachers = teachers.filter(t => {
@@ -553,13 +567,22 @@ export default function TeachersPage() {
                           </DropdownMenuItem>
                           
                           {isPendingSetup ? (
-                            <DropdownMenuItem 
-                              className="gap-2 text-xs font-medium cursor-pointer text-indigo-600 focus:text-indigo-600 focus:bg-indigo-500/10"
-                              disabled={isResending[teacher.id]}
-                              onClick={() => handleResendCredentials(teacher)}
-                            >
-                              <Mail className="size-3.5" /> {isResending[teacher.id] ? "Resending..." : "Resend Welcome Email"}
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem 
+                                className="gap-2 text-xs font-medium cursor-pointer text-indigo-600 focus:text-indigo-600 focus:bg-indigo-500/10"
+                                disabled={isResending[teacher.id]}
+                                onClick={() => handleResendCredentials(teacher)}
+                              >
+                                <Mail className="size-3.5" /> {isResending[teacher.id] ? "Resending..." : "Resend Welcome Email"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-primary/10" />
+                              <DropdownMenuItem 
+                                className="gap-2 text-xs font-bold text-red-600 focus:text-red-600 focus:bg-red-500/10 cursor-pointer"
+                                onClick={() => handleDeletePendingTeacher(teacher.id)}
+                              >
+                                <Trash2 className="size-3.5" /> Delete Pending Teacher
+                              </DropdownMenuItem>
+                            </>
                           ) : (
                             <>
                               <DropdownMenuItem 

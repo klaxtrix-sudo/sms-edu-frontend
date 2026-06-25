@@ -142,6 +142,41 @@ export async function getTeachers(schoolId: string, subdomain: string, includeAr
   }
 }
 
+export async function deletePendingTeacher(userId: string, subdomain: string) {
+  console.log(`[Admin Actions] Deleting pending teacher ${userId} in subdomain ${subdomain}`);
+  if (!subdomain) return { error: 'Subdomain is required to delete teacher.' };
+  try {
+    const tenantSupabase = await createTenantAdminClient(subdomain);
+    
+    // 1. Delete the profile explicitly to clear application data
+    const { error: profileError } = await (tenantSupabase as any)
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (profileError) {
+      console.error(`[Admin Actions] Profile deletion error:`, profileError);
+      return { error: `Profile deletion failed: ${profileError.message}` };
+    }
+
+    // 2. Delete the auth identity completely
+    const { error: authError } = await tenantSupabase.auth.admin.deleteUser(userId);
+    
+    if (authError) {
+      console.error(`[Admin Actions] Auth deletion error:`, authError);
+      return { error: `Auth deletion failed: ${authError.message}` };
+    }
+
+    console.log(`[Admin Actions] Successfully completely deleted pending teacher ${userId}`);
+    revalidatePath('/dashboard/admin/users/teachers');
+    
+    return { success: true };
+  } catch (e: any) {
+    console.error(`[Admin Actions] Catch error deleting teacher:`, e);
+    return { error: e.message || 'Failed to delete pending teacher.' };
+  }
+}
+
 export async function getClasses(schoolId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to fetch classes.' };
   try {
