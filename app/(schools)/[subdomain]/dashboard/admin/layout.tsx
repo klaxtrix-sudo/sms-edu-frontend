@@ -65,10 +65,12 @@ export default function AdminLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 text-center">
-          <div className="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-[10px] font-black uppercase text-cyan-500 tracking-[0.3em] animate-pulse">Syncing Protocols...</p>
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-semibold uppercase text-muted-foreground tracking-widest animate-pulse">
+            Loading...
+          </p>
         </div>
       </div>
     );
