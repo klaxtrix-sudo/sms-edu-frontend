@@ -272,54 +272,45 @@ export async function createTeacher(data: CreateUserData) {
         ? `https://${subdomain}.${rootDomain}/login`
         : `http://${subdomain}.${rootDomain}/login`;
 
-      // 5. Generate a one-time magic link for secure account setup (no plaintext password in email)
-      const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email,
-        options: { redirectTo: loginUrl },
-      });
-
-      let setupLink = loginUrl;
-      if (!linkError && linkData?.properties?.action_link) {
-        try {
-          const urlObj = new URL(linkData.properties.action_link);
-          const token = urlObj.searchParams.get('token');
-          const type = urlObj.searchParams.get('type') || 'magiclink';
-          
-          // Reconstruct the URL to point to our new custom frontend mask route
-          const customUrl = new URL('/api/auth/confirm', loginUrl); // loginUrl already has correct subdomain and protocol
-          if (token) customUrl.searchParams.set('token_hash', token);
-          customUrl.searchParams.set('type', type);
-          setupLink = customUrl.toString();
-        } catch (e) {
-          setupLink = linkData.properties.action_link;
+      // 5. Fetch school logo for the email template
+      let schoolLogoUrl = '';
+      try {
+        const { data: schoolData } = await tenantSupabase
+          .from('schools')
+          .select('logo_url')
+          .eq('id', schoolId)
+          .maybeSingle();
+        if (schoolData?.logo_url) {
+          schoolLogoUrl = schoolData.logo_url;
         }
-      }
-
-      if (linkError) {
-        console.error('[createTeacher] Magic link generation failed:', linkError.message);
+      } catch (err) {
+        console.error('[createTeacher] Failed to fetch school logo:', err);
       }
 
       if (resendApiKey) {
         const resend = new Resend(resendApiKey);
+        const logoImgHtml = schoolLogoUrl ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${schoolLogoUrl}" alt="School Logo" style="max-height: 80px; max-width: 200px;" /></div>` : '';
         const emailHtml = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-            <h2 style="color: #4f46e5; margin-bottom: 24px;">Welcome to Klaxtrix!</h2>
+            ${logoImgHtml}
+            <h2 style="color: #4f46e5; margin-bottom: 24px; text-align: center;">Welcome to Klaxtrix!</h2>
             <p>Hello <strong>${fullName}</strong>,</p>
             <p>An administrator has registered your teacher account at the school portal.</p>
-            <p>Click the button below to securely set up your account and choose your password:</p>
+            <p>Please use the following credentials to log in to your dashboard:</p>
+            <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${email}</p>
+              <p style="margin: 0;"><strong>Password:</strong> ${password}</p>
+            </div>
+            <p>We recommend that you change this temporary password after your first login.</p>
             <div style="text-align: center; margin: 24px 0;">
-              <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Set Up My Account</a>
+              <a href="${loginUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Log In to Portal</a>
             </div>
             <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
               If the button doesn't work, copy and paste this link into your browser: <br />
-              <a href="${setupLink}" target="_blank" rel="noopener noreferrer">${setupLink}</a>
-            </p>
-            <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
-              This link is one-time use and will expire shortly. Upon setup, you will be prompted to verify your email via OTP and choose your own password.
+              <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a>
             </p>
             <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply directly to this email.</p>
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated notification. Please do not reply directly to this email.</p>
           </div>
         `;
 
@@ -344,7 +335,8 @@ export async function createTeacher(data: CreateUserData) {
         console.log('[createTeacher] MOCK EMAIL DISPATCH LOG (No Resend Key Found)');
         console.log('To:', email);
         console.log('Subject: Set Up Your Teacher Account — Klaxtrix Portal');
-        console.log('Setup Link:', setupLink);
+        console.log('Password:', password);
+        console.log('Login URL:', loginUrl);
         console.log('==================================================');
       }
     }
