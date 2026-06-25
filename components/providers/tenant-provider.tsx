@@ -142,7 +142,15 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         };
 
         setTenant(prev => {
-          if (prev && prev.id === newTenant.id && prev.name === newTenant.name && prev.subdomain === newTenant.subdomain) return prev;
+          if (
+            prev && 
+            prev.id === newTenant.id && 
+            prev.name === newTenant.name && 
+            prev.subdomain === newTenant.subdomain &&
+            prev.logoUrl === newTenant.logoUrl
+          ) {
+            return prev;
+          }
           return newTenant;
         });
 
