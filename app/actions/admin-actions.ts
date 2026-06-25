@@ -293,7 +293,28 @@ export async function createTeacher(data: CreateUserData) {
 
       if (resendApiKey) {
         const resend = new Resend(resendApiKey);
-        const logoImgHtml = schoolLogoUrl ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${schoolLogoUrl}" alt="School Logo" style="max-height: 80px; max-width: 200px;" /></div>` : '';
+        
+        let logoImgHtml = '';
+        const attachments: any[] = [];
+        
+        if (schoolLogoUrl) {
+          if (schoolLogoUrl.startsWith('data:image/')) {
+            const matches = schoolLogoUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+              const ext = matches[1];
+              const base64Data = matches[2];
+              attachments.push({
+                filename: `logo.${ext}`,
+                content: Buffer.from(base64Data, 'base64'),
+                content_id: 'school-logo'
+              });
+              logoImgHtml = `<div style="text-align: center; margin-bottom: 24px;"><img src="cid:school-logo" alt="School Logo" style="max-height: 80px; max-width: 200px;" /></div>`;
+            }
+          } else {
+            logoImgHtml = `<div style="text-align: center; margin-bottom: 24px;"><img src="${schoolLogoUrl}" alt="School Logo" style="max-height: 80px; max-width: 200px;" /></div>`;
+          }
+        }
+
         const emailHtml = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
             ${logoImgHtml}
@@ -323,7 +344,8 @@ export async function createTeacher(data: CreateUserData) {
             from: `${resendFromName} <${resendFromEmail}>`,
             to: email,
             subject: 'Set Up Your Teacher Account — Klaxtrix Portal',
-            html: emailHtml
+            html: emailHtml,
+            attachments: attachments.length > 0 ? attachments : undefined
           });
 
           if (sendError) {
