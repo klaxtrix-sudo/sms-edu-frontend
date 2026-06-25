@@ -272,19 +272,23 @@ export async function createTeacher(data: CreateUserData) {
         ? `https://${subdomain}.${rootDomain}/login`
         : `http://${subdomain}.${rootDomain}/login`;
 
-      // 5. Fetch school logo for the email template
+      // 5. Fetch school logo and name for the email template
       let schoolLogoUrl = '';
+      let schoolName = 'the school';
       try {
         const { data: schoolData } = await tenantSupabase
           .from('schools')
-          .select('logo_url')
+          .select('logo_url, name')
           .eq('id', schoolId)
           .maybeSingle();
         if (schoolData?.logo_url) {
           schoolLogoUrl = schoolData.logo_url;
         }
+        if (schoolData?.name) {
+          schoolName = schoolData.name;
+        }
       } catch (err) {
-        console.error('[createTeacher] Failed to fetch school logo:', err);
+        console.error('[createTeacher] Failed to fetch school details:', err);
       }
 
       if (resendApiKey) {
@@ -295,7 +299,7 @@ export async function createTeacher(data: CreateUserData) {
             ${logoImgHtml}
             <h2 style="color: #4f46e5; margin-bottom: 24px; text-align: center;">Welcome to Klaxtrix!</h2>
             <p>Hello <strong>${fullName}</strong>,</p>
-            <p>An administrator has registered your teacher account at the school portal.</p>
+            <p>An administrator has registered your teacher account at ${schoolName} portal.</p>
             <p>Please use the following credentials to log in to your dashboard:</p>
             <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
               <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${email}</p>
