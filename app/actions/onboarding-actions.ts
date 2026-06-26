@@ -220,7 +220,7 @@ export async function verifyOnboardingOTP(email: string, token: string) {
 // FINALIZE PASSWORD
 // ──────────────────────────────────────────────────────────────────────────────
 
-export async function finalizeTeacherAccount(password: string) {
+export async function finalizeAccount(password: string) {
   try {
     const { anonClient, adminClient } = await createTenantClients();
 
@@ -249,7 +249,7 @@ export async function finalizeTeacherAccount(password: string) {
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
-    console.error('[Onboarding] finalizeTeacherAccount error:', error);
+    console.error('[Onboarding] finalizeAccount error:', error);
     return { error: error.message || 'Failed to finalize account setup' };
   }
 }
@@ -263,7 +263,7 @@ function buildOtpEmailHtml(name: string, pin: string): string {
     <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 40px; border-radius: 10px;">
       <h2 style="color: #1e293b; text-align: center;">Verification Required</h2>
       <p>Hello ${name},</p>
-      <p>To access your faculty portal, please enter this 6-digit verification code:</p>
+      <p>To access your school portal, please enter this 6-digit verification code:</p>
       <div style="background: #f8fafc; padding: 24px; text-align: center; border-radius: 8px; margin: 30px 0; border: 2px dashed #e2e8f0;">
         <span style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #2563eb;">${pin}</span>
       </div>

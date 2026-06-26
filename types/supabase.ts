@@ -311,6 +311,7 @@ export type Database = {
           date_of_birth: string | null
           gender: string | null
           id: string
+          parent_id: string | null
           school_id: string
           user_id: string
         }
@@ -321,6 +322,7 @@ export type Database = {
           date_of_birth?: string | null
           gender?: string | null
           id?: string
+          parent_id?: string | null
           school_id: string
           user_id: string
         }
@@ -331,6 +333,7 @@ export type Database = {
           date_of_birth?: string | null
           gender?: string | null
           id?: string
+          parent_id?: string | null
           school_id?: string
           user_id?: string
         }
@@ -352,6 +355,13 @@ export type Database = {
           {
             foreignKeyName: "students_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_parent_id_fkey"
+            columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   resendOnboardingOTP, 
   verifyOnboardingOTP, 
-  finalizeTeacherAccount 
+  finalizeAccount 
 } from '@/app/actions/onboarding-actions';
 import { signOutAction } from '@/app/actions/auth-actions';
 import { cn } from '@/lib/utils';
@@ -121,7 +121,7 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
       return toast.error("Password must be at least 8 characters.");
     }
     setIsSubmitting(true);
-    const result = await finalizeTeacherAccount(passwords.new);
+    const result = await finalizeAccount(passwords.new);
     if (result.success) {
       toast.success("You're all set. Welcome!");
       setStage('ready');
