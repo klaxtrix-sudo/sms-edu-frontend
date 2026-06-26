@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { createServerClient } from "@/lib/supabase/server";
 import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
 import { redirect } from "next/navigation";
+import OnboardingGate from "@/components/dashboard/onboarding-gate";
 
 export default async function ParentLayout({
   children,
@@ -51,21 +52,23 @@ export default async function ParentLayout({
   ];
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar items={parentNavItems} role="Parent" />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto bg-background flex flex-col min-h-0">
-          <div className="flex-1 p-8 lg:p-12">
-            {children}
-          </div>
-          <footer className="py-4 text-center select-none">
-            <p className="text-[11px] text-foreground/70 leading-relaxed">
-              © {new Date().getFullYear()} Klaxtrix SMS &mdash; School Management System. All rights reserved.
-            </p>
-          </footer>
-        </main>
+    <OnboardingGate user={user}>
+      <div className="flex min-h-screen">
+        <Sidebar items={parentNavItems} role="Parent" />
+        <div className="flex-1 flex flex-col min-w-0">
+          <DashboardHeader />
+          <main className="flex-1 overflow-y-auto bg-background flex flex-col min-h-0">
+            <div className="flex-1 p-8 lg:p-12">
+              {children}
+            </div>
+            <footer className="py-4 text-center select-none">
+              <p className="text-[11px] text-foreground/70 leading-relaxed">
+                © {new Date().getFullYear()} Klaxtrix SMS &mdash; School Management System. All rights reserved.
+              </p>
+            </footer>
+          </main>
+        </div>
       </div>
-    </div>
+    </OnboardingGate>
   );
 }

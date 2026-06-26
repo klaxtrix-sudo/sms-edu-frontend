@@ -70,7 +70,7 @@ export default function ParentFinancePage() {
             class_id,
             school_id,
             classes (name),
-            profiles!user_id (full_name)
+            profiles!students_user_id_fkey (full_name)
           `)
           .eq("parent_id", session.user.id);
 
