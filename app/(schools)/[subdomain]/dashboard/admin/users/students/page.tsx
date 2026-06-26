@@ -107,7 +107,7 @@ export default function StudentsPage() {
             user_id,
             admission_no,
             gender,
-            profiles!user_id (
+            profiles!students_user_id_fkey (
               full_name,
               phone
             ),

@@ -26,6 +26,7 @@ import { Loader2 } from "lucide-react";
 import { createStudent } from "@/app/actions/admin-actions";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { AddParentModal } from "@/components/admin/add-parent-modal";
 
 const studentSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
@@ -52,6 +53,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
   const [parents, setParents] = useState<any[]>([]);
   const [parentSuggestions, setParentSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isAddParentOpen, setIsAddParentOpen] = useState(false);
   const supabase = createClient();
 
   const form = useForm<StudentFormValues>({
@@ -129,6 +131,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -147,7 +150,16 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
               )}
             </div>
             <div className="col-span-2 space-y-2 relative">
-              <Label htmlFor="email">Parent Email (Optional)</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="email">Parent Email (Optional)</Label>
+                <button 
+                  type="button" 
+                  onClick={() => setIsAddParentOpen(true)} 
+                  className="text-[10px] text-primary hover:underline font-bold"
+                >
+                  + Create Parent
+                </button>
+              </div>
               <Input 
                 id="email" 
                 placeholder="parent@example.com" 
@@ -252,5 +264,28 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
         </form>
       </DialogContent>
     </Dialog>
+    <AddParentModal 
+      isOpen={isAddParentOpen}
+      onClose={() => setIsAddParentOpen(false)}
+      onSuccess={(email) => {
+        if (email) {
+          form.setValue("email", email);
+          const fetchParents = async () => {
+            const { data } = await supabase
+              .from("profiles")
+              .select("email, full_name")
+              .eq("role", "parent")
+              .eq("school_id", schoolId)
+              .eq("is_active", true);
+            setParents(data || []);
+          };
+          fetchParents();
+        }
+      }}
+      schoolId={schoolId}
+      subdomain={subdomain}
+      initialEmail={emailValue}
+    />
+    </>
   );
 }

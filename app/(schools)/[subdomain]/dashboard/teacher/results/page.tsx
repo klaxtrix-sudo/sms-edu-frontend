@@ -196,7 +196,7 @@ export default function TeacherResultsPage() {
         .select(`
           id,
           admission_no,
-          profiles!user_id (
+          profiles!students_user_id_fkey (
             full_name
           )
         `)
