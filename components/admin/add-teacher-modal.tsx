@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { createTeacher } from "@/app/actions/admin-actions";
@@ -110,7 +111,7 @@ export function AddTeacherModal({ isOpen, onClose, onSuccess, schoolId, subdomai
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Temporary Password</Label>
-              <Input id="password" type="password" {...form.register("password")} placeholder="••••••••" />
+              <PasswordInput id="password" {...form.register("password")} placeholder="••••••••" />
               {form.formState.errors.password && (
                 <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
               )}

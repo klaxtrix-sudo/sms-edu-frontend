@@ -22,6 +22,7 @@ import {
   FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { 
   Select, 
@@ -392,8 +393,7 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                   <FormItem className="col-span-1 md:col-span-2">
                     <FormLabel>Student Exam PIN</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         placeholder="e.g. 4827"
                         maxLength={8}
                         className="font-mono tracking-widest"
