@@ -20,6 +20,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
@@ -304,8 +305,7 @@ export default function ConfigPage() {
                         </div>
                         <div className="space-y-1.5">
                            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Password</label>
-                           <Input
-                             type="password"
+                           <PasswordInput
                              placeholder="Min. 8 characters"
                              className="bg-slate-900 border-slate-800 h-12 rounded-xl"
                              value={newAdmin.password}
@@ -335,8 +335,7 @@ export default function ConfigPage() {
                         )}
                         <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
                            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Your password (confirm)</label>
-                           <Input
-                             type="password"
+                           <PasswordInput
                              placeholder="••••••••"
                              className="bg-slate-900 border-slate-800 h-12 rounded-xl"
                              value={newAdmin.creatorPassword}
@@ -435,8 +434,7 @@ export default function ConfigPage() {
                  </div>
                  <div className="space-y-1.5">
                    <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Your password (confirm)</label>
-                   <Input
-                     type="password"
+                   <PasswordInput
                      placeholder="••••••••"
                      className="bg-slate-900 border-slate-800 h-12 rounded-xl"
                      value={deleteCreatorPassword}
@@ -489,8 +487,7 @@ export default function ConfigPage() {
                  </div>
                   <div className="space-y-1.5">
                      <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">New password</label>
-                     <Input
-                       type="password"
+                     <PasswordInput
                        placeholder="Leave blank to keep current"
                        className="bg-slate-900 border-slate-800 h-12 rounded-xl"
                        value={profileUpdate.password}
@@ -499,8 +496,7 @@ export default function ConfigPage() {
                   </div>
                   <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
                      <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Your password (confirm)</label>
-                     <Input
-                       type="password"
+                     <PasswordInput
                        placeholder="••••••••"
                        className="bg-slate-900 border-slate-800 h-12 rounded-xl"
                        value={profileUpdate.creatorPassword}
