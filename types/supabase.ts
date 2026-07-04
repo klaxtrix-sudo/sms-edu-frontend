@@ -314,6 +314,14 @@ export type Database = {
           parent_id: string | null
           school_id: string
           user_id: string
+          state_of_origin: string | null
+          lga: string | null
+          religion: string | null
+          residential_address: string | null
+          blood_group: string | null
+          genotype: string | null
+          medical_conditions: string | null
+          previous_school: string | null
         }
         Insert: {
           admission_no: string
@@ -325,6 +333,14 @@ export type Database = {
           parent_id?: string | null
           school_id: string
           user_id: string
+          state_of_origin?: string | null
+          lga?: string | null
+          religion?: string | null
+          residential_address?: string | null
+          blood_group?: string | null
+          genotype?: string | null
+          medical_conditions?: string | null
+          previous_school?: string | null
         }
         Update: {
           admission_no?: string
@@ -336,6 +352,14 @@ export type Database = {
           parent_id?: string | null
           school_id?: string
           user_id?: string
+          state_of_origin?: string | null
+          lga?: string | null
+          religion?: string | null
+          residential_address?: string | null
+          blood_group?: string | null
+          genotype?: string | null
+          medical_conditions?: string | null
+          previous_school?: string | null
         }
         Relationships: [
           {

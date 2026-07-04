@@ -395,6 +395,16 @@ export async function createStudent(data: any) {
     admissionNo,
     classId,
     gender,
+    dateOfBirth,
+    stateOfOrigin,
+    lga,
+    religion,
+    residentialAddress,
+    bloodGroup,
+    genotype,
+    medicalConditions,
+    previousSchool,
+    passportUrl,
     schoolId,
     subdomain
   } = data;
@@ -441,7 +451,7 @@ export async function createStudent(data: any) {
     if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
     if (user) {
-      // 5. Create Student record in TENANT project (with parent_id link)
+      // 5. Create Student record in TENANT project (with all fields)
       const { error: studentError } = await (tenantSupabase as any)
         .from('students')
         .insert({
@@ -450,7 +460,16 @@ export async function createStudent(data: any) {
           class_id: classId,
           admission_no: admissionNo,
           gender: gender,
-          parent_id: parentId
+          date_of_birth: dateOfBirth || null,
+          parent_id: parentId,
+          state_of_origin: stateOfOrigin || null,
+          lga: lga || null,
+          religion: religion || null,
+          residential_address: residentialAddress || null,
+          blood_group: bloodGroup || null,
+          genotype: genotype || null,
+          medical_conditions: medicalConditions || null,
+          previous_school: previousSchool || null,
         });
 
       if (studentError) return { error: `Tenant Data Error: ${studentError.message}` };
@@ -465,6 +484,7 @@ export async function createStudent(data: any) {
           email: studentDummyEmail,
           role: 'student',
           is_active: true,
+          avatar_url: passportUrl || null,
         });
 
       if (profileError) {
@@ -476,6 +496,40 @@ export async function createStudent(data: any) {
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred during student provisioning" };
+  }
+}
+
+/**
+ * Uploads a student passport photograph to centralized storage.
+ * Returns a public URL that can be stored in profiles.avatar_url.
+ */
+export async function uploadStudentPassport(
+  schoolId: string,
+  studentId: string,
+  base64DataUri: string
+): Promise<{ success: boolean; publicUrl?: string; error?: string }> {
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000/api';
+    const res = await fetch(`${backendUrl}/tenant/upload-passport`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_AUTH_SECRET || "",
+      },
+      body: JSON.stringify({ schoolId, studentId, base64DataUri }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`[Admin Actions] Passport upload failed: ${errorText}`);
+      return { success: false, error: "Failed to upload passport photo" };
+    }
+
+    const data = await res.json();
+    return { success: true, publicUrl: data.publicUrl };
+  } catch (error: any) {
+    console.error(`[Admin Actions] Passport upload exception:`, error);
+    return { success: false, error: error.message };
   }
 }
 
