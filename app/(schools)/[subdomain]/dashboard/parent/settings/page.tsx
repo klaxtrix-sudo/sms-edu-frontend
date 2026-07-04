@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2, User, KeyRound, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
@@ -185,9 +186,8 @@ export default function ParentSettingsPage() {
             <form onSubmit={handleUpdatePassword} className="space-y-6">
               <div className="space-y-2 hidden">
                 <Label htmlFor="currentPassword">Current Password</Label>
-                <Input 
+                <PasswordInput 
                   id="currentPassword" 
-                  type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="h-12 rounded-xl"
@@ -196,9 +196,8 @@ export default function ParentSettingsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-slate-400">New Password</Label>
-                <Input 
+                <PasswordInput 
                   id="newPassword" 
-                  type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
@@ -208,9 +207,8 @@ export default function ParentSettingsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-slate-400">Confirm New Password</Label>
-                <Input 
+                <PasswordInput 
                   id="confirmPassword" 
-                  type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"

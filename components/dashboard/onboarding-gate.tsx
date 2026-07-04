@@ -11,6 +11,7 @@ import { signOutAction } from '@/app/actions/auth-actions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { 
   ShieldCheck, 
@@ -288,9 +289,8 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                   <div className="space-y-2">
                     <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Personal Password</Label>
                     <div className="relative">
-                      <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                      <Input 
-                        type="password"
+                      <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 z-10" />
+                      <PasswordInput 
                         required
                         placeholder="Min. 8 characters"
                         value={passwords.new}
@@ -303,9 +303,8 @@ export default function OnboardingGate({ user: initialUser, children }: Onboardi
                   <div className="space-y-2">
                     <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Confirm Password</Label>
                     <div className="relative">
-                      <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                      <Input 
-                        type="password"
+                      <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 z-10" />
+                      <PasswordInput 
                         required
                         placeholder="Repeat password"
                         value={passwords.confirm}

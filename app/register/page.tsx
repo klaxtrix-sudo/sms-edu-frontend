@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LandingHeader } from '@/components/landing/landing-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -401,7 +402,7 @@ export default function RegisterPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="adminPassword">Master Password</Label>
-                      <Input id="adminPassword" type="password" placeholder="Min. 8 characters" className="h-12 rounded-xl"
+                      <PasswordInput id="adminPassword" placeholder="Min. 8 characters" className="h-12 rounded-xl"
                         value={formData.adminPassword} onChange={e => update('adminPassword', e.target.value)} />
                     </div>
                   </div>
