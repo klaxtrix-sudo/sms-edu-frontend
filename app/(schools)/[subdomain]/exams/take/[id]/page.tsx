@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -477,8 +478,7 @@ export default function TakeExamPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Exam PIN</label>
-                <Input
-                  type="password"
+                <PasswordInput
                   placeholder="Enter the PIN provided by your teacher"
                   value={examPin}
                   onChange={(e) => setExamPin(e.target.value)}

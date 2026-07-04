@@ -15,6 +15,7 @@ import {
 } from '@/app/actions/admin-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   Table,
   TableBody,
@@ -311,9 +312,8 @@ export default function TeachersPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Initial Password</Label>
-                  <Input 
+                  <PasswordInput 
                     id="password" 
-                    type="password" 
                     placeholder="••••••••" 
                     required 
                     className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
