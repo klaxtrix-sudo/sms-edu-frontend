@@ -15,6 +15,7 @@ import {
 import { resetUserPassword } from '@/app/actions/admin-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   Table,
   TableBody,
@@ -75,8 +76,6 @@ export default function ParentsPage() {
   
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [isResetting, setIsResetting] = useState(false);
   const [isResending, setIsResending] = useState<Record<string, boolean>>({});
@@ -162,8 +161,6 @@ export default function ParentsPage() {
       setIsResetModalOpen(false);
       setNewPassword('');
       setConfirmPassword('');
-      setShowNewPassword(false);
-      setShowConfirmPassword(false);
     } else {
       toast.error(result.error);
     }
@@ -477,9 +474,8 @@ export default function ParentsPage() {
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input 
+                <PasswordInput 
                   id="new-password" 
-                  type={showNewPassword ? "text" : "password"} 
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Minimum 8 characters"
@@ -488,9 +484,8 @@ export default function ParentsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input 
+                <PasswordInput 
                   id="confirm-password" 
-                  type={showConfirmPassword ? "text" : "password"} 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat new password"
