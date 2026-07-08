@@ -14,6 +14,8 @@ export interface ParentChild {
   user_id: string;
   class_id: string | null;
   school_id: string;
+  gender: string | null;
+  date_of_birth: string | null;
   blood_group: string | null;
   genotype: string | null;
   medical_conditions: string | null;
@@ -28,9 +30,6 @@ export interface ParentChild {
     avatar_url: string | null;
     email: string | null;
     phone: string | null;
-    gender: string | null;
-    date_of_birth: string | null;
-    address: string | null;
   } | null;
 }
 
@@ -69,6 +68,8 @@ export function useParentChildren(childId?: string): UseParentChildrenResult {
     user_id,
     class_id,
     school_id,
+    gender,
+    date_of_birth,
     blood_group,
     genotype,
     medical_conditions,
@@ -78,7 +79,7 @@ export function useParentChildren(childId?: string): UseParentChildrenResult {
     residential_address,
     previous_school,
     classes (name),
-    profiles!students_user_id_fkey (full_name, avatar_url, email, phone, gender, date_of_birth, address)
+    profiles!students_user_id_fkey (full_name, avatar_url, email, phone)
   `;
 
   const fetchChildren = useCallback(async () => {

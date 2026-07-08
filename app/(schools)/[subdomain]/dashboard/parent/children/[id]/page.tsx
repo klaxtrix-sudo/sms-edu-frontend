@@ -127,12 +127,12 @@ export default function ChildDetailPage() {
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-4">
             <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gender</span>
-              <span className="font-bold text-slate-700 capitalize">{profile?.gender || 'N/A'}</span>
+              <span className="font-bold text-slate-700 capitalize">{child.gender || 'N/A'}</span>
             </div>
-            {profile?.date_of_birth && (
+            {child.date_of_birth && (
               <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">DOB</span>
-                <span className="font-bold text-slate-700">{new Date(profile.date_of_birth).toLocaleDateString()}</span>
+                <span className="font-bold text-slate-700">{new Date(child.date_of_birth).toLocaleDateString()}</span>
               </div>
             )}
           </div>
