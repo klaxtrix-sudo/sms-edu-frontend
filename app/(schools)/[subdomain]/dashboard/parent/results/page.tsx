@@ -89,7 +89,7 @@ export default function ParentResultsPage() {
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">Academic Results</h1>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Academic Results</h1>
           <p className="text-slate-500 mt-2 font-medium">View and download report cards for your children.</p>
         </div>
         <ErrorState message={error} onRetry={refetch} />
@@ -101,7 +101,7 @@ export default function ParentResultsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">Academic Results</h1>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Academic Results</h1>
           <p className="text-slate-500 mt-2 font-medium">View and download report cards for your children.</p>
         </div>
 
@@ -157,7 +157,7 @@ export default function ParentResultsPage() {
               >
                 <CardHeader className={`${isLatest ? "bg-primary/5" : "bg-slate-50"} pb-6 flex flex-row items-center justify-between`}>
                   <div>
-                    <CardTitle className={`${isLatest ? "text-primary" : "text-slate-700"} text-xl font-black italic uppercase`}>
+                    <CardTitle className={`${isLatest ? "text-primary" : "text-slate-700"} text-xl font-bold uppercase tracking-tight`}>
                       Term {group.term}
                     </CardTitle>
                     <CardDescription className={`font-bold ${isLatest ? "text-primary/60" : "text-slate-500"}`}>
@@ -189,7 +189,7 @@ export default function ParentResultsPage() {
                       </div>
                     ))}
                     {group.results.length > 4 && (
-                      <p className="text-xs text-muted-foreground italic pt-1">+ {group.results.length - 4} more subjects</p>
+                      <p className="text-xs text-muted-foreground font-medium pt-1">+ {group.results.length - 4} more subjects</p>
                     )}
                   </div>
                   <PDFDownloadLink

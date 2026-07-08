@@ -212,7 +212,7 @@ export default function ParentFinancePage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
           <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tight text-primary">Institution Fees</h1>
-            <p className="text-muted-foreground text-lg font-medium italic">Settle and monitor school fee obligations for your household.</p>
+            <p className="text-muted-foreground text-lg font-medium">Settle and monitor school fee obligations for your household.</p>
           </div>
         </div>
         <ErrorState message={error} onRetry={refetch} />
@@ -225,7 +225,7 @@ export default function ParentFinancePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
         <div className="space-y-1">
           <h1 className="text-4xl font-black tracking-tight text-primary">Institution Fees</h1>
-          <p className="text-muted-foreground text-lg font-medium italic">Settle and monitor school fee obligations for your household.</p>
+          <p className="text-muted-foreground text-lg font-medium">Settle and monitor school fee obligations for your household.</p>
         </div>
         
         {children.length > 0 && (
@@ -364,13 +364,13 @@ export default function ParentFinancePage() {
                   <TableBody>
                     {loadingData ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-20 animate-pulse text-muted-foreground font-medium italic">
+                        <TableCell colSpan={6} className="text-center py-20 animate-pulse text-muted-foreground font-medium">
                           Loading payments...
                         </TableCell>
                       </TableRow>
                     ) : history.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic opacity-50 font-medium">
+                        <TableCell colSpan={6} className="text-center py-20 text-muted-foreground opacity-50 font-medium">
                           No prior transactions found for this student.
                         </TableCell>
                       </TableRow>
@@ -445,14 +445,14 @@ export default function ParentFinancePage() {
                   <AlertCircle className="size-5" />
                   <CardTitle className="text-lg font-bold">Billing Support</CardTitle>
                 </div>
-                <CardDescription className="text-primary/70 font-medium italic">For payment inquiries, please reach out to the bursary office.</CardDescription>
+                <CardDescription className="text-primary/70 font-medium">For payment inquiries, please reach out to the bursary office.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 bg-background/50 rounded-xl space-y-2 border border-primary/10">
                   <p className="text-xs uppercase tracking-widest font-black text-muted-foreground opacity-50">School</p>
                   <p className="font-bold text-sm">{tenant?.name || "Your school"}</p>
                 </div>
-                <p className="text-xs text-primary/60 font-medium italic">
+                <p className="text-xs text-primary/60 font-medium">
                   For payment inquiries, please contact the school's bursary office directly.
                 </p>
               </CardContent>
