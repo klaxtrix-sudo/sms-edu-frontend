@@ -144,7 +144,7 @@ export default function ParentSettingsPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       <div className="text-center md:text-left">
-        <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">Account Settings</h1>
+        <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Account Settings</h1>
         <p className="text-slate-500 mt-2 font-medium">Manage your personal information and security preferences.</p>
       </div>
 

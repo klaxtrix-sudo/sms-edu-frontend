@@ -48,7 +48,7 @@ export default function ParentNotificationsPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       <div className="text-center md:text-left">
-        <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">School Notifications</h1>
+        <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">School Notifications</h1>
         <p className="text-slate-500 mt-2 font-medium">Stay updated with the latest announcements from the school.</p>
       </div>
 
@@ -77,7 +77,7 @@ export default function ParentNotificationsPage() {
                        </Badge>
                     </div>
                     <div className="flex-1 space-y-4">
-                       <h3 className="text-2xl font-black tracking-tight text-slate-900 leading-snug group-hover:text-primary transition-colors italic uppercase">{bulletin.title}</h3>
+                       <h3 className="text-2xl font-bold tracking-tight text-slate-900 leading-snug group-hover:text-primary transition-colors uppercase">{bulletin.title}</h3>
                        <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{bulletin.message}</p>
                     </div>
                   </div>
