@@ -143,7 +143,7 @@ export default function ChildDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
           <CardHeader className="bg-emerald-50/50 pb-6">
-            <CardTitle className="text-emerald-700 flex items-center gap-2 text-xl font-black italic uppercase">
+            <CardTitle className="text-emerald-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <Clock className="size-5" /> Attendance
             </CardTitle>
             <CardDescription className="font-medium text-emerald-600/70">Current Term Overview</CardDescription>
@@ -164,7 +164,7 @@ export default function ChildDetailPage() {
 
         <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
           <CardHeader className="bg-primary/5 pb-6">
-            <CardTitle className="text-primary flex items-center gap-2 text-xl font-black italic uppercase">
+            <CardTitle className="text-primary flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <GraduationCap className="size-5" /> Academics
             </CardTitle>
             <CardDescription className="font-medium text-primary/60">Average Grade · {academicCycle?.academicYear || ""} Term {academicCycle?.currentTerm || 1}</CardDescription>
@@ -203,7 +203,7 @@ export default function ChildDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
           <CardHeader className="bg-violet-50 pb-6">
-            <CardTitle className="text-violet-700 flex items-center gap-2 text-xl font-black italic uppercase">
+            <CardTitle className="text-violet-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <BookOpen className="size-5" /> Assignments
             </CardTitle>
             <CardDescription className="font-medium text-violet-600/70">Current homework for {className}</CardDescription>
@@ -214,7 +214,7 @@ export default function ChildDetailPage() {
                 <Loader2 className="size-6 animate-spin text-violet-300" />
               </div>
             ) : assignments.length === 0 ? (
-              <div className="text-center py-8 text-sm text-muted-foreground italic">No assignments posted yet.</div>
+              <div className="text-center py-8 text-sm text-muted-foreground font-medium">No assignments posted yet.</div>
             ) : (
               <div className="space-y-3">
                 {assignments.slice(0, 5).map((a) => (
@@ -233,7 +233,7 @@ export default function ChildDetailPage() {
 
         <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
           <CardHeader className="bg-amber-50 pb-6">
-            <CardTitle className="text-amber-700 flex items-center gap-2 text-xl font-black italic uppercase">
+            <CardTitle className="text-amber-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <CalendarDays className="size-5" /> Exam Timetable
             </CardTitle>
             <CardDescription className="font-medium text-amber-600/70">Upcoming exams for {className}</CardDescription>
@@ -244,7 +244,7 @@ export default function ChildDetailPage() {
                 <Loader2 className="size-6 animate-spin text-amber-300" />
               </div>
             ) : examTimetable.length === 0 ? (
-              <div className="text-center py-8 text-sm text-muted-foreground italic">No exams scheduled yet.</div>
+              <div className="text-center py-8 text-sm text-muted-foreground font-medium">No exams scheduled yet.</div>
             ) : (
               <div className="space-y-3">
                 {examTimetable.slice(0, 5).map((e) => (
@@ -267,7 +267,7 @@ export default function ChildDetailPage() {
       {/* Health & Background */}
       <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
         <CardHeader className="bg-rose-50 pb-6">
-          <CardTitle className="text-rose-700 flex items-center gap-2 text-xl font-black italic uppercase">
+          <CardTitle className="text-rose-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
             <Heart className="size-5" /> Health &amp; Background
           </CardTitle>
           <CardDescription className="font-medium text-rose-600/70">Medical and demographic information on file</CardDescription>
@@ -293,7 +293,7 @@ function InfoField({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-      <p className="font-bold text-sm text-slate-700">{value || <span className="text-muted-foreground italic font-normal">Not provided</span>}</p>
+      <p className="font-bold text-sm text-slate-700">{value || <span className="text-muted-foreground font-normal">Not provided</span>}</p>
     </div>
   );
 }

@@ -26,7 +26,7 @@ export default function ParentChildrenPage() {
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">My Children</h1>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">My Children</h1>
           <p className="text-slate-500 mt-2 font-medium">Detailed profiles of your enrolled children.</p>
         </div>
         <ErrorState message={error} onRetry={refetch} />
@@ -37,7 +37,7 @@ export default function ParentChildrenPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">My Children</h1>
+        <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">My Children</h1>
         <p className="text-slate-500 mt-2 font-medium">Detailed profiles of your enrolled children.</p>
       </div>
 
