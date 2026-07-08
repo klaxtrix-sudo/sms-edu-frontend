@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { 
   Calendar, 
   Clock, 
@@ -72,6 +72,7 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
   const [teacherName, setTeacherName] = useState<string>("");
   const [teacherLoading, setTeacherLoading] = useState(false);
   const supabase = createTenantClient();
+  const skipNextLookup = useRef(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,7 +90,7 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
   const watchClassId = form.watch("class_id");
   const watchSubjectId = form.watch("subject_id");
 
-  const lookupTeacher = useCallback(async (classId: string, subjectId: string) => {
+  const lookupTeacher = async (classId: string, subjectId: string) => {
     if (!classId || !subjectId) {
       setTeacherName("");
       form.setValue("teacher_id", "");
@@ -115,7 +116,7 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
         return;
       }
 
-      // If not found in class_subject_teachers but this matches the entry's original class & subject, restore original teacher
+      // If not found in class_subject_teachers but matches the entry's original class & subject, restore original teacher
       if (entry && classId === entry.class_id && subjectId === entry.subject_id && entry.teacher_id) {
         form.setValue("teacher_id", entry.teacher_id);
         setTeacherName(entry.profiles?.full_name || "Assigned Teacher");
@@ -130,7 +131,7 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
     } finally {
       setTeacherLoading(false);
     }
-  }, [supabase, form, entry]);
+  };
 
   const fetchData = async () => {
     try {
@@ -145,8 +146,10 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
     }
   };
 
+  // On modal open: populate form from entry data and set teacher name directly (no network call)
   useEffect(() => {
     if (open && entry) {
+      skipNextLookup.current = true;
       fetchData();
       form.reset({
         class_id: entry.class_id || "",
@@ -157,17 +160,22 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
         room: entry.room || "",
         teacher_id: entry.teacher_id || "",
       });
-      if (entry.profiles?.full_name) {
-        setTeacherName(entry.profiles.full_name);
-      }
+      setTeacherName(entry.profiles?.full_name || (entry.teacher_id ? "Assigned Teacher" : "Not assigned"));
+      setTeacherLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entry]);
 
+  // On class/subject change: lookup teacher (skip the initial change triggered by form.reset)
   useEffect(() => {
-    if (open && watchClassId && watchSubjectId) {
-      lookupTeacher(watchClassId, watchSubjectId);
+    if (!open || !watchClassId || !watchSubjectId) return;
+    if (skipNextLookup.current) {
+      skipNextLookup.current = false;
+      return;
     }
-  }, [watchClassId, watchSubjectId, open, lookupTeacher]);
+    lookupTeacher(watchClassId, watchSubjectId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchClassId, watchSubjectId, open]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
