@@ -82,6 +82,14 @@ export default function ParentSettingsPage() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.email) {
+      toast.error("Session expired. Please sign in again.");
+      return;
+    }
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match");
       return;
@@ -90,9 +98,24 @@ export default function ParentSettingsPage() {
       toast.error("Password must be at least 8 characters");
       return;
     }
+    const hasNumber = /\d/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+    if (!hasNumber || !hasSpecial) {
+      toast.error("Password must contain at least one number and one special character");
+      return;
+    }
 
     setSaving(true);
     try {
+      // Re-authenticate with the current password before changing it.
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (reauthError) {
+        throw new Error("Current password is incorrect");
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -184,14 +207,16 @@ export default function ParentSettingsPage() {
           </CardHeader>
           <CardContent className="pt-8">
             <form onSubmit={handleUpdatePassword} className="space-y-6">
-              <div className="space-y-2 hidden">
-                <Label htmlFor="currentPassword">Current Password</Label>
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Password</Label>
                 <PasswordInput 
                   id="currentPassword" 
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="h-12 rounded-xl"
+                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  required
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">Verify it's really you before changing your password.</p>
               </div>
 
               <div className="space-y-2">
@@ -216,7 +241,7 @@ export default function ParentSettingsPage() {
                 />
               </div>
 
-              <Button type="submit" disabled={saving || !newPassword || !confirmPassword} className="w-full h-12 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg transition-all">
+              <Button type="submit" disabled={saving || !currentPassword || !newPassword || !confirmPassword} className="w-full h-12 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg transition-all">
                 {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : <KeyRound className="size-4 mr-2" />}
                 Update Password
               </Button>

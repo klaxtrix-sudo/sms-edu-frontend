@@ -68,7 +68,8 @@ export default function IntegrationSettings() {
   const [savedTermiiConfig, setSavedTermiiConfig] = useState<TermiiConfig | null>(null);
 
   const [paystackConfig, setPaystackConfig] = useState<PaystackConfig>({
-    secretKey: ''
+    secretKey: '',
+    publicKey: ''
   });
   const [savedPaystackConfig, setSavedPaystackConfig] = useState<PaystackConfig | null>(null);
   
@@ -219,7 +220,8 @@ export default function IntegrationSettings() {
       await toggleIntegrationActive(tenant.id, 'termii_settings', checked, tenantCreds);
     } else if (key === 'paystack') {
       const hasUnsavedChanges = !savedPaystackConfig || 
-        paystackConfig.secretKey !== savedPaystackConfig.secretKey;
+        paystackConfig.secretKey !== savedPaystackConfig.secretKey ||
+        paystackConfig.publicKey !== savedPaystackConfig.publicKey;
 
       if (checked && hasUnsavedChanges) {
         toast.error("Unsaved Configuration", {
@@ -414,6 +416,18 @@ export default function IntegrationSettings() {
                     {showKeys['paystack'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Public Key (PK)</Label>
+                <Input 
+                  type="text"
+                  value={paystackConfig.publicKey}
+                  onChange={(e) => setPaystackConfig({...paystackConfig, publicKey: e.target.value})}
+                  placeholder="pk_live_xxxxxxxxxxxxxxxx"
+                  className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-emerald-500 focus:border-emerald-300"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Used by parents/students to open the Paystack checkout popup.</p>
               </div>
 
               <div className="flex items-start gap-3 p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-2xl">

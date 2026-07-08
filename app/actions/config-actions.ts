@@ -18,6 +18,7 @@ export type TermiiConfig = {
 
 export type PaystackConfig = {
   secretKey: string;
+  publicKey: string;
 };
 
 // Tenant credentials are ALWAYS required for these actions.
@@ -322,8 +323,24 @@ export async function savePaystackConfig(
 
     await verifyPaystackKey(unmaskedKey);
 
+    // Preserve the existing public key if the new one is empty (e.g. masked/unmodified).
+    let publicKeyToSave = config.publicKey;
+    if (!publicKeyToSave) {
+      const { data } = await supabase
+        .from('institutional_configs')
+        .select('config_value')
+        .eq('school_id', schoolId)
+        .eq('config_key', 'paystack_settings')
+        .maybeSingle();
+      if (data?.config_value) {
+        const parsed = JSON.parse(data.config_value) as PaystackConfig;
+        publicKeyToSave = parsed.publicKey || '';
+      }
+    }
+
     const configToSave: PaystackConfig = {
-      secretKey: unmaskedKey
+      secretKey: unmaskedKey,
+      publicKey: publicKeyToSave,
     };
 
     await upsertConfig(
@@ -366,7 +383,8 @@ export async function getPaystackConfig(
 
     return {
       config: {
-        secretKey: maskedKey
+        secretKey: maskedKey,
+        publicKey: config.publicKey || '',
       },
       isActive: data.is_active ?? false
     };

@@ -138,19 +138,20 @@ const styles = StyleSheet.create({
 });
 
 interface ResultSlipPDFProps {
-  student: any;
-  results: any[];
+  student: { full_name: string; admission_no: string; class_name: string };
+  results: { subject: string; ca: string | number; exam: string | number; total: number; grade: string }[];
   term: string;
   year: string;
+  schoolName?: string;
 }
 
-export const ResultSlipPDF = ({ student, results, term, year }: ResultSlipPDFProps) => (
+export const ResultSlipPDF = ({ student, results, term, year, schoolName = "KLAXTRIX ACADEMY" }: ResultSlipPDFProps) => (
   <Document>
     <Page size="A4" style={styles.page}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.schoolInfo}>
-          <Text style={styles.schoolName}>KLAXTRIX ACADEMY</Text>
+          <Text style={styles.schoolName}>{schoolName.toUpperCase()}</Text>
           <Text style={styles.schoolAddress}>Nigeria's Premier Digital Institution · Innovation Hub</Text>
         </View>
         <Text style={{ fontSize: 10, fontWeight: "bold", color: "#3b82f6" }}>OFFICIAL ACADEMIC RECORD</Text>

@@ -88,10 +88,19 @@ const styles = StyleSheet.create({
 });
 
 interface PaymentReceiptPDFProps {
-  receipt: any;
+  receipt: {
+    reference: string;
+    parentName: string;
+    studentName: string;
+    admissionNo: string;
+    description: string;
+    date: string;
+    amount: number;
+  };
+  schoolName?: string;
 }
 
-export const PaymentReceiptPDF = ({ receipt }: PaymentReceiptPDFProps) => (
+export const PaymentReceiptPDF = ({ receipt, schoolName = "KLAXTRIX INSTITUTION" }: PaymentReceiptPDFProps) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.receiptContainer}>
@@ -100,7 +109,7 @@ export const PaymentReceiptPDF = ({ receipt }: PaymentReceiptPDFProps) => (
         </View>
 
         <View style={styles.header}>
-           <Text style={styles.schoolName}>KLAXTRIX INSTITUTION</Text>
+           <Text style={styles.schoolName}>{schoolName}</Text>
            <Text style={styles.receiptNo}>Receipt No: {receipt.reference}</Text>
         </View>
 

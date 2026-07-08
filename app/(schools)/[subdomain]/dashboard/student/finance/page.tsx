@@ -38,6 +38,7 @@ export default function StudentFinancePage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [paystackPublicKey, setPaystackPublicKey] = useState<string | null>(null);
   const supabase = createTenantClient();
 
   const fetchData = async () => {
@@ -87,6 +88,24 @@ export default function StudentFinancePage() {
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
     document.body.appendChild(script);
+
+    // Fetch the tenant Paystack public key from the backend.
+    const fetchPaystackConfig = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const res = await fetch(`${getBackendUrl()}/payments/config`, {
+          headers: { "Authorization": `Bearer ${session.access_token}` },
+        });
+        const result = await res.json();
+        if (result.success && result.data?.publicKey) {
+          setPaystackPublicKey(result.data.publicKey);
+        }
+      } catch (e) {
+        console.error("Failed to fetch Paystack config:", e);
+      }
+    };
+    fetchPaystackConfig();
   }, []);
 
   const handlePay = async (structure: any) => {
@@ -112,8 +131,11 @@ export default function StudentFinancePage() {
       if (!result.success) throw new Error(result.message);
 
       // 2. Open Paystack Inline
+      if (!paystackPublicKey) {
+        throw new Error("Payments are not configured for this school. Please contact the school administrator.");
+      }
       const handler = PaystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_xxxxxxxxxxxx', // Should be in env
+        key: paystackPublicKey,
         email: session?.user.email,
         amount: structure.amount * 100,
         ref: result.data.reference,

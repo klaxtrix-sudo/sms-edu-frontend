@@ -60,7 +60,8 @@ export async function requireRole(
     (role === "teacher" && userRole === "admin");
 
   if (!isAuthorized) {
-    redirect("/login");
+    // Send the user to their own dashboard instead of /login — mirrors middleware.ts.
+    redirect(`/dashboard/${userRole || "student"}`);
   }
 
   const schoolId = user.user_metadata?.school_id as string;

@@ -53,7 +53,12 @@ export async function middleware(request: NextRequest) {
     }
 
     // Role-based route enforcement: prevent cross-role access
-    const role = user.user_metadata?.role || 'student';
+    const role = user.user_metadata?.role as string | undefined;
+    if (!role) {
+      // Fail closed: a user with no role metadata cannot reach any dashboard.
+      console.log(`[Security Guard] User ${user.email} has no role metadata. Redirecting to /login.`);
+      return NextResponse.redirect(new URL('/login?error=role_missing', request.url));
+    }
     const dashboardRoleMatch = url.pathname.match(/^\/dashboard\/(admin|teacher|student|parent)/);
     if (dashboardRoleMatch && dashboardRoleMatch[1] !== role) {
       const correctDashboard = new URL(`/dashboard/${role}`, request.url);
@@ -80,7 +85,11 @@ export async function middleware(request: NextRequest) {
   if (url.pathname === '/login') {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const role = user.user_metadata?.role || 'student';
+      const role = user.user_metadata?.role as string | undefined;
+      if (!role) {
+        // Fail closed: no role metadata — send back to login.
+        return NextResponse.redirect(new URL('/login?error=role_missing', request.url));
+      }
       const redirectUrl = new URL(`/dashboard/${role}`, request.url);
       
       console.log(`[Auto-Navigator] Authenticated session for ${user.email} (${role}). Redirecting to dashboard.`);
