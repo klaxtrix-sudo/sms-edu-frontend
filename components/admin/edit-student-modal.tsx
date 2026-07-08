@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Edit3, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateStudent, uploadStudentPassport } from "@/app/actions/admin-actions";
+import { compressImageToBase64 } from "@/lib/utils";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
@@ -112,31 +113,26 @@ export function EditStudentModal({
 
     setUploading(true);
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result as string;
+    try {
+      const base64String = await compressImageToBase64(file, 600, 600, 0.82);
       setPassportPreview(base64String);
 
-      try {
-        const result = await uploadStudentPassport(
-          schoolId || "school",
-          student.id || "student",
-          base64String
-        );
-        if (result.success && result.publicUrl) {
-          setPassportUrl(result.publicUrl);
-          toast.success("Passport photo uploaded successfully");
-        } else {
-          toast.error(result.error || "Failed to upload passport photo");
-        }
-      } catch (err: any) {
-        toast.error(err.message || "Failed to upload passport photo");
-      } finally {
-        setUploading(false);
+      const result = await uploadStudentPassport(
+        schoolId || "school",
+        student.id || "student",
+        base64String
+      );
+      if (result.success && result.publicUrl) {
+        setPassportUrl(result.publicUrl);
+        toast.success("Passport photo uploaded successfully");
+      } else {
+        toast.error(result.error || "Failed to upload passport photo");
       }
-    };
-
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload passport photo");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removePassport = () => {

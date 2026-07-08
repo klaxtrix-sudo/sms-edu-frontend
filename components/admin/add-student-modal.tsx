@@ -40,6 +40,7 @@ import { createStudent, uploadStudentPassport } from "@/app/actions/admin-action
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { AddParentModal } from "@/components/admin/add-parent-modal";
+import { compressImageToBase64 } from "@/lib/utils";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
@@ -186,38 +187,28 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
 
     setUploading(true);
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result as string;
+    try {
+      const base64String = await compressImageToBase64(file, 600, 600, 0.82);
       setPassportPreview(base64String);
 
-      try {
-        const tempStudentId = typeof crypto !== 'undefined' && crypto.randomUUID 
-          ? crypto.randomUUID() 
-          : Math.random().toString(36).substring(2, 15);
+      const tempStudentId = typeof crypto !== 'undefined' && crypto.randomUUID 
+        ? crypto.randomUUID() 
+        : Math.random().toString(36).substring(2, 15);
 
-        const result = await uploadStudentPassport(schoolId, tempStudentId, base64String);
-        if (result.success && result.publicUrl) {
-          form.setValue("passportUrl", result.publicUrl);
-          toast.success("Passport photo uploaded successfully");
-        } else {
-          toast.error(result.error || "Failed to upload passport photo");
-          setPassportPreview("");
-        }
-      } catch (err: any) {
-        toast.error(err.message || "Failed to upload passport photo");
+      const result = await uploadStudentPassport(schoolId, tempStudentId, base64String);
+      if (result.success && result.publicUrl) {
+        form.setValue("passportUrl", result.publicUrl);
+        toast.success("Passport photo uploaded successfully");
+      } else {
+        toast.error(result.error || "Failed to upload passport photo");
         setPassportPreview("");
-      } finally {
-        setUploading(false);
       }
-    };
-
-    reader.onerror = () => {
-      toast.error("Failed to read image file");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload passport photo");
+      setPassportPreview("");
+    } finally {
       setUploading(false);
-    };
-
-    reader.readAsDataURL(file);
+    }
   };
 
   const removePassport = () => {

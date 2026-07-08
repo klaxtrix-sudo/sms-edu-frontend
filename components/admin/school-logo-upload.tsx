@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Image as ImageIcon, Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadSchoolLogo } from "@/app/actions/tenant-sync-actions";
+import { compressImageToBase64 } from "@/lib/utils";
 
 interface SchoolLogoUploadProps {
   value?: string;
@@ -25,40 +26,29 @@ export function SchoolLogoUpload({ value, onChange, schoolId }: SchoolLogoUpload
         return;
       }
 
-      // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image size must be less than 2MB");
+      // Validate file size (max 5MB initial selection)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size must be less than 5MB");
         return;
       }
 
       setUploading(true);
 
-      // Convert to Base64 first, then upload to Storage via the backend
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-
-        try {
-          const result = await uploadSchoolLogo(schoolId, base64String);
-          if (result.success && result.publicUrl) {
-            onChange(result.publicUrl);
-            toast.success("Logo uploaded.");
-          } else {
-            toast.error(result.error || "Failed to upload logo");
-          }
-        } catch (err: any) {
-          toast.error(err.message || "Failed to upload logo");
-        } finally {
-          setUploading(false);
+      try {
+        // Compress image client-side so base64 payload is compact (~100KB) and fast
+        const base64String = await compressImageToBase64(file, 600, 600, 0.82);
+        const result = await uploadSchoolLogo(schoolId, base64String);
+        if (result.success && result.publicUrl) {
+          onChange(result.publicUrl);
+          toast.success("Logo uploaded.");
+        } else {
+          toast.error(result.error || "Failed to upload logo");
         }
-      };
-      
-      reader.onerror = () => {
-        toast.error("Failed to read image file");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to upload logo");
+      } finally {
         setUploading(false);
-      };
-
-      reader.readAsDataURL(file);
+      }
 
     } catch (error: any) {
       toast.error(error.message || "Failed to process logo");
