@@ -1,5 +1,5 @@
-import { Sidebar, type SidebarItem } from "@/components/dashboard/sidebar";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { type SidebarItem } from "@/components/dashboard/sidebar";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { createServerClient } from "@/lib/supabase/server";
 import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
 import OnboardingGate from "@/components/dashboard/onboarding-gate";
@@ -58,22 +58,9 @@ export default async function TeacherLayout({
   return (
     <OnboardingGate user={user}>
       <UserStatusGuard userId={user.id} />
-      <div className="flex min-h-screen relative overflow-hidden">
-        <Sidebar items={teacherNavItems} role="Teacher" />
-        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-          <DashboardHeader />
-          <main className="flex-1 overflow-y-auto bg-background flex flex-col min-h-0">
-            <div className="flex-1 p-8 lg:p-12">
-              {children}
-            </div>
-            <footer className="py-4 text-center select-none">
-              <p className="text-[11px] text-foreground/70 leading-relaxed">
-                © {new Date().getFullYear()} Klaxtrix SMS &mdash; School Management System. All rights reserved.
-              </p>
-            </footer>
-          </main>
-        </div>
-      </div>
+      <DashboardShell items={teacherNavItems} role="Teacher">
+        {children}
+      </DashboardShell>
     </OnboardingGate>
   );
 }
