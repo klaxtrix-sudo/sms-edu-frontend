@@ -404,25 +404,16 @@ export default function AcademicsPage() {
                     {/* Card Header */}
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-50/60 px-3 py-1 rounded-lg">Curriculum</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-50/60 px-3 py-1 rounded-lg">Academic Subject</span>
                         
                         {/* Hover Actions */}
                         <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <Button 
-                            onClick={() => {
-                              toast.info("You can edit a subject from its class settings.");
-                            }}
-                            variant="ghost" 
-                            size="icon" 
-                            className="size-8 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-all"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </Button>
                           <Button 
                             onClick={() => handleDeleteSubject(sub.id, sub.name)}
                             variant="ghost" 
                             size="icon" 
                             className="size-8 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                            title="Delete Subject"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
