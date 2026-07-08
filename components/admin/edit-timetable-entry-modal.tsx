@@ -112,17 +112,25 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
           .eq("id", assignment.teacher_id)
           .single();
         setTeacherName(teacher?.full_name || "Unknown Teacher");
-      } else {
-        form.setValue("teacher_id", "");
-        setTeacherName("Not assigned");
+        return;
       }
+
+      // If not found in class_subject_teachers but this matches the entry's original class & subject, restore original teacher
+      if (entry && classId === entry.class_id && subjectId === entry.subject_id && entry.teacher_id) {
+        form.setValue("teacher_id", entry.teacher_id);
+        setTeacherName(entry.profiles?.full_name || "Assigned Teacher");
+        return;
+      }
+
+      form.setValue("teacher_id", "");
+      setTeacherName("Not assigned");
     } catch {
       form.setValue("teacher_id", "");
       setTeacherName("Lookup failed");
     } finally {
       setTeacherLoading(false);
     }
-  }, [supabase, form]);
+  }, [supabase, form, entry]);
 
   const fetchData = async () => {
     try {
@@ -157,11 +165,9 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
 
   useEffect(() => {
     if (open && watchClassId && watchSubjectId) {
-      if (watchClassId !== entry.class_id || watchSubjectId !== entry.subject_id) {
-        lookupTeacher(watchClassId, watchSubjectId);
-      }
+      lookupTeacher(watchClassId, watchSubjectId);
     }
-  }, [watchClassId, watchSubjectId, open, entry, lookupTeacher]);
+  }, [watchClassId, watchSubjectId, open, lookupTeacher]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
