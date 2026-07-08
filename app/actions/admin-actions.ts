@@ -499,6 +499,110 @@ export async function createStudent(data: any) {
   }
 }
 
+export async function updateStudent(data: {
+  studentId: string;
+  userId?: string;
+  fullName: string;
+  admissionNo: string;
+  classId: string | null;
+  gender?: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  genotype?: string;
+  medicalConditions?: string;
+  stateOfOrigin?: string;
+  lga?: string;
+  religion?: string;
+  residentialAddress?: string;
+  previousSchool?: string;
+  passportUrl?: string;
+  subdomain: string;
+}) {
+  if (!data.subdomain) return { error: "Subdomain is required to update student." };
+
+  try {
+    const tenantSupabase = await createTenantAdminClient(data.subdomain);
+
+    const { error: studentError } = await (tenantSupabase as any)
+      .from('students')
+      .update({
+        admission_no: data.admissionNo,
+        class_id: data.classId || null,
+        gender: data.gender || null,
+        date_of_birth: data.dateOfBirth || null,
+        blood_group: data.bloodGroup || null,
+        genotype: data.genotype || null,
+        medical_conditions: data.medicalConditions || null,
+        state_of_origin: data.stateOfOrigin || null,
+        lga: data.lga || null,
+        religion: data.religion || null,
+        residential_address: data.residentialAddress || null,
+        previous_school: data.previousSchool || null,
+      })
+      .eq('id', data.studentId);
+
+    if (studentError) {
+      return { error: `Tenant Data Error: ${studentError.message}` };
+    }
+
+    if (data.userId) {
+      const profileUpdates: any = {
+        full_name: data.fullName,
+      };
+      if (data.passportUrl !== undefined) {
+        profileUpdates.avatar_url = data.passportUrl || null;
+      }
+
+      const { error: profileError } = await (tenantSupabase as any)
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', data.userId);
+
+      if (profileError) {
+        console.error('[Admin Actions] Profile update error:', profileError.message);
+      }
+    }
+
+    revalidatePath("/dashboard/admin/users/students");
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || "Failed to update student record." };
+  }
+}
+
+export async function deleteStudent(data: {
+  studentId: string;
+  userId?: string;
+  subdomain: string;
+}) {
+  if (!data.subdomain) return { error: "Subdomain is required to delete student." };
+
+  try {
+    const tenantSupabase = await createTenantAdminClient(data.subdomain);
+
+    const { error: studentError } = await (tenantSupabase as any)
+      .from('students')
+      .delete()
+      .eq('id', data.studentId);
+
+    if (studentError) {
+      return { error: `Failed to delete student: ${studentError.message}` };
+    }
+
+    if (data.userId) {
+      await (tenantSupabase as any)
+        .from('profiles')
+        .delete()
+        .eq('id', data.userId);
+    }
+
+    revalidatePath("/dashboard/admin/users/students");
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || "Failed to delete student." };
+  }
+}
+
 /**
  * Uploads a student passport photograph to centralized storage.
  * Returns a public URL that can be stored in profiles.avatar_url.
