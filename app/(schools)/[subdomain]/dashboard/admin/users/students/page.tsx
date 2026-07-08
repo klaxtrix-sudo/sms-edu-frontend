@@ -49,9 +49,15 @@ import {
   MoreHorizontal, 
   GraduationCap,
   Loader2,
-  Key
+  Key,
+  Eye,
+  Edit3,
+  Trash2
 } from "lucide-react";
 import { AddStudentModal } from "@/components/admin/add-student-modal";
+import { StudentProfileModal } from "@/components/admin/student-profile-modal";
+import { EditStudentModal } from "@/components/admin/edit-student-modal";
+import { DeleteStudentModal } from "@/components/admin/delete-student-modal";
 import { resetStudentPassword } from "@/app/actions/admin-actions";
 import { toast } from "sonner";
 
@@ -70,6 +76,12 @@ export default function StudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState<{ id: string, name: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [resetting, setResetting] = useState(false);
+
+  // Lifecycle Action Modal States
+  const [selectedStudentRecord, setSelectedStudentRecord] = useState<any | null>(null);
+  const [isViewProfileOpen, setIsViewProfileOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -106,11 +118,22 @@ export default function StudentsPage() {
           .select(`
             id,
             user_id,
+            class_id,
             admission_no,
             gender,
+            date_of_birth,
+            blood_group,
+            genotype,
+            medical_conditions,
+            state_of_origin,
+            lga,
+            religion,
+            residential_address,
+            previous_school,
             profiles!students_user_id_fkey (
               full_name,
-              phone
+              phone,
+              avatar_url
             ),
             classes!class_id (
               id,
@@ -276,15 +299,49 @@ export default function StudentsPage() {
                               <MoreHorizontal className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuContent align="end" className="w-[180px]">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedStudentRecord(student);
+                                setIsViewProfileOpen(true);
+                              }}
+                              className="cursor-pointer font-bold flex items-center gap-2"
+                            >
+                              <Eye className="size-4 text-primary" />
+                              <span>View Profile</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedStudentRecord(student);
+                                setIsEditModalOpen(true);
+                              }}
+                              className="cursor-pointer font-bold flex items-center gap-2"
+                            >
+                              <Edit3 className="size-4 text-emerald-600" />
+                              <span>Edit Student</span>
+                            </DropdownMenuItem>
+
                             <DropdownMenuItem 
                               onClick={() => {
                                 setSelectedStudent({ id: student.user_id, name: student.profiles?.full_name || "Student" });
                                 setIsResetPasswordOpen(true);
                               }}
-                              className="text-cyan-500 hover:text-cyan-600 focus:text-cyan-600 font-semibold cursor-pointer"
+                              className="text-cyan-600 hover:text-cyan-700 focus:text-cyan-700 font-bold cursor-pointer flex items-center gap-2"
                             >
-                              Reset Password
+                              <Key className="size-4" />
+                              <span>Reset Password</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedStudentRecord(student);
+                                setIsDeleteModalOpen(true);
+                              }}
+                              className="cursor-pointer font-bold flex items-center gap-2 text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
+                              <span>Delete Student</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -345,17 +402,17 @@ export default function StudentsPage() {
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleResetPassword}>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 font-bold">
                 <Key className="w-5 h-5 text-cyan-500" />
                 Change Student Password
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="font-medium">
                 Assign a new login password for {selectedStudent?.name}.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password" className="font-bold">New Password</Label>
                 <PasswordInput
                   id="new-password"
                   placeholder="••••••••"
@@ -363,14 +420,14 @@ export default function StudentsPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                 />
-                <p className="text-[10px] text-muted-foreground">Password must be at least 6 characters long.</p>
+                <p className="text-[10px] text-muted-foreground font-medium">Password must be at least 6 characters long.</p>
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsResetPasswordOpen(false)} disabled={resetting}>
+              <Button type="button" variant="outline" onClick={() => setIsResetPasswordOpen(false)} disabled={resetting} className="font-bold">
                 Cancel
               </Button>
-              <Button type="submit" disabled={resetting}>
+              <Button type="submit" disabled={resetting} className="font-bold">
                 {resetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Password
               </Button>
@@ -378,6 +435,42 @@ export default function StudentsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Read: View Student Profile Modal */}
+      <StudentProfileModal
+        isOpen={isViewProfileOpen}
+        onClose={() => {
+          setIsViewProfileOpen(false);
+          setSelectedStudentRecord(null);
+        }}
+        student={selectedStudentRecord}
+      />
+
+      {/* Update: Edit Student Modal */}
+      <EditStudentModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedStudentRecord(null);
+        }}
+        student={selectedStudentRecord}
+        classes={classes}
+        subdomain={subdomain as string}
+        schoolId={schoolId || ""}
+        onSuccess={fetchData}
+      />
+
+      {/* Delete: Remove Student Modal */}
+      <DeleteStudentModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedStudentRecord(null);
+        }}
+        student={selectedStudentRecord}
+        subdomain={subdomain as string}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }
