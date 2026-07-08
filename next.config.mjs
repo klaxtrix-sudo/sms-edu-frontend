@@ -50,6 +50,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: [],
     serverActions: {
+      bodySizeLimit: '10mb',
       allowedOrigins: [
         '*.localhost:3000', 'localhost:3000', '*.localhost',  // dev
         'klaxtrix.site', '*.klaxtrix.site',                  // production
