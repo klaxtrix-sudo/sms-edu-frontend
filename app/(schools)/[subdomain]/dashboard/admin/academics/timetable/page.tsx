@@ -32,6 +32,7 @@ import { createTenantClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddTimetableEntryModal } from "@/components/admin/add-timetable-entry-modal";
+import { EditTimetableEntryModal } from "@/components/admin/edit-timetable-entry-modal";
 
 const DAYS = [
   { value: 1, label: "Monday" },
@@ -152,12 +153,17 @@ export default function AdminTimetablePage() {
                 timetable
                   .filter(item => item.day_of_week === day.value)
                   .map((item) => (
-                    <ScheduleCard key={item.id} item={item} onDelete={handleDelete} />
+                    <ScheduleCard
+                      key={item.id}
+                      item={item}
+                      onDelete={handleDelete}
+                      onUpdate={fetchTimetable}
+                    />
                   ))
               )}
 
               {!loading && timetable.filter(item => item.day_of_week === day.value).length === 0 && (
-                <div className="border-2 border-dashed border-muted/50 rounded-2xl h-32 flex items-center justify-center text-muted-foreground text-xs italic p-4 text-center">
+                <div className="border-2 border-dashed border-muted/50 rounded-2xl h-32 flex items-center justify-center text-muted-foreground text-xs font-medium p-4 text-center">
                   No subjects scheduled.
                 </div>
               )}
@@ -169,19 +175,24 @@ export default function AdminTimetablePage() {
   );
 }
 
-function ScheduleCard({ item, onDelete }: any) {
+function ScheduleCard({ item, onDelete, onUpdate }: any) {
   return (
     <Card className="border-none shadow-xl bg-card/60 backdrop-blur-xl group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
       <CardHeader className="p-4 pb-0">
         <div className="flex items-center justify-between gap-2">
           <div className="text-[10px] font-black uppercase tracking-widest text-primary/70">{item.subjects?.code}</div>
-          <button 
-            onClick={() => onDelete(item.id)}
-            className="size-6 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
-          >
-            <Trash2 className="size-3" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <EditTimetableEntryModal entry={item} onSuccess={onUpdate} />
+            <button 
+              type="button"
+              onClick={() => onDelete(item.id)}
+              className="size-7 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center transition-all hover:bg-destructive hover:text-white"
+              title="Delete Period"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </div>
         </div>
         <CardTitle className="text-sm font-black mt-1 line-clamp-1">{item.subjects?.name}</CardTitle>
       </CardHeader>
@@ -191,7 +202,7 @@ function ScheduleCard({ item, onDelete }: any) {
           {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
         </div>
         {item.room && (
-          <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground italic">
+          <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground">
             <MapPin className="size-3" />
             {item.room}
           </div>
@@ -199,7 +210,7 @@ function ScheduleCard({ item, onDelete }: any) {
         {item.profiles?.full_name && (
           <div className="text-[10px] font-medium text-muted-foreground/80 border-t border-border/20 pt-1.5 mt-1.5 flex items-center gap-1.5">
             <span className="font-bold text-primary/70">Teacher:</span>
-            <span className="italic">{item.profiles.full_name}</span>
+            <span className="font-semibold">{item.profiles.full_name}</span>
           </div>
         )}
       </CardContent>
