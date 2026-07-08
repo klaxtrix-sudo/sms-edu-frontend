@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,10 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
   const params = useParams();
   const subdomain = params?.subdomain as string;
 
+  useEffect(() => {
+    onClose?.();
+  }, [pathname]);
+
   const handleLogout = async () => {
     await signOutAction(subdomain);
     // Hard reload — guarantees browser applies cleared-cookie response headers
@@ -123,6 +128,7 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
             <Link
               key={item.href}
               href={fullHref}
+              onClick={onClose}
               id={`sidebar-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               className={cn(
                 "flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-all group",
