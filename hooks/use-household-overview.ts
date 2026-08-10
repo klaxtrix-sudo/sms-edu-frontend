@@ -30,10 +30,7 @@ export interface HouseholdOverviewData {
  * Aggregates financial + academic data across all linked children
  * for the household overview page.
  *
- * - Computes total outstanding fees (fee_structures − successful fee_payments)
- *   across all children for the current term/year.
- * - Computes per-child attendance % and average grade.
- * - Builds a performance trend chart from historical results.
+ * Uses batch queries with `.in()` filters to avoid N+1 query patterns.
  */
 export function useHouseholdOverview(): HouseholdOverviewData {
   const { supabase, academicCycle } = useTenant();
@@ -55,95 +52,117 @@ export function useHouseholdOverview(): HouseholdOverviewData {
     setLoading(true);
     setError(null);
     try {
+      const childIds = children.map((c) => c.id);
+      const classIds = Array.from(new Set(children.map((c) => c.class_id).filter(Boolean))) as string[];
+      const schoolIds = Array.from(new Set(children.map((c) => c.school_id).filter(Boolean))) as string[];
+
+      // 1. Batch fetch fee structures for all children's classes
+      let feeStructures: any[] = [];
+      if (classIds.length > 0 && year && term) {
+        const { data } = await supabase
+          .from("fee_structures")
+          .select("id, amount, class_id, school_id")
+          .in("class_id", classIds)
+          .in("school_id", schoolIds)
+          .eq("academic_year", year)
+          .eq("term", term);
+        feeStructures = data || [];
+      }
+
+      // 2. Batch fetch successful payments for all children
+      let payments: any[] = [];
+      if (childIds.length > 0) {
+        const { data } = await supabase
+          .from("fee_payments")
+          .select("fee_structure_id, student_id, amount, status")
+          .in("student_id", childIds)
+          .eq("status", "success");
+        payments = data || [];
+      }
+
+      // 3. Batch fetch attendance for all children
+      const { data: attendance } = await supabase
+        .from("attendance")
+        .select("student_id, status")
+        .in("student_id", childIds);
+
+      // 4. Batch fetch current term results
+      let currentResultsQuery = supabase
+        .from("results")
+        .select("student_id, total_score, academic_year, term")
+        .in("student_id", childIds);
+      if (year) currentResultsQuery = currentResultsQuery.eq("academic_year", year);
+      if (term) currentResultsQuery = currentResultsQuery.eq("term", term);
+      const { data: currentResults } = await currentResultsQuery;
+
+      // 5. Batch fetch all historical results for performance chart
+      const { data: allResults } = await supabase
+        .from("results")
+        .select("student_id, total_score, academic_year, term")
+        .in("student_id", childIds)
+        .order("academic_year", { ascending: true })
+        .order("term", { ascending: true });
+
+      // ── Process data per-child ──
+
       const stats: Record<string, ChildStat> = {};
       let totalOutstanding = 0;
       const termAverages: Map<string, number[]> = new Map();
 
+      // Index payments by student_id for O(1) lookup
+      const paymentsByStudent = new Map<string, Set<string>>();
+      for (const p of payments) {
+        if (!paymentsByStudent.has(p.student_id)) {
+          paymentsByStudent.set(p.student_id, new Set());
+        }
+        paymentsByStudent.get(p.student_id)!.add(p.fee_structure_id);
+      }
+
       for (const child of children) {
-        // 1. Fee structures for this child's class (current term/year)
+        // Fee calculation
         let owedForChild = 0;
         if (child.class_id && child.school_id) {
-          const { data: feeStructures } = await supabase
-            .from("fee_structures")
-            .select("id, amount, academic_year, term")
-            .eq("class_id", child.class_id)
-            .eq("school_id", child.school_id)
-            .eq("academic_year", year)
-            .eq("term", term);
-
-          if (feeStructures && feeStructures.length > 0) {
-            // Fetch successful payments for this child
-            const { data: payments } = await supabase
-              .from("fee_payments")
-              .select("fee_structure_id, amount, status")
-              .eq("student_id", child.id)
-              .eq("status", "success");
-
-            const paidFeeIds = new Set((payments || []).map((p) => p.fee_structure_id));
-            for (const fs of feeStructures) {
-              if (!paidFeeIds.has(fs.id)) {
-                owedForChild += Number(fs.amount);
-              }
+          const childFees = feeStructures.filter(
+            (fs) => fs.class_id === child.class_id && fs.school_id === child.school_id
+          );
+          const paidFeeIds = paymentsByStudent.get(child.id) || new Set();
+          for (const fs of childFees) {
+            if (!paidFeeIds.has(fs.id)) {
+              owedForChild += Number(fs.amount);
             }
           }
         }
         totalOutstanding += owedForChild;
 
-        // 2. Attendance
-        const { data: attendance } = await supabase
-          .from("attendance")
-          .select("status")
-          .eq("student_id", child.id);
-
+        // Attendance calculation
+        const childAttendance = (attendance || []).filter((a) => a.student_id === child.id);
         let attPct: number | null = null;
-        if (attendance && attendance.length > 0) {
-          const present = attendance.filter(
+        if (childAttendance.length > 0) {
+          const present = childAttendance.filter(
             (a) => a.status === "present" || a.status === "late"
           ).length;
-          attPct = Math.round((present / attendance.length) * 100);
+          attPct = Math.round((present / childAttendance.length) * 100);
         }
 
-        // 3. Results for current term (for avg grade)
-        let resultsQuery = supabase
-          .from("results")
-          .select("total_score, academic_year, term")
-          .eq("student_id", child.id);
-
-        if (year) resultsQuery = resultsQuery.eq("academic_year", year);
-        if (term) resultsQuery = resultsQuery.eq("term", term);
-
-        const { data: currentResults } = await resultsQuery;
-
+        // Current term results
+        const childResults = (currentResults || []).filter((r) => r.student_id === child.id);
         let avgScore: number | null = null;
         let avgGrade: string | null = null;
-        if (currentResults && currentResults.length > 0) {
+        if (childResults.length > 0) {
           avgScore = Math.round(
-            currentResults.reduce((s, r) => s + Number(r.total_score), 0) / currentResults.length
+            childResults.reduce((s, r) => s + Number(r.total_score), 0) / childResults.length
           );
           avgGrade = scoreToGrade(avgScore);
         }
 
-        stats[child.id] = {
-          childId: child.id,
-          attendancePct: attPct,
-          avgGrade,
-          avgScore,
-        };
+        stats[child.id] = { childId: child.id, attendancePct: attPct, avgGrade, avgScore };
 
-        // 4. Historical results for performance chart (all terms)
-        const { data: allResults } = await supabase
-          .from("results")
-          .select("total_score, academic_year, term")
-          .eq("student_id", child.id)
-          .order("academic_year", { ascending: true })
-          .order("term", { ascending: true });
-
-        if (allResults) {
-          for (const r of allResults) {
-            const key = `${r.academic_year}-T${r.term}`;
-            if (!termAverages.has(key)) termAverages.set(key, []);
-            termAverages.get(key)!.push(Number(r.total_score));
-          }
+        // Historical results for chart
+        const childAllResults = (allResults || []).filter((r) => r.student_id === child.id);
+        for (const r of childAllResults) {
+          const key = `${r.academic_year}-T${r.term}`;
+          if (!termAverages.has(key)) termAverages.set(key, []);
+          termAverages.get(key)!.push(Number(r.total_score));
         }
       }
 
