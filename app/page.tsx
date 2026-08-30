@@ -55,8 +55,8 @@ export default function RootPage() {
                © {new Date().getFullYear()} Klaxtrix Institution Management. All rights reserved.
             </p>
             <div className="flex gap-6">
-               <Link href="#" className="text-sm text-primary hover:underline">Privacy Policy</Link>
-               <Link href="#" className="text-sm text-primary hover:underline">Terms of Service</Link>
+               <Link href="/privacy" className="text-sm text-primary hover:underline">Privacy Policy</Link>
+               <Link href="/terms" className="text-sm text-primary hover:underline">Terms of Service</Link>
             </div>
          </div>
       </footer>
