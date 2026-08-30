@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, MapPin, Baby } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, Baby } from 'lucide-react';
 import Image from 'next/image';
 
 export function LandingHero() {
@@ -322,7 +322,7 @@ export function LandingSolutions() {
       description: "Advanced management for high schools. Streamline subject selection, exam processing, and detailed academic performance.",
       icon: School,
       color: "text-indigo-500",
-      features: ["Exam Center", "Subject Mgt", "Performance"]
+      features: ["Exam Center", "Subject Management", "Performance"]
     }
   ];
 
@@ -394,17 +394,7 @@ export function LandingContact() {
                       </div>
                       <div>
                          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Support Line</div>
-                         <div className="text-lg font-semibold">+234 812 345 6789</div>
-                      </div>
-                   </div>
-                   
-                   <div className="flex items-center gap-5 group">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                         <MapPin className="w-6 h-6 text-emerald-500" />
-                      </div>
-                      <div>
-                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Main HQ</div>
-                         <div className="text-lg font-semibold">Victoria Island, Lagos, Nigeria</div>
+                         <div className="text-lg font-semibold">+234 805 414 0785</div>
                       </div>
                    </div>
                 </div>
@@ -422,7 +412,7 @@ export function LandingContact() {
                          </div>
                          <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-500 uppercase px-1">Contact Email</label>
-                            <input type="email" placeholder="admin@school.com" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all" />
+                            <input type="email" placeholder="e.g. admin@school.edu.ng" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all" />
                          </div>
                       </div>
                       <div className="space-y-2">

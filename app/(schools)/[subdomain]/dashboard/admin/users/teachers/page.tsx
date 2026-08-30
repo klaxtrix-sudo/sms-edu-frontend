@@ -278,7 +278,7 @@ export default function TeachersPage() {
                     <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">First Name</Label>
                     <Input 
                       id="firstName" 
-                      placeholder="Jane" 
+                      placeholder="e.g. Amaka" 
                       required 
                       className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                       value={formData.firstName}
@@ -289,7 +289,7 @@ export default function TeachersPage() {
                     <Label htmlFor="lastName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Last Name</Label>
                     <Input 
                       id="lastName" 
-                      placeholder="Doe" 
+                      placeholder="e.g. Adebayo" 
                       required 
                       className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                       value={formData.lastName}
@@ -303,7 +303,7 @@ export default function TeachersPage() {
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="teacher@school.com" 
+                    placeholder="e.g. teacher@school.edu.ng" 
                     required 
                     className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
                     value={formData.email}

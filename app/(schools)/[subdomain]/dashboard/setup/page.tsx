@@ -235,7 +235,7 @@ export default function SetupWizardPage() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Official Email</Label>
                   <Input 
                     type="email"
-                    placeholder="info@school.com" 
+                    placeholder="info@school.edu.ng" 
                     value={formData.officialEmail}
                     onChange={e => update('officialEmail', e.target.value)}
                     className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"

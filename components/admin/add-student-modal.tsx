@@ -316,7 +316,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
                   {/* Full Name */}
                   <div className="col-span-2 space-y-1.5">
                     <Label htmlFor="fullName" className="text-xs font-semibold">Full Name <span className="text-destructive">*</span></Label>
-                    <Input id="fullName" {...form.register("fullName")} placeholder="Jane Doe" className="h-10 text-sm" />
+                    <Input id="fullName" {...form.register("fullName")} placeholder="e.g. Chidi Okafor" className="h-10 text-sm" />
                     {form.formState.errors.fullName && (
                       <p className="text-xs text-destructive">{form.formState.errors.fullName.message}</p>
                     )}
@@ -535,7 +535,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
                     </div>
                     <Input 
                       id="email" 
-                      placeholder="parent@example.com" 
+                      placeholder="e.g. parent@school.edu.ng" 
                       value={form.watch("email") || ""}
                       className="h-10 text-sm"
                       onChange={(e) => {

@@ -90,14 +90,14 @@ export function AddTeacherModal({ isOpen, onClose, onSuccess, schoolId, subdomai
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
-              <Input id="fullName" {...form.register("fullName")} placeholder="John Doe" />
+              <Input id="fullName" {...form.register("fullName")} placeholder="e.g. Emeka Nnamdi" />
               {form.formState.errors.fullName && (
                 <p className="text-xs text-destructive">{form.formState.errors.fullName.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" {...form.register("email")} placeholder="john@example.com" />
+              <Input id="email" type="email" {...form.register("email")} placeholder="e.g. teacher@school.edu.ng" />
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               )}
