@@ -49,7 +49,11 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       console.log(`[Security Guard] Unauthenticated access to ${url.pathname}. Redirecting to /login.`);
-      return NextResponse.redirect(new URL('/login', request.url));
+      const loginRedirect = NextResponse.redirect(new URL('/login', request.url));
+      updatedResponse.cookies.getAll().forEach((cookie) => {
+        loginRedirect.cookies.set(cookie);
+      });
+      return loginRedirect;
     }
 
     // Role-based route enforcement: prevent cross-role access
@@ -57,7 +61,11 @@ export async function middleware(request: NextRequest) {
     if (!role) {
       // Fail closed: a user with no role metadata cannot reach any dashboard.
       console.log(`[Security Guard] User ${user.email} has no role metadata. Redirecting to /login.`);
-      return NextResponse.redirect(new URL('/login?error=role_missing', request.url));
+      const roleMissingRedirect = NextResponse.redirect(new URL('/login?error=role_missing', request.url));
+      updatedResponse.cookies.getAll().forEach((cookie) => {
+        roleMissingRedirect.cookies.set(cookie);
+      });
+      return roleMissingRedirect;
     }
     const dashboardRoleMatch = url.pathname.match(/^\/dashboard\/(admin|teacher|student|parent)/);
     if (dashboardRoleMatch && dashboardRoleMatch[1] !== role) {
