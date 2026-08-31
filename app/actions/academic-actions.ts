@@ -1,12 +1,12 @@
 "use server";
 
-import { createTenantAdminClient } from "@/lib/supabase/tenant-admin";
+import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
 
 export async function getClasses(schoolId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to fetch classes.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
     const { data, error } = await (tenantSupabase as any)
       .from('classes')
       .select(`
@@ -30,7 +30,7 @@ export async function getClasses(schoolId: string, subdomain: string) {
 export async function getSubjects(schoolId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to fetch subjects.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
     const { data, error } = await (tenantSupabase as any)
       .from('subjects')
       .select('*')
@@ -50,7 +50,7 @@ export async function createClass(data: any) {
   if (!subdomain) return { error: 'Subdomain is required to create a class.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .insert({
@@ -73,7 +73,7 @@ export async function createSubject(data: any) {
   if (!subdomain) return { error: 'Subdomain is required to create a subject.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('subjects')
       .insert({
@@ -96,7 +96,7 @@ export async function updateClass(classId: string, data: any, subdomain: string)
   if (!subdomain) return { error: 'Subdomain is required to update a class.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .update({
@@ -118,7 +118,7 @@ export async function deleteClass(classId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to delete a class.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .delete()
@@ -137,7 +137,7 @@ export async function deleteSubject(subjectId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to delete a subject.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('subjects')
       .delete()
@@ -156,7 +156,7 @@ export async function saveResults(resultsData: any[], subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to save results.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
     const { error } = await (tenantSupabase as any)
       .from('results')
       .upsert(resultsData, {
@@ -180,7 +180,7 @@ export async function getResultMetrics(
 ) {
   if (!subdomain) return { error: 'Subdomain is required.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
     
     // If classId and subjectId are provided, check for custom metrics first
     if (classId && subjectId) {
@@ -235,7 +235,7 @@ export async function saveResultMetrics(
   }
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     
     // Prepare for upsert
     // First, let's delete any existing metrics for this class/subject or default if we are overwriting
@@ -269,7 +269,7 @@ export async function saveResultMetrics(
 export async function getClassSubjectTeachers(classId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
     const { data, error } = await (tenantSupabase as any)
       .from('class_subject_teachers')
       .select('subject_id, teacher_id')
@@ -291,7 +291,7 @@ export async function saveClassSubjectAssignments(
 ) {
   if (!subdomain) return { error: 'Subdomain is required.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
 
     // 1. Delete all existing subject teacher assignments for this class
     const { error: deleteError } = await (tenantSupabase as any)
@@ -332,7 +332,7 @@ export async function completeOnboarding(userId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required.' };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher', 'parent', 'student']);
     const { error } = await (tenantSupabase as any)
       .from('profiles')
       .update({ onboarding_completed: true })
@@ -350,7 +350,7 @@ export async function resetUserPassword(userId: string, newPassword: string, sub
   if (!subdomain) return { error: "Subdomain is required for security credential updates." };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error: authError } = await tenantSupabase.auth.admin.updateUserById(
       userId,
       { password: newPassword }

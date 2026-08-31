@@ -1,6 +1,6 @@
 "use server";
 
-import { createTenantAdminClient } from "@/lib/supabase/tenant-admin";
+import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 
@@ -16,7 +16,7 @@ interface CreateUserData {
 export async function toggleTeacherStatus(userId: string, isActive: boolean, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to update teacher status.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('profiles')
       .update({ is_active: isActive })
@@ -35,7 +35,7 @@ export async function archiveTeacher(userId: string, subdomain: string) {
   console.log(`[Admin Actions] Archiving teacher ${userId} in subdomain ${subdomain}`);
   if (!subdomain) return { error: 'Subdomain is required to archive teacher.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     
     // 1. Update Profile Status
     console.log(`[Admin Actions] Updating profile status for ${userId}...`);
@@ -78,7 +78,7 @@ export async function archiveTeacher(userId: string, subdomain: string) {
 export async function unarchiveTeacher(userId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to unarchive teacher.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     
     const { error } = await (tenantSupabase as any)
       .from('profiles')
@@ -100,7 +100,7 @@ export async function unarchiveTeacher(userId: string, subdomain: string) {
 export async function updateTeacher(userId: string, data: any, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to update teacher.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await (tenantSupabase as any)
       .from('profiles')
       .update({
@@ -121,7 +121,7 @@ export async function updateTeacher(userId: string, data: any, subdomain: string
 export async function getTeachers(schoolId: string, subdomain: string, includeArchived: boolean = false) {
   if (!subdomain) return { error: 'Subdomain is required to fetch teachers.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
     let query = (tenantSupabase as any)
       .from('profiles')
       .select('*')
@@ -146,7 +146,7 @@ export async function deletePendingTeacher(userId: string, subdomain: string) {
   console.log(`[Admin Actions] Deleting pending teacher ${userId} in subdomain ${subdomain}`);
   if (!subdomain) return { error: 'Subdomain is required to delete teacher.' };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     
     // 1. Delete the profile explicitly to clear application data
     const { error: profileError } = await (tenantSupabase as any)
@@ -188,8 +188,8 @@ export async function createTeacher(data: CreateUserData) {
   } = data;
 
   try {
-    // 1. Initialize Tenant Admin Client
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    // 1. Initialize Tenant Admin Client with auth check
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
 
     // 2. Create Auth User in TENANT project
     const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
@@ -346,7 +346,7 @@ export async function resendTeacherCredentials(
   subdomain: string
 ) {
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
 
     // 1. Get teacher's profile (name & email)
     const { data: profile, error: profileError } = await tenantSupabase

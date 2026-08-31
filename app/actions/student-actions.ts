@@ -1,6 +1,6 @@
 "use server";
 
-import { createTenantAdminClient } from "@/lib/supabase/tenant-admin";
+import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
 
 export async function createStudent(data: any) {
@@ -28,8 +28,8 @@ export async function createStudent(data: any) {
   if (!subdomain) return { error: "Subdomain is required for student provisioning." };
 
   try {
-    // 1. Initialize Tenant Admin Client
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    // 1. Initialize Tenant Admin Client with Auth Check
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
 
     // 2. Lookup Parent Profile if email is provided
     let parentId = null;
@@ -137,7 +137,7 @@ export async function updateStudent(data: {
   if (!data.subdomain) return { error: "Subdomain is required to update student." };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(data.subdomain);
+    const { tenantSupabase } = await requireActionAuth(data.subdomain, ['admin']);
 
     const { error: studentError } = await (tenantSupabase as any)
       .from('students')
@@ -194,7 +194,7 @@ export async function deleteStudent(data: {
   if (!data.subdomain) return { error: "Subdomain is required to delete student." };
 
   try {
-    const tenantSupabase = await createTenantAdminClient(data.subdomain);
+    const { tenantSupabase } = await requireActionAuth(data.subdomain, ['admin']);
 
     const { error: studentError } = await (tenantSupabase as any)
       .from('students')
@@ -256,7 +256,7 @@ export async function uploadStudentPassport(
 export async function resetStudentPassword(studentUserId: string, newPassword: string, subdomain: string) {
   if (!subdomain) return { error: "Subdomain is required to reset student password." };
   try {
-    const tenantSupabase = await createTenantAdminClient(subdomain);
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
     const { error } = await tenantSupabase.auth.admin.updateUserById(studentUserId, {
       password: newPassword
     });
