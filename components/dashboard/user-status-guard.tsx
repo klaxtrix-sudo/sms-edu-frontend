@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createTenantClient } from '@/lib/supabase/client';
+import { useTenant } from '@/components/providers/tenant-provider';
 
 interface UserStatusGuardProps {
   userId: string;
@@ -10,12 +10,14 @@ interface UserStatusGuardProps {
 
 export function UserStatusGuard({ userId }: UserStatusGuardProps) {
   const router = useRouter();
-  const supabase = createTenantClient();
+  const { supabase } = useTenant();
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !supabase) return;
 
-    // 1. Subscribe to real-time changes on the current user's profile
+    // 1. Subscribe to real-time changes on the current user's profile.
+    // Uses the tenant-aware client so the channel connects to the school's
+    // own project — never the platform/master one.
     const channel = supabase
       .channel(`personal-status-${userId}`)
       .on(
@@ -28,11 +30,11 @@ export function UserStatusGuard({ userId }: UserStatusGuardProps) {
         },
         (payload) => {
           const newStatus = payload.new as { is_active: boolean };
-          
+
           // 2. If the user has been deactivated, immediately "kick them out"
           if (newStatus && newStatus.is_active === false) {
             console.log('[Security Guard] Account suspension detected in real-time. Redirecting…');
-            
+
             // To ensure the redirection is "hard" and wipes any cached state,
             // we use window.location.href or router.replace.
             window.location.href = '/dashboard/suspended';
