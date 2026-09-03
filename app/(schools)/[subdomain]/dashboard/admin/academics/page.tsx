@@ -1,29 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useTenant } from "@/components/providers/tenant-provider";
 import { createTenantClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Plus, 
   BookOpen, 
   Users, 
   Loader2,
-  Trash2,
-  Edit2,
-  AlertCircle
+  Trash2, 
+  Edit2, 
+  AlertCircle,
+  Search,
+  X,
+  List,
+  LayoutGrid,
+  MoreHorizontal,
+  GraduationCap
 } from "lucide-react";
 import { AddClassModal } from "@/components/admin/add-class-modal";
 import { AddSubjectModal } from "@/components/admin/add-subject-modal";
-import { getClasses, getSubjects, deleteSubject } from "@/app/actions/admin-actions";
+import { getAcademicOverview, assignClassTeacher } from "@/app/actions/admin-actions";
 import { EditClassModal } from "@/components/admin/edit-class-modal";
 import { DeleteClassModal } from "@/components/admin/delete-class-modal";
+import { DeleteSubjectModal } from "@/components/admin/delete-subject-modal";
 import { ManageSubjectTeachersModal } from "@/components/admin/manage-subject-teachers-modal";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function AcademicsPage() {
   const { subdomain } = useParams();
@@ -33,35 +64,65 @@ export default function AcademicsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("classes");
   
+  // View mode switcher: "table" (default) or "cards"
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [classTeacherFilter, setClassTeacherFilter] = useState<"all" | "assigned" | "unassigned">("all");
+
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
   const [isDeleteClassModalOpen, setIsDeleteClassModalOpen] = useState(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
 
+  // Teachers list for quick assignment
+  const [teachers, setTeachers] = useState<any[]>([]);
+
+  // Subject deletion modal state
+  const [isDeleteSubjectModalOpen, setIsDeleteSubjectModalOpen] = useState(false);
+  const [selectedSubjectForDelete, setSelectedSubjectForDelete] = useState<any>(null);
+
   // Subject-Teacher assignment states
   const [isSubjectTeacherModalOpen, setIsSubjectTeacherModalOpen] = useState(false);
   const [selectedClassForSubjects, setSelectedClassForSubjects] = useState<any>(null);
   const [classAssignments, setClassAssignments] = useState<any[]>([]);
-  
-  const supabase = createTenantClient();
+
+  // Retrieve user view preference from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedMode = localStorage.getItem("klaxtrix_academics_view_mode") as "table" | "cards" | null;
+      if (savedMode === "table" || savedMode === "cards") {
+        setViewMode(savedMode);
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: "table" | "cards") => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("klaxtrix_academics_view_mode", mode);
+    } catch {
+      // Ignore localStorage write errors
+    }
+  };
 
   const fetchData = async () => {
-    if (!tenant?.id) return;
+    if (!subdomain) return;
     
     try {
-      const [classesRes, subjectsRes, assignmentsRes] = await Promise.all([
-        getClasses(tenant.id, subdomain as string),
-        getSubjects(tenant.id, subdomain as string),
-        supabase.from("class_subject_teachers").select("class_id, subject_id")
-      ]);
+      const res = await getAcademicOverview(subdomain as string);
+      if (res.error) throw new Error(res.error);
 
-      if (classesRes.error) throw new Error(classesRes.error);
-      if (subjectsRes.error) throw new Error(subjectsRes.error);
-
-      setClasses(classesRes.data || []);
-      setSubjects(subjectsRes.data || []);
-      setClassAssignments(assignmentsRes.data || []);
+      if (res.data) {
+        setClasses(res.data.classes || []);
+        setSubjects(res.data.subjects || []);
+        setClassAssignments(res.data.assignments || []);
+        setTeachers(res.data.teachers || []);
+      }
     } catch (error: any) {
       console.error("Error fetching academics data:", error);
       toast.error(error.message || "Failed to load classes and subjects.");
@@ -70,25 +131,38 @@ export default function AcademicsPage() {
     }
   };
 
-  const handleDeleteSubject = async (subjectId: string, subjectName: string) => {
-    if (!subdomain || !tenant?.id) return;
-    if (!confirm(`Are you sure you want to delete the subject "${subjectName}"? This action cannot be undone.`)) return;
-
-    try {
-      const res = await deleteSubject(subjectId, subdomain as string);
-      if (res.error) throw new Error(res.error);
-      toast.success(`Subject "${subjectName}" deleted.`);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete subject");
-    }
-  };
-
   useEffect(() => {
-    if (tenant?.id) {
-      fetchData();
-    }
-  }, [tenant?.id]);
+    fetchData();
+  }, [subdomain]);
+
+  // Filtered Classes computation
+  const filteredClasses = useMemo(() => {
+    return classes.filter((cls) => {
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !query ||
+        cls.name.toLowerCase().includes(query) ||
+        (cls.profiles?.full_name && cls.profiles.full_name.toLowerCase().includes(query));
+
+      if (!matchesSearch) return false;
+
+      if (classTeacherFilter === "assigned") return !!cls.profiles?.full_name;
+      if (classTeacherFilter === "unassigned") return !cls.profiles?.full_name;
+      return true;
+    });
+  }, [classes, searchQuery, classTeacherFilter]);
+
+  // Filtered Subjects computation
+  const filteredSubjects = useMemo(() => {
+    return subjects.filter((sub) => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
+      return (
+        sub.name.toLowerCase().includes(query) ||
+        sub.code.toLowerCase().includes(query)
+      );
+    });
+  }, [subjects, searchQuery]);
 
   if (loading) {
     return (
@@ -102,7 +176,7 @@ export default function AcademicsPage() {
   const unassignedClassesCount = classes.filter(c => !c.profiles?.full_name).length;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Header */}
       <header className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
@@ -204,39 +278,130 @@ export default function AcademicsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Custom Tab List */}
-        <div className="flex justify-between items-center border-b border-slate-100 pb-5">
-          <TabsList className="grid grid-cols-2 w-full max-w-[340px] h-12 bg-slate-100/60 border border-slate-200/50 p-1 rounded-2xl">
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="w-full">
+        {/* Navigation & Controls Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <TabsList className="grid grid-cols-2 w-full md:w-[340px] h-12 bg-slate-100/60 border border-slate-200/50 p-1 rounded-2xl">
             <TabsTrigger 
               value="classes" 
               className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-indigo-600 transition-all flex items-center justify-center gap-2"
             >
               <Users className="w-4 h-4" />
-              Class List
+              Class List ({classes.length})
             </TabsTrigger>
             <TabsTrigger 
               value="subjects" 
               className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-emerald-600 transition-all flex items-center justify-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
-              Subject List
+              Subject List ({subjects.length})
             </TabsTrigger>
           </TabsList>
           
-          <div className="hidden sm:block">
-            <Badge variant="outline" className={`font-black uppercase tracking-wider px-3 py-1 rounded-xl text-[10px] ${
-              activeTab === "classes" 
-                ? "bg-indigo-50/50 text-indigo-600 border-indigo-100" 
-                : "bg-emerald-50/50 text-emerald-600 border-emerald-100"
-            }`}>
-              {activeTab === "classes" ? `${classes.length} Classes` : `${subjects.length} Subjects`}
-            </Badge>
+          {/* View Switcher Controls */}
+          <div className="flex items-center gap-3 self-end md:self-auto">
+            <div className="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/60 shadow-inner">
+              <button
+                onClick={() => handleViewModeChange("table")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
+                  viewMode === "table"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800"
+                )}
+                title="Table View"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span>Table</span>
+              </button>
+              <button
+                onClick={() => handleViewModeChange("cards")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
+                  viewMode === "cards"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800"
+                )}
+                title="Cards View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Cards</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Classes Content */}
-        <TabsContent value="classes" className="mt-8 outline-none">
+        {/* Global Instant Search & Quick Filter Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={activeTab === "classes" ? "Search classes or class teachers..." : "Search subjects or subject codes..."}
+              className="pl-10 pr-9 h-11 rounded-xl bg-white border-slate-200/80 shadow-sm focus-visible:ring-indigo-500 text-sm font-medium"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-md"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Quick Filters for Classes */}
+          {activeTab === "classes" && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <Button
+                variant={classTeacherFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setClassTeacherFilter("all")}
+                className={cn(
+                  "rounded-xl text-xs font-bold h-9 px-3.5",
+                  classTeacherFilter === "all" 
+                    ? "bg-slate-900 text-white hover:bg-slate-800" 
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                All ({classes.length})
+              </Button>
+              <Button
+                variant={classTeacherFilter === "assigned" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setClassTeacherFilter("assigned")}
+                className={cn(
+                  "rounded-xl text-xs font-bold h-9 px-3.5",
+                  classTeacherFilter === "assigned" 
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700" 
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                Assigned ({classes.length - unassignedClassesCount})
+              </Button>
+              <Button
+                variant={classTeacherFilter === "unassigned" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setClassTeacherFilter("unassigned")}
+                className={cn(
+                  "rounded-xl text-xs font-bold h-9 px-3.5",
+                  classTeacherFilter === "unassigned" 
+                    ? "bg-amber-600 text-white hover:bg-amber-700" 
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                Unassigned ({unassignedClassesCount})
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* ─────────────────────────────────────────────────────────────
+            CLASSES TAB CONTENT
+        ───────────────────────────────────────────────────────────── */}
+        <TabsContent value="classes" className="mt-6 outline-none">
           <AnimatePresence mode="wait">
             {classes.length === 0 ? (
               <motion.div 
@@ -259,7 +424,247 @@ export default function AcademicsPage() {
                   Add First Class
                 </Button>
               </motion.div>
+            ) : filteredClasses.length === 0 ? (
+              <motion.div
+                key="no-matches-classes"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-16 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50"
+              >
+                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-slate-700">No matching classes found</h4>
+                <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or filter.</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setSearchQuery(""); setClassTeacherFilter("all"); }}
+                  className="mt-3 text-xs font-bold text-indigo-600"
+                >
+                  Clear Filters
+                </Button>
+              </motion.div>
+            ) : viewMode === "table" ? (
+              /* Modern Interactive Table View */
+              <motion.div 
+                key="table-classes"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="bg-white border border-slate-200/80 rounded-3xl shadow-sm overflow-hidden"
+              >
+                <Table>
+                  <TableHeader className="bg-slate-50/70 border-b border-slate-100">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 pl-6">
+                        Class Name
+                      </TableHead>
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                        Class Teacher
+                      </TableHead>
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                        Subjects Offered
+                      </TableHead>
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 text-right pr-6">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClasses.map((cls) => {
+                      const subjectCount = classAssignments.filter((a) => a.class_id === cls.id).length;
+                      return (
+                        <TableRow 
+                          key={cls.id} 
+                          className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80 group"
+                        >
+                          {/* Class Name */}
+                          <TableCell className="py-4 pl-6 font-bold">
+                            <div className="flex items-center gap-3">
+                              <div className="size-9 rounded-xl bg-indigo-50 border border-indigo-100/60 flex items-center justify-center text-indigo-600 shrink-0 font-black text-xs">
+                                <GraduationCap className="w-4 h-4" />
+                              </div>
+                              <span className="text-base font-black text-slate-900 tracking-tight">
+                                {cls.name}
+                              </span>
+                            </div>
+                          </TableCell>
+
+                          {/* Class Teacher with Inline Quick Assignment */}
+                          <TableCell className="py-4 font-medium">
+                            <div className="flex items-center gap-2 max-w-[240px]">
+                              <Select
+                                value={cls.class_teacher_id || "none"}
+                                onValueChange={async (newTeacherId) => {
+                                  const teacherIdToSave = newTeacherId === "none" ? null : newTeacherId;
+                                  const assignedTeacher = teachers.find((t) => t.id === teacherIdToSave);
+
+                                  // Optimistic UI update
+                                  setClasses((prev) =>
+                                    prev.map((c) =>
+                                      c.id === cls.id
+                                        ? {
+                                            ...c,
+                                            class_teacher_id: teacherIdToSave,
+                                            profiles: assignedTeacher ? { full_name: assignedTeacher.full_name } : null,
+                                          }
+                                        : c
+                                    )
+                                  );
+
+                                  try {
+                                    const res = await assignClassTeacher(cls.id, teacherIdToSave, subdomain as string);
+                                    if (res.error) throw new Error(res.error);
+                                    toast.success(
+                                      teacherIdToSave
+                                        ? `Assigned ${assignedTeacher?.full_name} to ${cls.name}`
+                                        : `Removed class teacher from ${cls.name}`
+                                    );
+                                  } catch (err: any) {
+                                    toast.error(err.message || "Failed to assign teacher");
+                                    fetchData();
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-8 px-2 bg-transparent hover:bg-slate-100/70 border border-transparent hover:border-slate-200 rounded-lg transition-all text-xs font-bold focus:ring-0 w-auto min-w-[140px]">
+                                  <SelectValue placeholder="Assign teacher...">
+                                    {cls.profiles?.full_name ? (
+                                      <div className="flex items-center gap-2">
+                                        <div className="size-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-extrabold text-[10px] shadow-sm shadow-indigo-500/10 shrink-0">
+                                          {cls.profiles.full_name.charAt(0)}
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-800 truncate">
+                                          {cls.profiles.full_name}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <Badge 
+                                        variant="outline" 
+                                        className="bg-amber-50 text-amber-700 border-amber-200/80 font-bold text-[10px] px-2 py-0.5 rounded-lg inline-flex items-center gap-1 cursor-pointer hover:bg-amber-100/70 transition-colors"
+                                      >
+                                        <AlertCircle className="w-3 h-3 text-amber-500" />
+                                        Unassigned
+                                      </Badge>
+                                    )}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-[260px]">
+                                  <SelectItem value="none" className="text-xs font-bold text-slate-500">
+                                    Unassigned
+                                  </SelectItem>
+                                  {teachers.map((t) => (
+                                    <SelectItem key={t.id} value={t.id} className="text-xs font-semibold">
+                                      {t.full_name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableCell>
+
+                          {/* Subjects Offered */}
+                          <TableCell className="py-4">
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant="secondary" 
+                                className="bg-indigo-50 text-indigo-700 border-none font-extrabold text-xs rounded-lg px-2.5 py-1"
+                              >
+                                {subjectCount} {subjectCount === 1 ? "Subject" : "Subjects"}
+                              </Badge>
+                              <Button
+                                onClick={() => {
+                                  setSelectedClassForSubjects({ id: cls.id, name: cls.name });
+                                  setIsSubjectTeacherModalOpen(true);
+                                }}
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50/80 rounded-lg px-2.5"
+                              >
+                                Manage
+                              </Button>
+                            </div>
+                          </TableCell>
+
+                          {/* Actions */}
+                          <TableCell className="py-4 pr-6 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button 
+                                onClick={() => {
+                                  setSelectedClass({
+                                    id: cls.id,
+                                    name: cls.name,
+                                    teacherId: cls.class_teacher_id
+                                  });
+                                  setIsEditClassModalOpen(true);
+                                }}
+                                variant="ghost" 
+                                size="icon" 
+                                className="size-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 transition-all"
+                                title="Edit Class"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </Button>
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="size-8 rounded-lg hover:bg-slate-100 text-slate-500 transition-all"
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                                  <DropdownMenuItem 
+                                    onClick={() => {
+                                      setSelectedClassForSubjects({ id: cls.id, name: cls.name });
+                                      setIsSubjectTeacherModalOpen(true);
+                                    }}
+                                    className="text-xs font-bold gap-2 cursor-pointer"
+                                  >
+                                    <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+                                    Manage Subjects
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => {
+                                      setSelectedClass({
+                                        id: cls.id,
+                                        name: cls.name,
+                                        teacherId: cls.class_teacher_id
+                                      });
+                                      setIsEditClassModalOpen(true);
+                                    }}
+                                    className="text-xs font-bold gap-2 cursor-pointer"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5 text-slate-600" />
+                                    Edit Class
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => {
+                                      setSelectedClass({
+                                        id: cls.id,
+                                        name: cls.name
+                                      });
+                                      setIsDeleteClassModalOpen(true);
+                                    }}
+                                    className="text-xs font-bold text-rose-600 gap-2 cursor-pointer focus:bg-rose-50 focus:text-rose-700"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Delete Class
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </motion.div>
             ) : (
+              /* Enhanced Cards Grid View */
               <motion.div 
                 key="grid-classes"
                 initial={{ opacity: 0, y: 10 }} 
@@ -267,21 +672,19 @@ export default function AcademicsPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {classes.map((cls) => (
+                {filteredClasses.map((cls) => (
                   <div 
                     key={cls.id} 
                     className="relative overflow-hidden group bg-white border border-slate-100 hover:border-indigo-100/70 rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between min-h-[190px]"
                   >
-                    {/* Background Soft Glow */}
-                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-indigo-50/0 to-indigo-50/20 group-hover:to-indigo-50/70 rounded-full blur-xl transition-all duration-300" />
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-indigo-50/0 to-indigo-50/20 group-hover:to-indigo-50/70 rounded-full blur-xl transition-all duration-300 pointer-events-none" />
                     
-                    {/* Card Header */}
                     <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-500 bg-indigo-50/60 px-3 py-1 rounded-lg">Classroom</span>
-                        
-                        {/* Hover Actions */}
-                        <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
+                          {cls.name}
+                        </h3>
+                        <div className="flex gap-1 shrink-0">
                           <Button 
                             onClick={() => {
                               setSelectedClass({
@@ -293,7 +696,8 @@ export default function AcademicsPage() {
                             }}
                             variant="ghost" 
                             size="icon" 
-                            className="size-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                            className="size-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all text-slate-400 hover:text-indigo-600"
+                            title="Edit Class"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </Button>
@@ -307,16 +711,13 @@ export default function AcademicsPage() {
                             }}
                             variant="ghost" 
                             size="icon" 
-                            className="size-8 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                            className="size-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                            title="Delete Class"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </div>
-                      
-                      <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
-                        {cls.name}
-                      </h3>
                       
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px] rounded-lg">
@@ -335,7 +736,6 @@ export default function AcademicsPage() {
                       </div>
                     </div>
 
-                    {/* Card Footer: Teacher Section */}
                     <div className="pt-6 border-t border-slate-50 mt-6 flex items-center justify-between">
                       {cls.profiles?.full_name ? (
                         <div className="flex items-center gap-2.5">
@@ -361,8 +761,10 @@ export default function AcademicsPage() {
           </AnimatePresence>
         </TabsContent>
 
-        {/* Subjects Content */}
-        <TabsContent value="subjects" className="mt-8 outline-none">
+        {/* ─────────────────────────────────────────────────────────────
+            SUBJECTS TAB CONTENT
+        ───────────────────────────────────────────────────────────── */}
+        <TabsContent value="subjects" className="mt-6 outline-none">
           <AnimatePresence mode="wait">
             {subjects.length === 0 ? (
               <motion.div 
@@ -385,7 +787,123 @@ export default function AcademicsPage() {
                   Add First Subject
                 </Button>
               </motion.div>
+            ) : filteredSubjects.length === 0 ? (
+              <motion.div
+                key="no-matches-subjects"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-16 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50"
+              >
+                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-slate-700">No matching subjects found</h4>
+                <p className="text-xs text-slate-400 mt-1">No subjects match your search query.</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSearchQuery("")}
+                  className="mt-3 text-xs font-bold text-emerald-600"
+                >
+                  Clear Search
+                </Button>
+              </motion.div>
+            ) : viewMode === "table" ? (
+              /* Modern Interactive Table View */
+              <motion.div 
+                key="table-subjects"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="bg-white border border-slate-200/80 rounded-3xl shadow-sm overflow-hidden"
+              >
+                <Table>
+                  <TableHeader className="bg-slate-50/70 border-b border-slate-100">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 pl-6">
+                        Subject Name
+                      </TableHead>
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                        Subject Code
+                      </TableHead>
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                        Classes Offering
+                      </TableHead>
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 text-right pr-6">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSubjects.map((sub) => {
+                      const offeringClassesCount = new Set(
+                        classAssignments.filter((a) => a.subject_id === sub.id).map((a) => a.class_id)
+                      ).size;
+
+                      return (
+                        <TableRow 
+                          key={sub.id} 
+                          className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80 group"
+                        >
+                          {/* Subject Name */}
+                          <TableCell className="py-4 pl-6 font-bold">
+                            <div className="flex items-center gap-3">
+                              <div className="size-9 rounded-xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center text-emerald-600 shrink-0 font-black text-xs">
+                                <BookOpen className="w-4 h-4" />
+                              </div>
+                              <span className="text-base font-black text-slate-900 tracking-tight">
+                                {sub.name}
+                              </span>
+                            </div>
+                          </TableCell>
+
+                          {/* Subject Code */}
+                          <TableCell className="py-4">
+                            <Badge 
+                              variant="outline" 
+                              className="font-mono bg-emerald-50/80 text-emerald-700 border-emerald-200 font-extrabold tracking-widest px-3 py-1 text-xs rounded-lg"
+                            >
+                              {sub.code}
+                            </Badge>
+                          </TableCell>
+
+                          {/* Classes Offering */}
+                          <TableCell className="py-4">
+                            {offeringClassesCount > 0 ? (
+                              <Badge 
+                                variant="secondary" 
+                                className="bg-slate-100 text-slate-700 border-none font-bold text-xs rounded-lg px-2.5 py-1"
+                              >
+                                {offeringClassesCount} {offeringClassesCount === 1 ? "Class" : "Classes"}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-slate-400 font-medium italic">
+                                Not assigned yet
+                              </span>
+                            )}
+                          </TableCell>
+
+                          {/* Actions */}
+                          <TableCell className="py-4 pr-6 text-right">
+                            <Button 
+                              onClick={() => {
+                                setSelectedSubjectForDelete({ id: sub.id, name: sub.name, code: sub.code });
+                                setIsDeleteSubjectModalOpen(true);
+                              }}
+                              variant="ghost" 
+                              size="icon" 
+                              className="size-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                              title="Delete Subject"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </motion.div>
             ) : (
+              /* Enhanced Cards Grid View */
               <motion.div 
                 key="grid-subjects"
                 initial={{ opacity: 0, y: 10 }} 
@@ -393,39 +911,35 @@ export default function AcademicsPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {subjects.map((sub) => (
+                {filteredSubjects.map((sub) => (
                   <div 
                     key={sub.id} 
                     className="relative overflow-hidden group bg-white border border-slate-100 hover:border-emerald-100/70 rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between min-h-[190px]"
                   >
-                    {/* Background Soft Glow */}
-                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-emerald-50/0 to-emerald-50/20 group-hover:to-emerald-50/70 rounded-full blur-xl transition-all duration-300" />
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-emerald-50/0 to-emerald-50/20 group-hover:to-emerald-50/70 rounded-full blur-xl transition-all duration-300 pointer-events-none" />
                     
-                    {/* Card Header */}
                     <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-50/60 px-3 py-1 rounded-lg">Academic Subject</span>
-                        
-                        {/* Hover Actions */}
-                        <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-emerald-600 transition-colors">
+                          {sub.name}
+                        </h3>
+                        <div className="flex gap-1 shrink-0">
                           <Button 
-                            onClick={() => handleDeleteSubject(sub.id, sub.name)}
+                            onClick={() => {
+                              setSelectedSubjectForDelete({ id: sub.id, name: sub.name, code: sub.code });
+                              setIsDeleteSubjectModalOpen(true);
+                            }}
                             variant="ghost" 
                             size="icon" 
-                            className="size-8 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                            className="size-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
                             title="Delete Subject"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </div>
-                      
-                      <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-emerald-600 transition-colors">
-                        {sub.name}
-                      </h3>
                     </div>
 
-                    {/* Card Footer: Subject Code */}
                     <div className="pt-6 border-t border-slate-50 mt-6 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="size-6 rounded-lg bg-emerald-100/50 flex items-center justify-center text-emerald-600">
@@ -445,6 +959,7 @@ export default function AcademicsPage() {
         </TabsContent>
       </Tabs>
 
+      {/* Modals */}
       {tenant?.id && (
         <>
           <AddClassModal 
@@ -465,7 +980,7 @@ export default function AcademicsPage() {
           <DeleteClassModal 
             isOpen={isDeleteClassModalOpen} 
             onClose={() => setIsDeleteClassModalOpen(false)} 
-            onSuccess={fetchData}
+            onSuccess={fetchData} 
             classData={selectedClass || { id: "", name: "" }}
           />
 
@@ -490,6 +1005,16 @@ export default function AcademicsPage() {
               subdomain={subdomain as string}
             />
           )}
+
+          <DeleteSubjectModal
+            isOpen={isDeleteSubjectModalOpen}
+            onClose={() => {
+              setIsDeleteSubjectModalOpen(false);
+              setSelectedSubjectForDelete(null);
+            }}
+            onSuccess={fetchData}
+            subjectData={selectedSubjectForDelete}
+          />
         </>
       )}
     </div>
