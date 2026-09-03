@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, configureTenantBrowserClient } from '@/lib/supabase/client';
 import { getBackendUrl } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
@@ -154,11 +154,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           return newTenant;
         });
 
-        // Set global variables for raw createClient/createTenantClient calls
-        if (typeof window !== 'undefined') {
-          (window as any).__tenant_url = data.data.supabaseUrl;
-          (window as any).__tenant_anon_key = data.data.supabaseAnonKey;
-        }
+        // Configure raw createClient/createTenantClient calls to use the
+        // tenant project and purge any clients created from the platform
+        // fallback during the initial resolve race.
+        configureTenantBrowserClient(data.data.supabaseUrl, data.data.supabaseAnonKey);
 
         // Set a lightweight cookie so server actions can determine the tenant.
         // This is NOT sensitive — subdomain is already public in the URL.
@@ -175,6 +174,22 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   }, [subdomain, mounted]);
 
   if (!mounted) return null;
+
+  // Gate rendering on tenant resolution: children must never mount a Supabase
+  // client before the school node's keys are known. Previously, no-argument
+  // createClient()/createTenantClient() calls in first-render effects silently
+  // bound to the platform (master) project — producing "not signed in" and
+  // "column does not exist" errors on first page load.
+  if (!tenant && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground animate-pulse">Resolving Institution...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TenantContext.Provider value={{ tenant, supabase, isLoading, error, academicCycle, refreshAcademicCycle: fetchAcademicCycle }}>
