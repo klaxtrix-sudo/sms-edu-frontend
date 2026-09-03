@@ -18,6 +18,15 @@ function resolveBrowserCredentials(
   supabaseAnonKey?: string
 ): { url: string; key: string } {
   const hasExplicitArgs = Boolean(supabaseUrl && supabaseAnonKey);
+
+  // A partial explicit arg pair (e.g. a URL without a key) would mix argument
+  // values with tenant/env fallbacks and silently misbind. Reject it loudly
+  // instead of producing a hard-to-debug client.
+  const hasAnyExplicitArg = supabaseUrl != null || supabaseAnonKey != null;
+  if (hasAnyExplicitArg && !hasExplicitArgs) {
+    throw new Error('Supabase URL and Anon Key must be provided together');
+  }
+
   const tenantUrl = typeof window !== 'undefined' ? (window as any).__tenant_url : null;
   const tenantKey = typeof window !== 'undefined' ? (window as any).__tenant_anon_key : null;
 
