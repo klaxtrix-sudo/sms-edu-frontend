@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createTenantClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { Loader2, User, KeyRound, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,9 +22,10 @@ export default function ParentSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const supabase = createTenantClient();
+  const { supabase } = useTenant();
 
   useEffect(() => {
+    if (!supabase) return;
     const fetchProfile = async () => {
       setLoading(true);
       try {
@@ -49,11 +50,11 @@ export default function ParentSettingsPage() {
       }
     };
     fetchProfile();
-  }, []);
+  }, [supabase]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !supabase) return;
     setSaving(true);
     
     try {
@@ -82,6 +83,10 @@ export default function ParentSettingsPage() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      toast.error("Session not ready. Please refresh the page.");
+      return;
+    }
     if (!user?.email) {
       toast.error("Session expired. Please sign in again.");
       return;

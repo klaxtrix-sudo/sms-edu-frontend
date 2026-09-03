@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createTenantClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { getBackendUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { Loader2, Bell, Smartphone, Megaphone, Calendar } from "lucide-react";
@@ -11,9 +11,10 @@ import { Badge } from "@/components/ui/badge";
 export default function ParentNotificationsPage() {
   const [bulletins, setBulletins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createTenantClient();
+  const { supabase } = useTenant();
 
   useEffect(() => {
+    if (!supabase) return;
     const fetchBulletins = async () => {
       setLoading(true);
       try {
@@ -34,7 +35,7 @@ export default function ParentNotificationsPage() {
       }
     };
     fetchBulletins();
-  }, []);
+  }, [supabase]);
 
   if (loading) {
     return (

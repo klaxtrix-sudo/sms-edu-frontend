@@ -87,7 +87,17 @@ export function useParentChildren(childId?: string): UseParentChildrenResult {
     setLoading(true);
     setError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      let { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        // The server-side session (verified by middleware) may still be valid
+        // even if the browser client's cached session went stale — e.g. after
+        // tenant keys changed or the refresh token rotated. Attempt one
+        // refresh before giving up.
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        session = refreshed.session ?? null;
+      }
+
       if (!session) {
         setError("Not signed in.");
         return;

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Search } from "lucide-react";
 import { linkStudentToParent, unlinkStudent } from "@/app/actions/parent-actions";
 import { toast } from "sonner";
-import { createTenantClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
 
 interface LinkStudentModalProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ interface LinkStudentModalProps {
 }
 
 export function LinkStudentModal({ isOpen, onClose, onSuccess, parent, schoolId, subdomain }: LinkStudentModalProps) {
+  const { supabase } = useTenant();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState<any[]>([]);
@@ -47,7 +48,10 @@ export function LinkStudentModal({ isOpen, onClose, onSuccess, parent, schoolId,
     
     setIsSearching(true);
     try {
-      const supabase = createTenantClient(subdomain);
+      if (!supabase) {
+        toast.error("Session not ready. Please refresh the page.");
+        return;
+      }
       const { data, error } = await supabase
         .from('students')
         .select(`
