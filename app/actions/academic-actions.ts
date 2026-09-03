@@ -2,11 +2,115 @@
 
 import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+const CreateClassSchema = z.object({
+  name: z.string().trim().min(1, "Class name cannot be empty").max(60, "Class name cannot exceed 60 characters"),
+  teacherId: z.string().trim().uuid("Invalid teacher ID").nullable().optional().or(z.literal("")),
+});
+
+const UpdateClassSchema = z.object({
+  name: z.string().trim().min(1, "Class name cannot be empty").max(60, "Class name cannot exceed 60 characters"),
+  teacherId: z.string().trim().uuid("Invalid teacher ID").nullable().optional().or(z.literal("")),
+});
+
+const CreateSubjectSchema = z.object({
+  name: z.string().trim().min(2, "Subject name must be at least 2 characters").max(80, "Subject name cannot exceed 80 characters"),
+  code: z.string().trim().min(1, "Subject code is required").max(15, "Subject code cannot exceed 15 characters"),
+});
+
+const SubjectAssignmentItemSchema = z.object({
+  subjectId: z.string().uuid("Invalid subject ID"),
+  teacherId: z.string().uuid("Invalid teacher ID").nullable().optional().or(z.literal("")).or(z.literal("none")),
+});
+
+const SaveAssignmentsSchema = z.array(SubjectAssignmentItemSchema);
+
+export async function getAcademicOverview(subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
+  try {
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
+
+    const [classesRes, subjectsRes, assignmentsRes, teachersRes] = await Promise.all([
+      (tenantSupabase as any)
+        .from('classes')
+        .select(`
+          id,
+          name,
+          class_teacher_id,
+          profiles:class_teacher_id (
+            id,
+            full_name
+          )
+        `)
+        .eq('school_id', schoolId)
+        .order('name'),
+      (tenantSupabase as any)
+        .from('subjects')
+        .select('id, name, code, created_at')
+        .eq('school_id', schoolId)
+        .order('name'),
+      (tenantSupabase as any)
+        .from('class_subject_teachers')
+        .select('class_id, subject_id, teacher_id')
+        .eq('school_id', schoolId),
+      (tenantSupabase as any)
+        .from('profiles')
+        .select('id, full_name')
+        .eq('school_id', schoolId)
+        .eq('role', 'teacher')
+        .eq('is_archived', false)
+        .order('full_name'),
+    ]);
+
+    if (classesRes.error) throw classesRes.error;
+    if (subjectsRes.error) throw subjectsRes.error;
+    if (assignmentsRes.error) throw assignmentsRes.error;
+
+    return {
+      success: true,
+      data: {
+        classes: classesRes.data || [],
+        subjects: subjectsRes.data || [],
+        assignments: assignmentsRes.data || [],
+        teachers: teachersRes.data || [],
+      },
+    };
+  } catch (error: any) {
+    console.error('[Admin Actions] getAcademicOverview Error:', error.message);
+    return { error: error.message || 'Failed to fetch academic overview.' };
+  }
+}
+
+export async function assignClassTeacher(classId: string, teacherId: string | null, subdomain: string) {
+  if (!subdomain) return { error: 'Subdomain is required.' };
+  if (!classId) return { error: 'Class ID is required.' };
+
+  try {
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    const cleanTeacherId = teacherId && teacherId !== 'none' && teacherId.trim() !== '' ? teacherId.trim() : null;
+
+    const { error } = await (tenantSupabase as any)
+      .from('classes')
+      .update({ class_teacher_id: cleanTeacherId })
+      .eq('id', classId)
+      .eq('school_id', schoolId);
+
+    if (error) throw error;
+
+    revalidatePath('/dashboard/admin/academics');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Admin Actions] assignClassTeacher Error:', error.message);
+    return { error: error.message || 'Failed to update class teacher.' };
+  }
+}
 
 export async function getClasses(schoolId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to fetch classes.' };
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
+    const { tenantSupabase, schoolId: verifiedSchoolId } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
     const { data, error } = await (tenantSupabase as any)
       .from('classes')
       .select(`
@@ -16,7 +120,7 @@ export async function getClasses(schoolId: string, subdomain: string) {
           full_name
         )
       `)
-      .eq('school_id', schoolId)
+      .eq('school_id', verifiedSchoolId)
       .order('name');
 
     if (error) throw error;
@@ -30,11 +134,11 @@ export async function getClasses(schoolId: string, subdomain: string) {
 export async function getSubjects(schoolId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to fetch subjects.' };
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
+    const { tenantSupabase, schoolId: verifiedSchoolId } = await requireActionAuth(subdomain, ['admin', 'teacher', 'student', 'parent']);
     const { data, error } = await (tenantSupabase as any)
       .from('subjects')
       .select('*')
-      .eq('school_id', schoolId)
+      .eq('school_id', verifiedSchoolId)
       .order('name');
 
     if (error) throw error;
@@ -46,16 +150,39 @@ export async function getSubjects(schoolId: string, subdomain: string) {
 }
 
 export async function createClass(data: any) {
-  const { name, teacherId, schoolId, subdomain } = data;
+  const { subdomain } = data || {};
   if (!subdomain) return { error: 'Subdomain is required to create a class.' };
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    // 1. Zod Validation
+    const parsed = CreateClassSchema.parse({
+      name: data.name,
+      teacherId: data.teacherId || null,
+    });
+
+    const cleanName = parsed.name.trim();
+    const cleanTeacherId = parsed.teacherId && parsed.teacherId !== "" ? parsed.teacherId : null;
+
+    // 2. Prevent duplicate class name in this school
+    const { data: existingClass } = await (tenantSupabase as any)
+      .from('classes')
+      .select('id')
+      .eq('school_id', schoolId)
+      .ilike('name', cleanName)
+      .maybeSingle();
+
+    if (existingClass) {
+      return { error: `A class named "${cleanName}" already exists in this school.` };
+    }
+
+    // 3. Scoped insert with verified schoolId
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .insert({
-        name,
-        class_teacher_id: teacherId || null,
+        name: cleanName,
+        class_teacher_id: cleanTeacherId,
         school_id: schoolId,
       });
 
@@ -64,21 +191,51 @@ export async function createClass(data: any) {
     revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return { error: error.errors[0]?.message || 'Invalid class data' };
+    }
     return { error: error.message || 'Failed to create class' };
   }
 }
 
 export async function createSubject(data: any) {
-  const { name, code, schoolId, subdomain } = data;
+  const { subdomain } = data || {};
   if (!subdomain) return { error: 'Subdomain is required to create a subject.' };
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    // 1. Zod Validation
+    const parsed = CreateSubjectSchema.parse({
+      name: data.name,
+      code: data.code,
+    });
+
+    const cleanName = parsed.name.trim();
+    const cleanCode = parsed.code.trim().toUpperCase();
+
+    // 2. Prevent duplicate subject name or code in this school
+    const { data: existingSubject } = await (tenantSupabase as any)
+      .from('subjects')
+      .select('id, name, code')
+      .eq('school_id', schoolId)
+      .or(`name.ilike.${cleanName},code.ilike.${cleanCode}`)
+      .limit(1);
+
+    if (existingSubject && existingSubject.length > 0) {
+      const match = existingSubject[0];
+      if (match.code.toUpperCase() === cleanCode) {
+        return { error: `Subject code "${cleanCode}" is already in use by ${match.name}.` };
+      }
+      return { error: `A subject named "${cleanName}" already exists.` };
+    }
+
+    // 3. Scoped insert with verified schoolId
     const { error } = await (tenantSupabase as any)
       .from('subjects')
       .insert({
-        name,
-        code: code.toUpperCase(),
+        name: cleanName,
+        code: cleanCode,
         school_id: schoolId,
       });
 
@@ -87,42 +244,129 @@ export async function createSubject(data: any) {
     revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return { error: error.errors[0]?.message || 'Invalid subject data' };
+    }
     return { error: error.message || 'Failed to create subject' };
   }
 }
 
 export async function updateClass(classId: string, data: any, subdomain: string) {
-  const { name, teacherId } = data;
   if (!subdomain) return { error: 'Subdomain is required to update a class.' };
+  if (!classId) return { error: 'Class ID is required.' };
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    // 1. Zod Validation
+    const parsed = UpdateClassSchema.parse({
+      name: data?.name,
+      teacherId: data?.teacherId || null,
+    });
+
+    const cleanName = parsed.name.trim();
+    const cleanTeacherId = parsed.teacherId && parsed.teacherId !== "" ? parsed.teacherId : null;
+
+    // 2. Check duplicate name on other classes
+    const { data: duplicate } = await (tenantSupabase as any)
+      .from('classes')
+      .select('id')
+      .eq('school_id', schoolId)
+      .ilike('name', cleanName)
+      .neq('id', classId)
+      .maybeSingle();
+
+    if (duplicate) {
+      return { error: `Another class named "${cleanName}" already exists in this school.` };
+    }
+
+    // 3. Scoped update with verified schoolId
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .update({
-        name,
-        class_teacher_id: teacherId || null,
+        name: cleanName,
+        class_teacher_id: cleanTeacherId,
       })
-      .eq('id', classId);
+      .eq('id', classId)
+      .eq('school_id', schoolId);
 
     if (error) throw error;
 
     revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return { error: error.errors[0]?.message || 'Invalid class data' };
+    }
     return { error: error.message || 'Failed to update class' };
   }
 }
 
 export async function deleteClass(classId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to delete a class.' };
+  if (!classId) return { error: 'Class ID is required.' };
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    // Pre-flight Dependency Guard 1: Enrolled Students
+    const { count: studentCount } = await (tenantSupabase as any)
+      .from('students')
+      .select('id', { count: 'exact', head: true })
+      .eq('class_id', classId)
+      .eq('school_id', schoolId);
+
+    if (studentCount && studentCount > 0) {
+      return {
+        error: `Cannot delete class: ${studentCount} student(s) are currently enrolled in this class. Please reassign or graduate students first to prevent data loss.`,
+      };
+    }
+
+    // Pre-flight Dependency Guard 2: Historical Academic Results
+    const { count: resultsCount } = await (tenantSupabase as any)
+      .from('results')
+      .select('id', { count: 'exact', head: true })
+      .eq('class_id', classId)
+      .eq('school_id', schoolId);
+
+    if (resultsCount && resultsCount > 0) {
+      return {
+        error: `Cannot delete class: ${resultsCount} historical academic result(s) are recorded for this class. Deleting it would permanently corrupt report cards.`,
+      };
+    }
+
+    // Pre-flight Dependency Guard 3: Fee Structures
+    const { count: feeCount } = await (tenantSupabase as any)
+      .from('fee_structures')
+      .select('id', { count: 'exact', head: true })
+      .eq('class_id', classId)
+      .eq('school_id', schoolId);
+
+    if (feeCount && feeCount > 0) {
+      return {
+        error: `Cannot delete class: ${feeCount} fee structure(s) are linked to this class. Remove or reassign them first.`,
+      };
+    }
+
+    // Pre-flight Dependency Guard 4: Active Timetables
+    const { count: timetableCount } = await (tenantSupabase as any)
+      .from('timetables')
+      .select('id', { count: 'exact', head: true })
+      .eq('class_id', classId)
+      .eq('school_id', schoolId);
+
+    if (timetableCount && timetableCount > 0) {
+      return {
+        error: `Cannot delete class: An active timetable is linked to this class. Clear the timetable schedule first.`,
+      };
+    }
+
+    // Safe to delete: Scoped deletion
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .delete()
-      .eq('id', classId);
+      .eq('id', classId)
+      .eq('school_id', schoolId);
 
     if (error) throw error;
 
@@ -135,13 +379,43 @@ export async function deleteClass(classId: string, subdomain: string) {
 
 export async function deleteSubject(subjectId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to delete a subject.' };
+  if (!subjectId) return { error: 'Subject ID is required.' };
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    // Pre-flight Dependency Guard 1: Student Results
+    const { count: resultsCount } = await (tenantSupabase as any)
+      .from('results')
+      .select('id', { count: 'exact', head: true })
+      .eq('subject_id', subjectId)
+      .eq('school_id', schoolId);
+
+    if (resultsCount && resultsCount > 0) {
+      return {
+        error: `Cannot delete subject: ${resultsCount} historical student result(s) are linked to this subject. Deleting it would permanently wipe past academic grades.`,
+      };
+    }
+
+    // Pre-flight Dependency Guard 2: Active Class Assignments
+    const { count: assignmentCount } = await (tenantSupabase as any)
+      .from('class_subject_teachers')
+      .select('id', { count: 'exact', head: true })
+      .eq('subject_id', subjectId)
+      .eq('school_id', schoolId);
+
+    if (assignmentCount && assignmentCount > 0) {
+      return {
+        error: `Cannot delete subject: It is currently assigned to ${assignmentCount} classroom(s). Please unassign it from all classrooms before deleting.`,
+      };
+    }
+
+    // Safe to delete: Scoped deletion
     const { error } = await (tenantSupabase as any)
       .from('subjects')
       .delete()
-      .eq('id', subjectId);
+      .eq('id', subjectId)
+      .eq('school_id', schoolId);
 
     if (error) throw error;
 
@@ -268,12 +542,14 @@ export async function saveResultMetrics(
 
 export async function getClassSubjectTeachers(classId: string, subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required.' };
+  if (!classId) return { error: 'Class ID is required.' };
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
+    const { tenantSupabase, schoolId: verifiedSchoolId } = await requireActionAuth(subdomain, ['admin', 'teacher']);
     const { data, error } = await (tenantSupabase as any)
       .from('class_subject_teachers')
       .select('subject_id, teacher_id')
-      .eq('class_id', classId);
+      .eq('class_id', classId)
+      .eq('school_id', verifiedSchoolId);
 
     if (error) throw error;
     return { success: true, data: data || [] };
@@ -290,28 +566,37 @@ export async function saveClassSubjectAssignments(
   subdomain: string
 ) {
   if (!subdomain) return { error: 'Subdomain is required.' };
-  try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+  if (!classId) return { error: 'Class ID is required.' };
 
-    // 1. Delete all existing subject teacher assignments for this class
+  try {
+    const { tenantSupabase, schoolId: verifiedSchoolId } = await requireActionAuth(subdomain, ['admin']);
+
+    // 1. Zod Validation
+    const parsedAssignments = SaveAssignmentsSchema.parse(assignments || []);
+
+    // 2. Scoped deletion of existing assignments for this class
     const { error: deleteError } = await (tenantSupabase as any)
       .from('class_subject_teachers')
       .delete()
-      .eq('class_id', classId);
+      .eq('class_id', classId)
+      .eq('school_id', verifiedSchoolId);
 
     if (deleteError) throw deleteError;
 
-    // 2. Filter out unassigned (null/none) teachers and map the others
-    const recordsToInsert = assignments
-      .filter(a => a.teacherId && a.teacherId !== 'none' && a.teacherId !== '')
-      .map(a => ({
-        school_id: schoolId,
-        class_id: classId,
-        subject_id: a.subjectId,
-        teacher_id: a.teacherId
-      }));
+    // 3. Map all selected curriculum subjects, allowing teacher_id to be null if unassigned
+    const recordsToInsert = parsedAssignments
+      .filter(a => a.subjectId && a.subjectId.trim() !== '')
+      .map(a => {
+        const hasTeacher = Boolean(a.teacherId && a.teacherId !== 'none' && a.teacherId.trim() !== '');
+        return {
+          school_id: verifiedSchoolId,
+          class_id: classId,
+          subject_id: a.subjectId,
+          teacher_id: hasTeacher ? a.teacherId : null,
+        };
+      });
 
-    // 3. Perform bulk insert if there are any records
+    // 4. Perform bulk insert if there are any records
     if (recordsToInsert.length > 0) {
       const { error: insertError } = await (tenantSupabase as any)
         .from('class_subject_teachers')
@@ -323,6 +608,9 @@ export async function saveClassSubjectAssignments(
     revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return { error: error.errors[0]?.message || 'Invalid assignment data' };
+    }
     console.error('[Admin Actions] saveClassSubjectAssignments Error:', error.message);
     return { error: error.message || 'Failed to save subject assignments.' };
   }

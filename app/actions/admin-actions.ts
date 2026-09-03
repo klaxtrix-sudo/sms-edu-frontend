@@ -34,6 +34,8 @@ export {
 export {
   getClasses,
   getSubjects,
+  getAcademicOverview,
+  assignClassTeacher,
   createClass,
   createSubject,
   updateClass,
