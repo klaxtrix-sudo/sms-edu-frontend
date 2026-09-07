@@ -149,12 +149,12 @@ export default function ParentSettingsPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       <div className="text-center md:text-left">
-        <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Account Settings</h1>
-        <p className="text-slate-500 mt-2 font-medium">Manage your personal information and security preferences.</p>
+        <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Account Settings</h1>
+        <p className="text-muted-foreground mt-2 font-medium">Manage your personal information and security preferences.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="border-none shadow-xl bg-white rounded-[2rem] overflow-hidden">
+        <Card className="border border-border/80 shadow-xl bg-card rounded-[2rem] overflow-hidden">
           <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
             <CardTitle className="flex items-center gap-2 text-xl font-black uppercase text-primary">
               <User className="size-5" /> Profile Information
@@ -164,34 +164,34 @@ export default function ParentSettingsPage() {
           <CardContent className="pt-8">
             <form onSubmit={handleUpdateProfile} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-slate-400">Email Address</Label>
+                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
                 <Input 
                   id="email" 
                   value={user?.email || ""} 
                   disabled 
-                  className="bg-slate-50 border-transparent text-slate-500 h-12 rounded-xl"
+                  className="bg-muted/50 border-transparent text-muted-foreground h-12 rounded-xl"
                 />
                 <p className="text-[10px] text-muted-foreground mt-1">Email cannot be changed.</p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-xs font-bold uppercase tracking-widest text-slate-400">Full Name</Label>
+                <Label htmlFor="fullName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
                 <Input 
                   id="fullName" 
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  className="h-12 rounded-xl bg-background border-border text-foreground focus-visible:ring-primary/30"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-slate-400">Phone Number</Label>
+                <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
                 <Input 
                   id="phone" 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  className="h-12 rounded-xl bg-background border-border text-foreground focus-visible:ring-primary/30"
                 />
               </div>
 
@@ -203,50 +203,50 @@ export default function ParentSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-xl bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-slate-50 pb-6 border-b border-slate-100">
-            <CardTitle className="flex items-center gap-2 text-xl font-black uppercase text-slate-700">
+        <Card className="border border-border/80 shadow-xl bg-card rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-muted/30 pb-6 border-b border-border">
+            <CardTitle className="flex items-center gap-2 text-xl font-black uppercase text-card-foreground">
               <KeyRound className="size-5" /> Security
             </CardTitle>
-            <CardDescription className="font-medium text-slate-500">Update your password</CardDescription>
+            <CardDescription className="font-medium text-muted-foreground">Update your password</CardDescription>
           </CardHeader>
           <CardContent className="pt-8">
             <form onSubmit={handleUpdatePassword} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Password</Label>
+                <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Current Password</Label>
                 <PasswordInput 
                   id="currentPassword" 
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  className="h-12 rounded-xl bg-background border-border text-foreground focus-visible:ring-primary/30"
                   required
                 />
                 <p className="text-[10px] text-muted-foreground mt-1">Verify it's really you before changing your password.</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-slate-400">New Password</Label>
+                <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">New Password</Label>
                 <PasswordInput 
                   id="newPassword" 
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  className="h-12 rounded-xl bg-background border-border text-foreground focus-visible:ring-primary/30"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-slate-400">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Confirm New Password</Label>
                 <PasswordInput 
                   id="confirmPassword" 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  className="h-12 rounded-xl bg-background border-border text-foreground focus-visible:ring-primary/30"
                   required
                 />
               </div>
 
-              <Button type="submit" disabled={saving || !currentPassword || !newPassword || !confirmPassword} className="w-full h-12 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg transition-all">
+              <Button type="submit" disabled={saving || !currentPassword || !newPassword || !confirmPassword} className="w-full h-12 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
                 {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : <KeyRound className="size-4 mr-2" />}
                 Update Password
               </Button>

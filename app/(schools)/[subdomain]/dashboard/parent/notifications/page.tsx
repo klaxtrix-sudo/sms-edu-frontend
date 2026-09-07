@@ -49,14 +49,14 @@ export default function ParentNotificationsPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       <div className="text-center md:text-left">
-        <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">School Notifications</h1>
-        <p className="text-slate-500 mt-2 font-medium">Stay updated with the latest announcements from the school.</p>
+        <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">School Notifications</h1>
+        <p className="text-muted-foreground mt-2 font-medium">Stay updated with the latest announcements from the school.</p>
       </div>
 
       {bulletins.length === 0 ? (
-        <Card className="border-none shadow-xl bg-white p-20 text-center rounded-[2rem]">
+        <Card className="border border-border/80 shadow-xl bg-card p-20 text-center rounded-[2rem]">
            <Bell className="size-20 mx-auto text-muted-foreground opacity-20 mb-6" />
-           <h3 className="text-2xl font-black text-slate-700">No Notifications</h3>
+           <h3 className="text-2xl font-black text-foreground">No Notifications</h3>
            <p className="text-muted-foreground mt-2">You're all caught up! New announcements will appear here.</p>
         </Card>
       ) : (
@@ -65,12 +65,12 @@ export default function ParentNotificationsPage() {
             const dateObj = new Date(bulletin.createdAt);
             
             return (
-              <Card key={bulletin._id} className="border-none shadow-md hover:shadow-lg transition-all duration-300 rounded-[2rem] overflow-hidden group bg-white">
+              <Card key={bulletin._id} className="border border-border/80 shadow-md hover:shadow-lg transition-all duration-300 rounded-[2rem] overflow-hidden group bg-card">
                 <CardContent className="p-8">
                   <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex flex-row md:flex-col items-center justify-between md:justify-center md:w-32 md:border-r border-slate-100 md:pr-6 shrink-0">
+                    <div className="flex flex-row md:flex-col items-center justify-between md:justify-center md:w-32 md:border-r border-border md:pr-6 shrink-0">
                        <div className="text-center">
-                          <div className="text-4xl font-black tracking-tighter text-slate-900">{dateObj.getDate()}</div>
+                          <div className="text-4xl font-black tracking-tighter text-foreground">{dateObj.getDate()}</div>
                           <div className="text-sm font-bold uppercase tracking-widest text-primary mt-1">{dateObj.toLocaleString('en-US', { month: 'short' })}</div>
                        </div>
                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black uppercase tracking-widest text-[9px] mt-0 md:mt-4">
@@ -78,8 +78,8 @@ export default function ParentNotificationsPage() {
                        </Badge>
                     </div>
                     <div className="flex-1 space-y-4">
-                       <h3 className="text-2xl font-bold tracking-tight text-slate-900 leading-snug group-hover:text-primary transition-colors uppercase">{bulletin.title}</h3>
-                       <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{bulletin.message}</p>
+                       <h3 className="text-2xl font-bold tracking-tight text-foreground leading-snug group-hover:text-primary transition-colors uppercase">{bulletin.title}</h3>
+                       <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{bulletin.message}</p>
                     </div>
                   </div>
                 </CardContent>

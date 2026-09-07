@@ -110,7 +110,7 @@ export default function ChildDetailPage() {
       </Button>
 
       {/* Profile Header */}
-      <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl flex flex-col md:flex-row items-center md:items-start gap-8">
+      <div className="bg-card text-card-foreground rounded-[3rem] p-10 border border-border/80 shadow-xl flex flex-col md:flex-row items-center md:items-start gap-8">
         <Avatar className="size-40 rounded-[2.5rem] border-8 border-primary/5 shadow-2xl">
           <AvatarImage src={profile?.avatar_url || undefined} />
           <AvatarFallback className="bg-primary/10 text-primary font-black text-5xl">
@@ -121,18 +121,18 @@ export default function ChildDetailPage() {
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black uppercase tracking-widest text-[10px] px-4 py-1 rounded-full">
             {className}
           </Badge>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 leading-none">{profile?.full_name}</h1>
-          <p className="text-lg text-slate-500 font-bold uppercase tracking-widest">Adm No: {child.admission_no}</p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground leading-none">{profile?.full_name}</h1>
+          <p className="text-lg text-muted-foreground font-bold uppercase tracking-widest">Adm No: {child.admission_no}</p>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-4">
-            <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gender</span>
-              <span className="font-bold text-slate-700 capitalize">{child.gender || 'N/A'}</span>
+            <div className="px-4 py-2 bg-muted/40 rounded-xl border border-border/80 flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Gender</span>
+              <span className="font-bold text-foreground capitalize">{child.gender || 'N/A'}</span>
             </div>
             {child.date_of_birth && (
-              <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">DOB</span>
-                <span className="font-bold text-slate-700">{new Date(child.date_of_birth).toLocaleDateString()}</span>
+              <div className="px-4 py-2 bg-muted/40 rounded-xl border border-border/80 flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">DOB</span>
+                <span className="font-bold text-foreground">{new Date(child.date_of_birth).toLocaleDateString()}</span>
               </div>
             )}
           </div>
@@ -141,47 +141,47 @@ export default function ChildDetailPage() {
 
       {/* Attendance + Academics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-emerald-50/50 pb-6">
-            <CardTitle className="text-emerald-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+        <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-emerald-500/10 border-b border-emerald-500/20 pb-6">
+            <CardTitle className="text-emerald-600 dark:text-emerald-400 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <Clock className="size-5" /> Attendance
             </CardTitle>
-            <CardDescription className="font-medium text-emerald-600/70">Current Term Overview</CardDescription>
+            <CardDescription className="font-medium text-emerald-600/70 dark:text-emerald-400/70">Current Term Overview</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="text-center py-8">
-               <div className="text-6xl font-black tabular-nums tracking-tighter text-slate-900">
+               <div className="text-6xl font-black tabular-nums tracking-tighter text-foreground">
                  {attendancePct !== null ? (
-                   <>{attendancePct}<span className="text-2xl text-slate-400">%</span></>
+                   <>{attendancePct}<span className="text-2xl text-muted-foreground">%</span></>
                  ) : (
-                   <span className="text-2xl text-slate-400">No records</span>
+                   <span className="text-2xl text-muted-foreground">No records</span>
                  )}
                </div>
-               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">Present Days</p>
+               <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-2">Present Days</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-primary/5 pb-6">
+        <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-primary/10 border-b border-primary/20 pb-6">
             <CardTitle className="text-primary flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <GraduationCap className="size-5" /> Academics
             </CardTitle>
-            <CardDescription className="font-medium text-primary/60">Average Grade · {academicCycle?.academicYear || ""} Term {academicCycle?.currentTerm || 1}</CardDescription>
+            <CardDescription className="font-medium text-primary/70">Average Grade · {academicCycle?.academicYear || ""} Term {academicCycle?.currentTerm || 1}</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="text-center py-8">
-               <div className="text-6xl font-black tabular-nums tracking-tighter text-slate-900">
-                 {avgGrade !== null ? avgGrade : <span className="text-2xl text-slate-400">No results</span>}
+               <div className="text-6xl font-black tabular-nums tracking-tighter text-foreground">
+                 {avgGrade !== null ? avgGrade : <span className="text-2xl text-muted-foreground">No results</span>}
                </div>
                {avgScore !== null && (
-                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">{avgScore}/100 · {gradeRemark(avgGrade || "")}</p>
+                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-2">{avgScore}/100 · {gradeRemark(avgGrade || "")}</p>
                )}
                {results.length > 0 && (
                  <div className="mt-4 space-y-1 text-left max-h-32 overflow-y-auto">
                    {results.slice(0, 5).map((r) => (
-                     <div key={r.id} className="flex justify-between text-xs py-1 border-b border-slate-50">
-                       <span className="font-bold text-slate-600">{r.subject_name}</span>
+                     <div key={r.id} className="flex justify-between text-xs py-1 border-b border-border/50">
+                       <span className="font-bold text-muted-foreground">{r.subject_name}</span>
                        <span className="font-black text-primary">{r.total_score} ({r.grade})</span>
                      </div>
                    ))}
@@ -201,26 +201,26 @@ export default function ChildDetailPage() {
 
       {/* Assignments + Exam Timetable */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-violet-50 pb-6">
-            <CardTitle className="text-violet-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+        <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-violet-500/10 border-b border-violet-500/20 pb-6">
+            <CardTitle className="text-violet-600 dark:text-violet-400 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <BookOpen className="size-5" /> Assignments
             </CardTitle>
-            <CardDescription className="font-medium text-violet-600/70">Current homework for {className}</CardDescription>
+            <CardDescription className="font-medium text-violet-600/70 dark:text-violet-400/70">Current homework for {className}</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             {loadingExtras ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="size-6 animate-spin text-violet-300" />
+                <Loader2 className="size-6 animate-spin text-violet-500" />
               </div>
             ) : assignments.length === 0 ? (
               <div className="text-center py-8 text-sm text-muted-foreground font-medium">No assignments posted yet.</div>
             ) : (
               <div className="space-y-3">
                 {assignments.slice(0, 5).map((a) => (
-                  <div key={a._id} className="flex items-center justify-between p-3 bg-violet-50/30 rounded-xl border border-violet-100/50">
+                  <div key={a._id} className="flex items-center justify-between p-3 bg-violet-500/5 rounded-xl border border-violet-500/15">
                     <div>
-                      <p className="font-bold text-sm text-slate-700">{a.title}</p>
+                      <p className="font-bold text-sm text-foreground">{a.title}</p>
                       <p className="text-xs text-muted-foreground">Due: {new Date(a.dueDate).toLocaleDateString()}</p>
                     </div>
                     <Badge variant="outline" className="text-[9px] uppercase font-bold capitalize">{a.status}</Badge>
@@ -231,26 +231,26 @@ export default function ChildDetailPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-amber-50 pb-6">
-            <CardTitle className="text-amber-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+        <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-amber-500/10 border-b border-amber-500/20 pb-6">
+            <CardTitle className="text-amber-600 dark:text-amber-400 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
               <CalendarDays className="size-5" /> Exam Timetable
             </CardTitle>
-            <CardDescription className="font-medium text-amber-600/70">Upcoming exams for {className}</CardDescription>
+            <CardDescription className="font-medium text-amber-600/70 dark:text-amber-400/70">Upcoming exams for {className}</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             {loadingExtras ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="size-6 animate-spin text-amber-300" />
+                <Loader2 className="size-6 animate-spin text-amber-500" />
               </div>
             ) : examTimetable.length === 0 ? (
               <div className="text-center py-8 text-sm text-muted-foreground font-medium">No exams scheduled yet.</div>
             ) : (
               <div className="space-y-3">
                 {examTimetable.slice(0, 5).map((e) => (
-                  <div key={e.id} className="flex items-center justify-between p-3 bg-amber-50/30 rounded-xl border border-amber-100/50">
+                  <div key={e.id} className="flex items-center justify-between p-3 bg-amber-500/5 rounded-xl border border-amber-500/15">
                     <div>
-                      <p className="font-bold text-sm text-slate-700">{e.exam_title}</p>
+                      <p className="font-bold text-sm text-foreground">{e.exam_title}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(e.exam_date).toLocaleDateString()} · {e.start_time.slice(0, 5)}–{e.end_time.slice(0, 5)}
                         {e.room && ` · ${e.room}`}
@@ -265,12 +265,12 @@ export default function ChildDetailPage() {
       </div>
 
       {/* Health & Background */}
-      <Card className="border-none shadow-md bg-white rounded-[2rem] overflow-hidden">
-        <CardHeader className="bg-rose-50 pb-6">
-          <CardTitle className="text-rose-700 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+      <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
+        <CardHeader className="bg-rose-500/10 border-b border-rose-500/20 pb-6">
+          <CardTitle className="text-rose-600 dark:text-rose-400 flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
             <Heart className="size-5" /> Health &amp; Background
           </CardTitle>
-          <CardDescription className="font-medium text-rose-600/70">Medical and demographic information on file</CardDescription>
+          <CardDescription className="font-medium text-rose-600/70 dark:text-rose-400/70">Medical and demographic information on file</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -291,9 +291,9 @@ export default function ChildDetailPage() {
 
 function InfoField({ label, value }: { label: string; value: string | null }) {
   return (
-    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-      <p className="font-bold text-sm text-slate-700">{value || <span className="text-muted-foreground font-normal">Not provided</span>}</p>
+    <div className="p-4 bg-muted/40 rounded-xl border border-border/80">
+      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
+      <p className="font-bold text-sm text-foreground">{value || <span className="text-muted-foreground font-normal">Not provided</span>}</p>
     </div>
   );
 }

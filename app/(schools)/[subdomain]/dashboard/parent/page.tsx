@@ -83,19 +83,19 @@ export default function ParentDashboardPage() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
       {/* 1. Hero Summary Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border/80 rounded-3xl p-8 shadow-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="rounded-full px-3 py-1 bg-primary/5 text-primary border-primary/20 font-bold text-xs uppercase tracking-wider">
               Parent Portal
             </Badge>
             {academicCycle && (
-              <Badge variant="outline" className="rounded-full px-3 py-1 bg-slate-100 text-slate-700 border-slate-200 font-medium text-xs">
+              <Badge variant="outline" className="rounded-full px-3 py-1 bg-muted text-muted-foreground border-border/80 font-medium text-xs">
                 {academicCycle.academicYear} · Term {academicCycle.currentTerm}
               </Badge>
             )}
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 uppercase">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground uppercase">
             Family Overview
           </h1>
           <p className="text-muted-foreground text-lg font-medium max-w-2xl">
@@ -110,7 +110,7 @@ export default function ParentDashboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="py-32 flex flex-col items-center gap-4 bg-white rounded-3xl border border-slate-100">
+        <div className="py-32 flex flex-col items-center gap-4 bg-card rounded-3xl border border-border/80">
           <Loader2 className="size-12 animate-spin text-primary" />
           <p className="font-bold text-muted-foreground tracking-wider uppercase text-xs">Loading household overview...</p>
         </div>
@@ -128,7 +128,7 @@ export default function ParentDashboardPage() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+                <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
                   My Children
                 </h2>
                 <p className="text-sm font-medium text-muted-foreground">
@@ -154,7 +154,7 @@ export default function ParentDashboardPage() {
           {/* 3. Vertically Stacked: Financial Standing */}
           <section className="space-y-4">
             <div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+              <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
                 Financial Standing
               </h2>
               <p className="text-sm font-medium text-muted-foreground">
@@ -162,7 +162,7 @@ export default function ParentDashboardPage() {
               </p>
             </div>
 
-            <Card className="border border-slate-100 shadow-md bg-white rounded-3xl overflow-hidden">
+            <Card className="border border-border/80 shadow-md bg-card rounded-3xl overflow-hidden">
               <div className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
                 <div className="flex items-center gap-5">
                   <div className="size-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/15">
@@ -195,7 +195,7 @@ export default function ParentDashboardPage() {
           {/* 4. Vertically Stacked: Academic Performance Trends */}
           <section className="space-y-4">
             <div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+              <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
                 Academic Performance Trends
               </h2>
               <p className="text-sm font-medium text-muted-foreground">
@@ -203,10 +203,10 @@ export default function ParentDashboardPage() {
               </p>
             </div>
 
-            <Card className="border border-slate-100 shadow-md bg-white rounded-3xl overflow-hidden">
+            <Card className="border border-border/80 shadow-md bg-card rounded-3xl overflow-hidden">
               <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-bold text-slate-900 uppercase tracking-tight">
+                  <CardTitle className="text-xl font-bold text-foreground uppercase tracking-tight">
                     Performance Analytics
                   </CardTitle>
                   <CardDescription className="text-sm font-medium text-muted-foreground">
@@ -227,7 +227,7 @@ export default function ParentDashboardPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+                <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
                   School Bulletins
                 </h2>
                 <p className="text-sm font-medium text-muted-foreground">
@@ -237,13 +237,13 @@ export default function ParentDashboardPage() {
               <Bell className="size-5 text-primary" />
             </div>
 
-            <Card className="border border-slate-100 shadow-md bg-white rounded-3xl p-8">
+            <Card className="border border-border/80 shadow-md bg-card rounded-3xl p-8">
               {bulletins.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground text-xs font-bold uppercase tracking-wider">
                   No notices available right now
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-border/60">
                   {bulletins.slice(0, 5).map((bulletin) => {
                     const dateObj = new Date(bulletin.createdAt);
                     const month = dateObj.toLocaleString('en-US', { month: 'short' });
@@ -253,7 +253,7 @@ export default function ParentDashboardPage() {
                       <div
                         key={bulletin._id}
                         onClick={() => setSelectedBulletin(bulletin)}
-                        className="py-4 first:pt-0 last:pb-0 cursor-pointer hover:bg-slate-50/80 rounded-xl px-3 transition-colors"
+                        className="py-4 first:pt-0 last:pb-0 cursor-pointer hover:bg-accent/50 rounded-xl px-3 transition-colors"
                       >
                         <BulletinItem
                           title={bulletin.title}
@@ -284,11 +284,11 @@ export default function ParentDashboardPage() {
                 {selectedBulletin && new Date(selectedBulletin.createdAt).toLocaleDateString()}
               </span>
             </div>
-            <DialogTitle className="text-xl font-bold leading-snug text-slate-900">
+            <DialogTitle className="text-xl font-bold leading-snug text-foreground">
               {selectedBulletin?.title}
             </DialogTitle>
           </DialogHeader>
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 border-t border-border/60 pt-4">
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {selectedBulletin?.message}
             </p>
@@ -304,10 +304,10 @@ function ChildOverviewCard({ child, stats }: { child: ParentChild; stats?: { att
   const className = child.classes?.name || "Unassigned";
 
   return (
-    <Card className="border border-slate-100 shadow-sm hover:shadow-md bg-white rounded-3xl overflow-hidden transition-all duration-300 text-left flex flex-col justify-between">
+    <Card className="border border-border/80 shadow-sm hover:shadow-md bg-card rounded-3xl overflow-hidden transition-all duration-300 text-left flex flex-col justify-between">
       <div>
         <CardHeader className="p-6 pb-4 flex flex-row items-center gap-4">
-          <Avatar className="size-16 rounded-2xl border border-slate-100 shadow-sm">
+          <Avatar className="size-16 rounded-2xl border border-border/80 shadow-sm">
             <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl uppercase">
               {profile?.full_name?.charAt(0)}
@@ -317,7 +317,7 @@ function ChildOverviewCard({ child, stats }: { child: ParentChild; stats?: { att
             <Badge variant="outline" className="rounded-full px-2.5 py-0.5 bg-primary/5 text-primary border-primary/20 font-bold text-[10px] uppercase tracking-wider mb-1">
               {className}
             </Badge>
-            <CardTitle className="text-lg font-bold text-slate-900 truncate uppercase">
+            <CardTitle className="text-lg font-bold text-foreground truncate uppercase">
               {profile?.full_name}
             </CardTitle>
             <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
@@ -327,23 +327,23 @@ function ChildOverviewCard({ child, stats }: { child: ParentChild; stats?: { att
         </CardHeader>
         <CardContent className="p-6 pt-2">
           <div className="grid grid-cols-2 gap-3 mt-2 text-left">
-            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-left">
+            <div className="p-3.5 bg-muted/40 rounded-2xl border border-border/60 text-left">
               <div className="flex items-center gap-1.5 mb-1 justify-start">
-                <CheckCircle2 className="size-3.5 text-emerald-600" />
+                <CheckCircle2 className="size-3.5 text-emerald-500" />
                 <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Attendance</span>
               </div>
-              <p className="text-lg font-black text-slate-900">
+              <p className="text-lg font-black text-foreground">
                 {stats?.attendancePct !== null && stats?.attendancePct !== undefined
                   ? `${stats.attendancePct}%`
                   : "—"}
               </p>
             </div>
-            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-left">
+            <div className="p-3.5 bg-muted/40 rounded-2xl border border-border/60 text-left">
               <div className="flex items-center gap-1.5 mb-1 justify-start">
                 <TrendingUp className="size-3.5 text-primary" />
                 <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Avg Grade</span>
               </div>
-              <p className="text-lg font-black text-slate-900">
+              <p className="text-lg font-black text-foreground">
                 {stats?.avgGrade || "—"}
               </p>
             </div>
@@ -364,12 +364,12 @@ function ChildOverviewCard({ child, stats }: { child: ParentChild; stats?: { att
 function BulletinItem({ title, date, type }: { title: string; date: string; type: string }) {
   return (
     <div className="flex items-center gap-4 group cursor-pointer text-left">
-      <div className="size-12 rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-700 group-hover:bg-primary group-hover:text-white transition-all min-w-[3rem]">
+      <div className="size-12 rounded-xl bg-muted border border-border/80 flex flex-col items-center justify-center text-foreground group-hover:bg-primary group-hover:text-white transition-all min-w-[3rem]">
         <span className="text-[10px] font-bold uppercase tracking-tight leading-none">{date.split(' ')[0]}</span>
         <span className="text-sm font-black">{date.split(' ')[1]}</span>
       </div>
       <div className="flex-1 min-w-0 text-left">
-        <h5 className="text-sm font-bold leading-snug text-slate-900 group-hover:text-primary transition-colors truncate">
+        <h5 className="text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors truncate">
           {title}
         </h5>
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">

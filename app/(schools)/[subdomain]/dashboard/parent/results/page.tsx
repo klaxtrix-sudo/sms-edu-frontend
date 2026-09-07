@@ -89,8 +89,8 @@ export default function ParentResultsPage() {
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Academic Results</h1>
-          <p className="text-slate-500 mt-2 font-medium">View and download report cards for your children.</p>
+          <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Academic Results</h1>
+          <p className="text-muted-foreground mt-2 font-medium">View and download report cards for your children.</p>
         </div>
         <ErrorState message={error} onRetry={refetch} />
       </div>
@@ -101,14 +101,14 @@ export default function ParentResultsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Academic Results</h1>
-          <p className="text-slate-500 mt-2 font-medium">View and download report cards for your children.</p>
+          <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Academic Results</h1>
+          <p className="text-muted-foreground mt-2 font-medium">View and download report cards for your children.</p>
         </div>
 
         {children.length > 0 && (
           <div className="w-full md:w-64">
             <Select value={selectedChildId || ""} onValueChange={setSelectedChildId}>
-              <SelectTrigger className="h-12 rounded-xl bg-white border-slate-200">
+              <SelectTrigger className="h-12 rounded-xl bg-background border-border">
                 <SelectValue placeholder="Select a child" />
               </SelectTrigger>
               <SelectContent>
@@ -153,29 +153,29 @@ export default function ParentResultsPage() {
             return (
               <Card
                 key={group.key}
-                className={`border-none shadow-md bg-white rounded-[2rem] overflow-hidden group hover:shadow-lg transition-shadow ${!isLatest ? "opacity-75" : ""}`}
+                className={`border border-border/80 shadow-md bg-card rounded-[2rem] overflow-hidden group hover:shadow-lg transition-shadow ${!isLatest ? "opacity-75" : ""}`}
               >
-                <CardHeader className={`${isLatest ? "bg-primary/5" : "bg-slate-50"} pb-6 flex flex-row items-center justify-between`}>
+                <CardHeader className={`${isLatest ? "bg-primary/5" : "bg-muted/30"} pb-6 flex flex-row items-center justify-between`}>
                   <div>
-                    <CardTitle className={`${isLatest ? "text-primary" : "text-slate-700"} text-xl font-bold uppercase tracking-tight`}>
+                    <CardTitle className={`${isLatest ? "text-primary" : "text-card-foreground"} text-xl font-bold uppercase tracking-tight`}>
                       Term {group.term}
                     </CardTitle>
-                    <CardDescription className={`font-bold ${isLatest ? "text-primary/60" : "text-slate-500"}`}>
+                    <CardDescription className={`font-bold ${isLatest ? "text-primary/60" : "text-muted-foreground"}`}>
                       {group.year} Academic Year
                     </CardDescription>
                   </div>
-                  <Badge className={isLatest ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 font-bold px-3" : ""} variant={isLatest ? "default" : "outline"}>
+                  <Badge className={isLatest ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold px-3" : ""} variant={isLatest ? "default" : "outline"}>
                     {isLatest ? "Published" : "Archived"}
                   </Badge>
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="flex items-center gap-4 mb-6">
-                    <div className={`size-12 rounded-2xl ${isLatest ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-400"} flex items-center justify-center`}>
+                    <div className={`size-12 rounded-2xl ${isLatest ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"} flex items-center justify-center`}>
                       <FileText className="size-6" />
                     </div>
                     <div>
-                      <h4 className="font-black text-lg text-slate-900">Termly Report Card</h4>
-                      <p className="text-sm text-slate-500 font-medium">
+                      <h4 className="font-black text-lg text-foreground">Termly Report Card</h4>
+                      <p className="text-sm text-muted-foreground font-medium">
                         {group.results.length} subject{group.results.length !== 1 ? "s" : ""} · Available for download
                       </p>
                     </div>
@@ -183,8 +183,8 @@ export default function ParentResultsPage() {
                   {/* Subject summary */}
                   <div className="space-y-2 mb-6">
                     {group.results.slice(0, 4).map((r) => (
-                      <div key={r.id} className="flex justify-between text-sm py-1 border-b border-slate-50">
-                        <span className="font-bold text-slate-700">{r.subject_name}</span>
+                      <div key={r.id} className="flex justify-between text-sm py-1 border-b border-border/40">
+                        <span className="font-bold text-foreground">{r.subject_name}</span>
                         <span className="font-black text-primary">{r.total_score} ({r.grade})</span>
                       </div>
                     ))}
