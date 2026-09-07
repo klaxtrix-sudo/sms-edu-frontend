@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { 
   CreditCard, 
   Plus, 
@@ -8,12 +9,15 @@ import {
   Users, 
   Clock, 
   CheckCircle2, 
-  Search,
-  Filter,
-  ArrowUpRight,
-  Loader2,
-  Wallet,
-  Activity
+  Search, 
+  Filter, 
+  ArrowUpRight, 
+  Loader2, 
+  Wallet, 
+  Activity,
+  Landmark,
+  Check,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +39,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { createTenantClient } from "@/lib/supabase/client";
-import { formatNGN, cn } from "@/lib/utils";
+import { formatNGN, cn, getBackendUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { AddFeeStructureModal } from "@/components/admin/add-fee-structure-modal";
 
@@ -49,6 +53,12 @@ export default function FinanceDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [schoolBank, setSchoolBank] = useState<{
+    bank_name: string | null;
+    account_name: string | null;
+    account_number: string | null;
+  } | null>(null);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const supabase = createTenantClient();
 
   const fetchFinanceData = async () => {
@@ -70,7 +80,17 @@ export default function FinanceDashboard() {
       if (paymentsError) throw paymentsError;
       setPayments(paymentsData || []);
 
-      // 2. Calculate Stats
+      // 2. Fetch School Bank Details
+      const { data: schoolData } = await supabase
+        .from("schools")
+        .select("bank_name, account_name, account_number")
+        .maybeSingle();
+
+      if (schoolData) {
+        setSchoolBank(schoolData);
+      }
+
+      // 3. Calculate Stats
       const calculatedStats = (paymentsData || []).reduce((acc: any, curr: any) => {
         if (curr.status === 'success') {
           acc.totalRevenue += Number(curr.amount);
@@ -90,13 +110,39 @@ export default function FinanceDashboard() {
     }
   };
 
+  const handleVerifyTransfer = async (paymentId: string, action: 'approve' | 'reject') => {
+    setVerifyingId(paymentId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`${getBackendUrl()}/payments/verify-transfer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ paymentId, action }),
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Verification failed");
+      toast.success(action === 'approve' ? "Transfer approved successfully!" : "Transfer rejected.");
+      fetchFinanceData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to verify transfer");
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
   useEffect(() => {
     fetchFinanceData();
   }, []);
 
   const filteredPayments = payments.filter(p => 
     p.students?.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.reference.toLowerCase().includes(searchTerm.toLowerCase())
+    p.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.metadata?.senderName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.metadata?.bankReference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -104,7 +150,7 @@ export default function FinanceDashboard() {
       
       {/* Executive Header */}
       <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-10 group bg-white/5 border-white/10 text-foreground">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider mb-2">
               Finance
@@ -116,7 +162,27 @@ export default function FinanceDashboard() {
               Track school fees, revenue, and pending payments.
             </p>
           </div>
-          <AddFeeStructureModal onSuccess={fetchFinanceData} />
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Link
+              href="settings/general"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all group backdrop-blur-md"
+            >
+              <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:scale-105 transition-transform">
+                <Landmark className="size-4" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Settlement Account</p>
+                <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                  {schoolBank?.account_number
+                    ? `${schoolBank.bank_name || 'Bank'} • ****${schoolBank.account_number.slice(-4)}`
+                    : '⚠️ Not Configured (Set Up)'}
+                </p>
+              </div>
+            </Link>
+
+            <AddFeeStructureModal onSuccess={fetchFinanceData} />
+          </div>
         </div>
         
         {/* Decorative background glow */}
@@ -232,19 +298,61 @@ export default function FinanceDashboard() {
                           <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{p.students?.admission_no}</div>
                         </TableCell>
                         <TableCell className="font-medium text-muted-foreground">{p.fee_structures?.name}</TableCell>
-                        <TableCell className="font-mono text-[10px] opacity-40 uppercase tracking-tighter">{p.reference}</TableCell>
+                        <TableCell>
+                          <div className="font-mono text-[10px] opacity-70 uppercase tracking-tighter">{p.reference}</div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 border-white/20 text-muted-foreground">
+                              {p.channel === 'bank_transfer' ? 'Bank Transfer' : 'Online'}
+                            </Badge>
+                            {p.metadata?.bankReference && (
+                              <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">
+                                {p.metadata.bankReference}
+                              </span>
+                            )}
+                          </div>
+                          {p.metadata?.senderName && (
+                            <div className="text-[10px] text-muted-foreground italic mt-0.5">
+                              From: {p.metadata.senderName}
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="font-black text-lg">{formatNGN(p.amount)}</TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={p.status === 'success' ? 'default' : p.status === 'pending' ? 'outline' : 'destructive'}
-                            className={cn(
-                              "capitalize rounded-xl px-4 py-1 font-black tracking-tight text-[10px] shadow-sm",
-                              p.status === 'success' && "bg-emerald-500 hover:bg-emerald-600 text-white border-none",
-                              p.status === 'pending' && "border-orange-500/30 text-orange-500 bg-orange-500/10 animate-pulse"
+                          <div className="space-y-1.5">
+                            <Badge 
+                              variant={p.status === 'success' ? 'default' : p.status === 'pending' ? 'outline' : 'destructive'}
+                              className={cn(
+                                "capitalize rounded-xl px-4 py-1 font-black tracking-tight text-[10px] shadow-sm",
+                                p.status === 'success' && "bg-emerald-500 hover:bg-emerald-600 text-white border-none",
+                                p.status === 'pending' && "border-orange-500/30 text-orange-500 bg-orange-500/10 animate-pulse"
+                              )}
+                            >
+                              {p.status}
+                            </Badge>
+
+                            {p.status === 'pending' && p.channel === 'bank_transfer' && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Button
+                                  size="sm"
+                                  disabled={verifyingId === p.id}
+                                  onClick={() => handleVerifyTransfer(p.id, 'approve')}
+                                  className="h-6 px-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg gap-1"
+                                >
+                                  {verifyingId === p.id ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+                                  Confirm
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={verifyingId === p.id}
+                                  onClick={() => handleVerifyTransfer(p.id, 'reject')}
+                                  className="h-6 px-1.5 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold rounded-lg"
+                                >
+                                  <X className="size-3" />
+                                </Button>
+                              </div>
                             )}
-                          >
-                            {p.status}
-                          </Badge>
+                          </div>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground font-bold pr-6">
                           {new Date(p.created_at).toLocaleDateString(undefined, {

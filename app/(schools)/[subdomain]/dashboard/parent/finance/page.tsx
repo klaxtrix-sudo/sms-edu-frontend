@@ -10,8 +10,14 @@ import {
   Loader2,
   ShieldCheck,
   Users,
-  Download
+  Download,
+  Landmark,
+  Copy,
+  Check,
+  Phone,
+  Mail,
 } from "lucide-react";
+import { FeePaymentModal } from "@/components/parent/fee-payment-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -56,6 +62,17 @@ export default function ParentFinancePage() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const [paystackPublicKey, setPaystackPublicKey] = useState<string | null>(null);
   const [parentName, setParentName] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [schoolBankDetails, setSchoolBankDetails] = useState<{
+    bankName: string | null;
+    accountName: string | null;
+    accountNumber: string | null;
+    officialPhone?: string | null;
+    officialEmail?: string | null;
+  } | null>(null);
+  const [selectedFeeForPayment, setSelectedFeeForPayment] = useState<any | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [copiedSidebarAccount, setCopiedSidebarAccount] = useState(false);
 
   // Auto-select the first child once the list loads.
   useEffect(() => {
@@ -78,6 +95,7 @@ export default function ParentFinancePage() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
         setParentName(session.user.user_metadata?.full_name || "Parent");
+        if (session.user.email) setParentEmail(session.user.email);
         const res = await fetch(`${getBackendUrl()}/payments/config`, {
           headers: { "Authorization": `Bearer ${session.access_token}` },
         });
@@ -91,6 +109,33 @@ export default function ParentFinancePage() {
     };
     fetchPaystackConfig();
   }, [supabase]);
+
+  // Fetch school bank details for direct transfer and contact info.
+  useEffect(() => {
+    if (!supabase || !tenant?.id) return;
+    const fetchSchoolBank = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("schools")
+          .select("bank_name, account_name, account_number, official_phone, official_email")
+          .eq("id", tenant.id)
+          .maybeSingle();
+
+        if (data && !error) {
+          setSchoolBankDetails({
+            bankName: data.bank_name || null,
+            accountName: data.account_name || null,
+            accountNumber: data.account_number || null,
+            officialPhone: data.official_phone || null,
+            officialEmail: data.official_email || null,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load school bank info:", err);
+      }
+    };
+    fetchSchoolBank();
+  }, [supabase, tenant?.id]);
 
   // Fetch fees + history when the selected child changes.
   const fetchChildFinanceData = async (childId: string) => {
@@ -144,55 +189,9 @@ export default function ParentFinancePage() {
     }
   }, [selectedChildId, children, supabase]);
 
-  const handlePay = async (structure: any) => {
-    if (!selectedChildId || !supabase) return;
-    setPayingId(structure.id);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      
-      // 1. Initialize on backend
-      const res = await fetch(`${getBackendUrl()}/payments/initialize`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.access_token}` 
-        },
-        body: JSON.stringify({ 
-          feeStructureId: structure.id,
-          amount: structure.amount,
-          studentId: selectedChildId
-        })
-      });
-
-      const result = await res.json();
-      if (!result.success) throw new Error(result.message);
-
-      // 2. Open Paystack Inline
-      if (!paystackPublicKey) {
-        throw new Error("Payments are not configured for this school. Please contact the school administrator.");
-      }
-      const handler = PaystackPop.setup({
-        key: paystackPublicKey,
-        email: session?.user.email,
-        amount: structure.amount * 100, // Paystack expects kobo
-        ref: result.data.reference,
-        onClose: () => {
-          toast.info("Payment window closed");
-          setPayingId(null);
-        },
-        callback: (response: any) => {
-          toast.success("Payment received! We're confirming it...");
-          fetchChildFinanceData(selectedChildId); // Refresh history
-          setPayingId(null);
-        }
-      });
-      handler.openIframe();
-
-    } catch (error: any) {
-      toast.error(error.message || "Checkout failed");
-      setPayingId(null);
-    }
+  const handlePay = (structure: any) => {
+    setSelectedFeeForPayment(structure);
+    setIsPaymentModalOpen(true);
   };
 
   const selectedChild = children.find(c => c.id === selectedChildId);
@@ -439,26 +438,162 @@ export default function ParentFinancePage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="border-none shadow-xl bg-primary/5 text-primary border-primary/20 rounded-2xl">
-              <CardHeader>
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="size-5" />
-                  <CardTitle className="text-lg font-bold">Billing Support</CardTitle>
+            {schoolBankDetails?.accountNumber ? (
+              <Card className="border-none shadow-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-3xl overflow-hidden">
+                <CardHeader className="p-6 pb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-emerald-600">
+                      <Landmark className="size-5" />
+                      <span className="text-xs font-black uppercase tracking-widest">Official Account</span>
+                    </div>
+                    <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] px-2 py-0 border-none">
+                      Verified
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-xl font-black text-foreground">
+                    Direct Bank Transfer
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground font-medium">
+                    Official institution account for mobile app and over-the-counter payments.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-4">
+                  <div className="p-4 bg-background/80 rounded-2xl border border-border/50 space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Bank Name</p>
+                    <p className="font-black text-base text-foreground">{schoolBankDetails.bankName || "Commercial Bank"}</p>
+                  </div>
+
+                  <div className="p-4 bg-background/80 rounded-2xl border border-border/50 space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Account Number</p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-2xl font-black text-foreground tracking-wider">
+                        {schoolBankDetails.accountNumber}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          navigator.clipboard.writeText(schoolBankDetails.accountNumber || "");
+                          setCopiedSidebarAccount(true);
+                          toast.success("Account number copied to clipboard");
+                          setTimeout(() => setCopiedSidebarAccount(false), 2000);
+                        }}
+                        className="gap-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg px-2.5 h-8"
+                      >
+                        {copiedSidebarAccount ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                        <span>{copiedSidebarAccount ? "Copied" : "Copy"}</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-background/80 rounded-2xl border border-border/50 space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Beneficiary Name</p>
+                    <p className="font-bold text-sm text-foreground">{schoolBankDetails.accountName || tenant?.name}</p>
+                  </div>
+
+                  {selectedChild?.admission_no && (
+                    <div className="p-3.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                        💡 Transfer Narration Hint
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Please enter <span className="font-mono font-bold text-foreground">{selectedChild.admission_no}</span> in your transfer narration so the bursar can identify your payment.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-none shadow-xl bg-amber-500/5 border border-amber-500/20 rounded-3xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <AlertCircle className="size-5" />
+                    <span className="text-xs font-black uppercase tracking-widest">Payment Notice</span>
+                  </div>
+                  <Badge variant="outline" className="border-amber-500/30 text-amber-600 text-[9px] font-bold">
+                    Pending Setup
+                  </Badge>
                 </div>
-                <CardDescription className="text-primary/70 font-medium">For payment inquiries, please reach out to the bursary office.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 bg-background/50 rounded-xl space-y-2 border border-primary/10">
-                  <p className="text-xs uppercase tracking-widest font-black text-muted-foreground opacity-50">School</p>
-                  <p className="font-bold text-sm">{tenant?.name || "Your school"}</p>
+
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-foreground">Electronic Bank Details Pending</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Official direct bank transfer details have not yet been published online by {tenant?.name || "the school"} administration.
+                  </p>
                 </div>
-                <p className="text-xs text-primary/60 font-medium">
-                  For payment inquiries, please contact the school's bursary office directly.
-                </p>
-              </CardContent>
+
+                <div className="p-4 bg-background/80 rounded-2xl border border-border/50 space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bursary Contact</p>
+                  <p className="text-xs text-muted-foreground">
+                    Please visit or reach out to the school's accounts office directly for payment instructions:
+                  </p>
+                  {(schoolBankDetails?.officialPhone || schoolBankDetails?.officialEmail) ? (
+                    <div className="pt-1 flex flex-col gap-2">
+                      {schoolBankDetails?.officialPhone && (
+                        <a href={`tel:${schoolBankDetails.officialPhone}`} className="flex items-center gap-2 text-xs font-bold text-primary hover:underline">
+                          <Phone className="size-3.5" /> {schoolBankDetails.officialPhone}
+                        </a>
+                      )}
+                      {schoolBankDetails?.officialEmail && (
+                        <a href={`mailto:${schoolBankDetails.officialEmail}`} className="flex items-center gap-2 text-xs font-bold text-primary hover:underline">
+                          <Mail className="size-3.5" /> {schoolBankDetails.officialEmail}
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs font-bold text-foreground">{tenant?.name || "School Administration"}</p>
+                  )}
+                </div>
+              </Card>
+            )}
+
+            <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md rounded-2xl border border-border/50 p-5 space-y-2">
+              <div className="flex items-center gap-2 text-foreground font-bold text-sm">
+                <AlertCircle className="size-4 text-primary" />
+                <span>Need Assistance?</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                For offline bank deposit confirmation or billing questions, contact the school's bursary office directly.
+              </p>
+              {(schoolBankDetails?.officialPhone || schoolBankDetails?.officialEmail) && (
+                <div className="pt-2 flex flex-col gap-1.5">
+                  {schoolBankDetails?.officialPhone && (
+                    <a href={`tel:${schoolBankDetails.officialPhone}`} className="flex items-center gap-2 text-xs font-semibold text-primary hover:underline">
+                      <Phone className="size-3" /> {schoolBankDetails.officialPhone}
+                    </a>
+                  )}
+                  {schoolBankDetails?.officialEmail && (
+                    <a href={`mailto:${schoolBankDetails.officialEmail}`} className="flex items-center gap-2 text-xs font-semibold text-primary hover:underline">
+                      <Mail className="size-3" /> {schoolBankDetails.officialEmail}
+                    </a>
+                  )}
+                </div>
+              )}
             </Card>
           </div>
         </div>
+      )}
+
+      {/* Multi-Channel Fee Payment Modal */}
+      {selectedFeeForPayment && selectedChild && (
+        <FeePaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setSelectedFeeForPayment(null);
+          }}
+          structure={selectedFeeForPayment}
+          child={selectedChild}
+          schoolBank={schoolBankDetails}
+          paystackPublicKey={paystackPublicKey}
+          parentEmail={parentEmail}
+          supabase={supabase}
+          onPaymentSuccess={() => {
+            if (selectedChildId) {
+              fetchChildFinanceData(selectedChildId);
+            }
+          }}
+        />
       )}
     </div>
   );

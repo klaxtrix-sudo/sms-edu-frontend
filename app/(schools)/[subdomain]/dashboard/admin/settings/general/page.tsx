@@ -1,11 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Building2, MapPin, Quote, Smartphone, Globe, Save, Fingerprint, Loader2 } from 'lucide-react';
+import { Building2, MapPin, Quote, Smartphone, Globe, Save, Fingerprint, Loader2, Landmark, CreditCard, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { SchoolLogoUpload } from '@/components/admin/school-logo-upload';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +23,33 @@ import { syncSchoolSettingsToMaster, uploadSchoolLogo } from '@/app/actions/tena
 import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { useTenant } from '@/components/providers/tenant-provider';
 
+const NIGERIAN_BANKS = [
+  'Access Bank',
+  'Ecobank Nigeria',
+  'Fidelity Bank',
+  'First Bank of Nigeria',
+  'First City Monument Bank (FCMB)',
+  'Guaranty Trust Bank (GTBank)',
+  'Heritage Bank',
+  'Jaiz Bank',
+  'Keystone Bank',
+  'Kuda Bank',
+  'Moniepoint MFB',
+  'OPay',
+  'PalmPay',
+  'Polaris Bank',
+  'Stanbic IBTC Bank',
+  'Standard Chartered Bank',
+  'Sterling Bank',
+  'Titan Trust Bank',
+  'Union Bank of Nigeria',
+  'United Bank for Africa (UBA)',
+  'Unity Bank',
+  'Wema Bank',
+  'Zenith Bank',
+  'Other Bank',
+];
+
 const schoolSchema = z.object({
   name: z.string().min(3, 'School name must be at least 3 characters'),
   motto: z.string().optional(),
@@ -23,6 +57,9 @@ const schoolSchema = z.object({
   official_phone: z.string().optional(),
   official_website: z.string().optional(),
   logo_url: z.string().optional(),
+  bank_name: z.string().optional(),
+  account_name: z.string().optional(),
+  account_number: z.string().max(10, 'Account number cannot exceed 10 digits').optional(),
 });
 type SchoolFormValues = z.infer<typeof schoolSchema>;
 
@@ -35,6 +72,7 @@ export default function GeneralSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [isCustomBank, setIsCustomBank] = useState(false);
 
   const form = useForm<SchoolFormValues>({
     resolver: zodResolver(schoolSchema),
@@ -45,6 +83,9 @@ export default function GeneralSettings() {
       official_phone: '',
       official_website: '',
       logo_url: '',
+      bank_name: '',
+      account_name: '',
+      account_number: '',
     },
   });
 
@@ -63,6 +104,12 @@ export default function GeneralSettings() {
           setSchoolId(tenant.id);
         }
 
+        const savedBank = school?.bank_name || '';
+        const isStandard = NIGERIAN_BANKS.slice(0, -1).includes(savedBank);
+        if (savedBank && !isStandard) {
+          setIsCustomBank(true);
+        }
+
         form.reset({
           name: school?.name || tenant?.name || '',
           motto: school?.motto || '',
@@ -70,6 +117,9 @@ export default function GeneralSettings() {
           official_phone: school?.official_phone || '',
           official_website: school?.official_website || '',
           logo_url: tenant?.logoUrl || school?.logo_url || '',
+          bank_name: savedBank,
+          account_name: school?.account_name || '',
+          account_number: school?.account_number || '',
         });
 
       } catch (error: any) {
@@ -83,6 +133,9 @@ export default function GeneralSettings() {
           official_phone: '',
           official_website: '',
           logo_url: tenant?.logoUrl || '',
+          bank_name: '',
+          account_name: '',
+          account_number: '',
         });
         if (tenant?.id) setSchoolId(tenant.id);
       } finally {
@@ -118,6 +171,9 @@ export default function GeneralSettings() {
         official_phone: values.official_phone,
         official_website: values.official_website,
         logo_url: finalLogoUrl,
+        bank_name: values.bank_name || null,
+        account_name: values.account_name || null,
+        account_number: values.account_number || null,
       });
 
       if (!result.success) {
@@ -130,7 +186,7 @@ export default function GeneralSettings() {
         logoUrl: finalLogoUrl,
       });
 
-      toast.success('School profile saved.');
+      toast.success('School profile and bank settings saved.');
       router.refresh();
 
       setTimeout(() => {
@@ -222,6 +278,107 @@ export default function GeneralSettings() {
                 <div className="relative">
                   <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input id="website" {...form.register('official_website')} className="pl-12 h-14 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 text-slate-700 font-medium" />
+                </div>
+              </div>
+            </div>
+
+            {/* Official Bank & Settlement Account Section */}
+            <div className="pt-10 border-t border-slate-100 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600">
+                  <Landmark className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-heading font-extrabold text-slate-900">Official Bank & Settlement Account</h3>
+                  <p className="text-xs text-slate-500 font-medium">Bank details presented to parents for direct tuition deposits and fee settlement.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 bg-slate-50/60 p-6 rounded-3xl border border-slate-100">
+                {/* Bank Name Selector */}
+                <div className="space-y-2">
+                  <Label htmlFor="bank-select" className="text-xs font-black uppercase tracking-widest text-slate-400">Official Bank</Label>
+                  <Select
+                    value={
+                      isCustomBank
+                        ? 'Other Bank'
+                        : form.watch('bank_name') && NIGERIAN_BANKS.includes(form.watch('bank_name') || '')
+                        ? form.watch('bank_name')
+                        : form.watch('bank_name')
+                        ? 'Other Bank'
+                        : ''
+                    }
+                    onValueChange={(val) => {
+                      if (val === 'Other Bank') {
+                        setIsCustomBank(true);
+                      } else {
+                        setIsCustomBank(false);
+                        form.setValue('bank_name', val);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="bank-select" className="h-14 bg-white border-slate-200 rounded-2xl font-medium text-slate-800">
+                      <SelectValue placeholder="Select official bank" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl max-h-60">
+                      {NIGERIAN_BANKS.map((b) => (
+                        <SelectItem key={b} value={b} className="font-medium">
+                          {b}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Custom Bank Name Input (if Other chosen) */}
+                {isCustomBank && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-bank-name" className="text-xs font-black uppercase tracking-widest text-slate-400">Specify Bank Name</Label>
+                    <Input
+                      id="custom-bank-name"
+                      placeholder="e.g. Standard Chartered Bank"
+                      value={form.watch('bank_name') || ''}
+                      onChange={(e) => form.setValue('bank_name', e.target.value)}
+                      className="h-14 bg-white border-slate-200 rounded-2xl font-medium text-slate-800"
+                    />
+                  </div>
+                )}
+
+                {/* Account Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="account-number" className="text-xs font-black uppercase tracking-widest text-slate-400">Account Number (10 Digits NUBAN)</Label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="account-number"
+                      maxLength={10}
+                      placeholder="0123456789"
+                      {...form.register('account_number')}
+                      className="pl-12 h-14 bg-white border-slate-200 rounded-2xl font-mono text-base tracking-wider font-bold text-slate-800"
+                    />
+                  </div>
+                  {form.formState.errors.account_number && (
+                    <p className="text-xs text-red-500">{form.formState.errors.account_number.message}</p>
+                  )}
+                </div>
+
+                {/* Account Name */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="account-name" className="text-xs font-black uppercase tracking-widest text-slate-400">Account Beneficiary Name</Label>
+                  <Input
+                    id="account-name"
+                    placeholder="e.g. Glorydays Academy Operations"
+                    {...form.register('account_name')}
+                    className="h-14 bg-white border-slate-200 rounded-2xl font-bold text-slate-800"
+                  />
+                </div>
+
+                {/* Verification callout */}
+                <div className="md:col-span-2 flex items-start gap-3 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+                    This account is verified and displayed to parents in their portal for direct tuition transfers, bank app transfers, and over-the-counter teller deposits.
+                  </p>
                 </div>
               </div>
             </div>
