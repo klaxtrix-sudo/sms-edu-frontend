@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { 
   Bell, 
   CheckCircle2, 
@@ -37,6 +38,8 @@ interface Notification {
 }
 
 export function NotificationDrawer() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -110,6 +113,27 @@ export function NotificationDrawer() {
     }
   };
 
+  const handleNotificationClick = async (n: Notification) => {
+    if (!n.read) {
+      await markAsRead(n._id);
+    }
+    setOpen(false);
+
+    if (n.type === "payment") {
+      if (pathname.includes("/parent")) {
+        router.push("/dashboard/parent/finance");
+      } else if (pathname.includes("/admin")) {
+        router.push("/dashboard/admin/finance");
+      }
+    } else if (n.type === "result") {
+      if (pathname.includes("/parent")) {
+        router.push("/dashboard/parent/results");
+      } else if (pathname.includes("/admin")) {
+        router.push("/dashboard/admin/academics/results");
+      }
+    }
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'success':
@@ -177,7 +201,7 @@ export function NotificationDrawer() {
                   "p-6 transition-colors hover:bg-accent/50 group cursor-pointer relative",
                   !n.read && "bg-primary/[0.03]"
                 )}
-                onClick={() => !n.read && markAsRead(n._id)}
+                onClick={() => handleNotificationClick(n)}
               >
                 {!n.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
                 <div className="flex gap-4">

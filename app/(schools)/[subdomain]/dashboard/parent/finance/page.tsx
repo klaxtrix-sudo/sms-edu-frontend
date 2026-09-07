@@ -16,8 +16,10 @@ import {
   Check,
   Phone,
   Mail,
+  Receipt,
 } from "lucide-react";
 import { FeePaymentModal } from "@/components/parent/fee-payment-modal";
+import { ReceiptDialog, type ReceiptData } from "@/components/shared/receipt-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -63,6 +65,7 @@ export default function ParentFinancePage() {
   const [paystackPublicKey, setPaystackPublicKey] = useState<string | null>(null);
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
+  const [selectedReceiptForModal, setSelectedReceiptForModal] = useState<ReceiptData | null>(null);
   const [schoolBankDetails, setSchoolBankDetails] = useState<{
     bankName: string | null;
     accountName: string | null;
@@ -401,29 +404,51 @@ export default function ParentFinancePage() {
                           </TableCell>
                           <TableCell className="text-center">
                             {h.status === 'success' ? (
-                              <PDFDownloadLink
-                                document={
-                                  <PaymentReceiptPDF
-                                    receipt={{
-                                      reference: h.reference,
-                                      parentName,
-                                      studentName: selectedChild?.profiles?.full_name || "—",
-                                      admissionNo: selectedChild?.admission_no || "—",
-                                      description: h.fee_structures?.name || "School Fees",
-                                      date: h.paid_at || h.created_at,
-                                      amount: Number(h.amount),
-                                    }}
-                                    schoolName={tenant?.name || "Klaxtrix Institution"}
-                                  />
-                                }
-                                fileName={`receipt-${h.reference}.pdf`}
-                              >
-                                {({ loading: pdfLoading }) => (
-                                  <Button variant="ghost" size="icon" className="size-8 rounded-lg" disabled={pdfLoading}>
-                                    {pdfLoading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-                                  </Button>
-                                )}
-                              </PDFDownloadLink>
+                              <div className="flex items-center justify-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setSelectedReceiptForModal({
+                                    reference: h.reference,
+                                    parentName,
+                                    studentName: selectedChild?.profiles?.full_name || "—",
+                                    admissionNo: selectedChild?.admission_no || "—",
+                                    description: h.fee_structures?.name || "School Fees",
+                                    date: h.paid_at || h.created_at,
+                                    amount: Number(h.amount),
+                                    channel: h.channel,
+                                    schoolName: tenant?.name,
+                                  })}
+                                  className="size-8 rounded-lg text-primary hover:bg-primary/10"
+                                  title="View & Print Official Receipt"
+                                >
+                                  <Receipt className="size-4" />
+                                </Button>
+
+                                <PDFDownloadLink
+                                  document={
+                                    <PaymentReceiptPDF
+                                      receipt={{
+                                        reference: h.reference,
+                                        parentName,
+                                        studentName: selectedChild?.profiles?.full_name || "—",
+                                        admissionNo: selectedChild?.admission_no || "—",
+                                        description: h.fee_structures?.name || "School Fees",
+                                        date: h.paid_at || h.created_at,
+                                        amount: Number(h.amount),
+                                      }}
+                                      schoolName={tenant?.name || "Klaxtrix Institution"}
+                                    />
+                                  }
+                                  fileName={`receipt-${h.reference}.pdf`}
+                                >
+                                  {({ loading: pdfLoading }) => (
+                                    <Button variant="ghost" size="icon" className="size-8 rounded-lg text-muted-foreground hover:text-foreground" disabled={pdfLoading} title="Download PDF">
+                                      {pdfLoading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                                    </Button>
+                                  )}
+                                </PDFDownloadLink>
+                              </div>
                             ) : (
                               <span className="text-muted-foreground/30 text-xs">—</span>
                             )}
@@ -436,6 +461,13 @@ export default function ParentFinancePage() {
               </Card>
             </section>
           </div>
+
+          <ReceiptDialog
+            isOpen={!!selectedReceiptForModal}
+            onClose={() => setSelectedReceiptForModal(null)}
+            receipt={selectedReceiptForModal}
+            schoolName={tenant?.name}
+          />
 
           <div className="space-y-6">
             {schoolBankDetails?.accountNumber ? (

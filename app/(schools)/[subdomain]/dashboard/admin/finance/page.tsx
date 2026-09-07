@@ -69,6 +69,7 @@ import { AddFeeStructureModal } from "@/components/admin/add-fee-structure-modal
 import { EditFeeStructureModal } from "@/components/admin/edit-fee-structure-modal";
 import { DeleteFeeStructureModal } from "@/components/admin/delete-fee-structure-modal";
 import { RecordManualPaymentModal } from "@/components/admin/record-manual-payment-modal";
+import { ReceiptDialog, type ReceiptData } from "@/components/shared/receipt-dialog";
 
 export default function FinanceDashboard() {
   const params = useParams();
@@ -97,6 +98,7 @@ export default function FinanceDashboard() {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [editingFee, setEditingFee] = useState<any>(null);
   const [deletingFee, setDeletingFee] = useState<any>(null);
+  const [selectedReceiptForModal, setSelectedReceiptForModal] = useState<ReceiptData | null>(null);
 
   // Filter states for Payments Ledger
   const [searchTerm, setSearchTerm] = useState("");
@@ -704,11 +706,36 @@ export default function FinanceDashboard() {
                           </TableCell>
 
                           <TableCell className="py-4 text-xs text-muted-foreground font-semibold pr-6">
-                            {new Date(p.created_at).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
+                            <div className="flex items-center justify-between gap-2">
+                              <span>
+                                {new Date(p.created_at).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </span>
+                              {p.status === "success" && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => setSelectedReceiptForModal({
+                                    reference: p.reference,
+                                    parentName: p.metadata?.senderName || "Payer / Guardian",
+                                    studentName: p.students?.profiles?.full_name || "Student",
+                                    admissionNo: p.students?.admission_no || "—",
+                                    description: p.fee_structures?.name || "School Fee",
+                                    date: p.paid_at || p.created_at,
+                                    amount: Number(p.amount),
+                                    channel: p.channel,
+                                    schoolName: tenant?.name,
+                                  })}
+                                  className="size-7 rounded-lg text-primary hover:bg-primary/10"
+                                  title="View Official Receipt"
+                                >
+                                  <Receipt className="size-3.5" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -997,6 +1024,14 @@ export default function FinanceDashboard() {
         onClose={() => setDeletingFee(null)}
         onSuccess={fetchFinanceData}
         feeStructure={deletingFee}
+      />
+
+      {/* Official Receipt Dialog Preview & Print */}
+      <ReceiptDialog
+        isOpen={!!selectedReceiptForModal}
+        onClose={() => setSelectedReceiptForModal(null)}
+        receipt={selectedReceiptForModal}
+        schoolName={tenant?.name}
       />
     </div>
   );
