@@ -48,4 +48,10 @@ export {
   saveClassSubjectAssignments,
   completeOnboarding,
   resetUserPassword,
+  getClassCurriculumSubjects,
+  getTermGradingReadiness,
+  getClassBroadsheetData,
+  publishClassResults,
+  getOnlineExamsForSubject,
+  syncOnlineExamScores,
 } from "./academic-actions";
