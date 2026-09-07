@@ -150,9 +150,8 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {loading ? (
-        <div className="py-24 flex flex-col items-center justify-center gap-3">
+        <div className="py-24 flex items-center justify-center">
           <Loader2 className="size-8 animate-spin text-primary" />
-          <p className="text-sm font-medium text-muted-foreground">Aggregating school intelligence...</p>
         </div>
       ) : !analyticsData ? (
         <div className="py-24 text-center">
