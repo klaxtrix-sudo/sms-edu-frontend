@@ -188,41 +188,41 @@ export default function SetupWizardPage() {
             className="space-y-10"
           >
             <div className="space-y-1">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Identity</h2>
-              <p className="text-slate-500 font-medium">Add your school's logo and contact details.</p>
+              <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Identity</h2>
+              <p className="text-muted-foreground font-medium">Add your school's logo and contact details.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">School Motto</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">School Motto</Label>
                   <Input 
                     placeholder="e.g. Knowledge is Power" 
                     value={formData.motto}
                     onChange={e => update('motto', e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"
+                    className="h-12 bg-muted/40 border-border rounded-xl font-bold text-foreground"
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">State</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">State</Label>
                     <Select value={formData.state} onValueChange={v => { update('state', v); update('lga', ''); }}>
-                      <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
+                      <SelectTrigger className="h-12 bg-muted/40 border-border rounded-xl font-bold text-foreground">
                         <SelectValue placeholder="Select State" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 text-slate-700">
+                      <SelectContent className="bg-popover border-border text-popover-foreground">
                         {NIGERIA_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">LGA</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">LGA</Label>
                     <Select value={formData.lga} onValueChange={v => update('lga', v)} disabled={!formData.state}>
-                      <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
+                      <SelectTrigger className="h-12 bg-muted/40 border-border rounded-xl font-bold text-foreground">
                         <SelectValue placeholder="Select LGA" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 text-slate-700">
+                      <SelectContent className="bg-popover border-border text-popover-foreground">
                         {lgas.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -232,18 +232,18 @@ export default function SetupWizardPage() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Official Email</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">Official Email</Label>
                   <Input 
                     type="email"
                     placeholder="info@school.edu.ng" 
                     value={formData.officialEmail}
                     onChange={e => update('officialEmail', e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"
+                    className="h-12 bg-background border-border rounded-xl font-bold text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">School Logo</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">School Logo</Label>
                   <input 
                     type="file" 
                     ref={logoInputRef}
@@ -254,7 +254,7 @@ export default function SetupWizardPage() {
                   <div className="grid grid-cols-1">
                      <div 
                        onClick={() => logoInputRef.current?.click()}
-                       className="h-36 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-slate-50/50 overflow-hidden relative"
+                       className="h-36 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all bg-muted/20 overflow-hidden relative"
                      >
                         {logoPreview ? (
                           <div className="relative h-full w-full">
@@ -265,12 +265,12 @@ export default function SetupWizardPage() {
                           </div>
                         ) : (
                           <>
-                            <Camera className="size-6 text-slate-400 group-hover:text-primary transition-colors mb-1" />
+                            <Camera className="size-6 text-muted-foreground group-hover:text-primary transition-colors mb-1" />
                             <div className="text-center space-y-1">
-                              <span className="text-[10px] font-black uppercase text-slate-900 block">Upload School Logo</span>
+                              <span className="text-[10px] font-black uppercase text-foreground block">Upload School Logo</span>
                               <div className="flex flex-col gap-0.5 opacity-60">
-                                <p className="text-[8px] font-bold uppercase text-slate-500">• Max 500 KB • Min 200px</p>
-                                <p className="text-[8px] font-bold uppercase text-slate-500">• PNG, SVG or WebP</p>
+                                <p className="text-[8px] font-bold uppercase text-muted-foreground">• Max 500 KB • Min 200px</p>
+                                <p className="text-[8px] font-bold uppercase text-muted-foreground">• PNG, SVG or WebP</p>
                               </div>
                             </div>
                           </>
@@ -291,19 +291,19 @@ export default function SetupWizardPage() {
             className="space-y-10"
           >
             <div className="space-y-1">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Academic</h2>
-              <p className="text-slate-500 font-medium">Tell us about your school's academic year.</p>
+              <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Academic</h2>
+              <p className="text-muted-foreground font-medium">Tell us about your school's academic year.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
               <div className="space-y-6">
                  <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">School Type</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">School Type</Label>
                   <Select value={formData.schoolType} onValueChange={v => update('schoolType', v)}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
+                    <SelectTrigger className="h-12 bg-background border-border rounded-xl font-bold text-foreground">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 text-slate-700">
+                    <SelectContent className="bg-popover border-border text-popover-foreground">
                       <SelectItem value="nursery">Early Childhood (Nursery/Pre-school)</SelectItem>
                       <SelectItem value="primary">Lower Basic (Primary)</SelectItem>
                       <SelectItem value="secondary">Middle/Upper Basic (Secondary)</SelectItem>
@@ -313,12 +313,12 @@ export default function SetupWizardPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Academic Year</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">Academic Year</Label>
                   <Select value={formData.academicYear} onValueChange={v => update('academicYear', v)}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
+                    <SelectTrigger className="h-12 bg-background border-border rounded-xl font-bold text-foreground">
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 text-slate-700">
+                    <SelectContent className="bg-popover border-border text-popover-foreground">
                       {DYNAMIC_ACADEMIC_YEARS.map(year => (
                         <SelectItem key={year} value={year}>{year}</SelectItem>
                       ))}
@@ -329,12 +329,12 @@ export default function SetupWizardPage() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Active Term</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">Active Term</Label>
                   <Select value={formData.currentTerm} onValueChange={v => update('currentTerm', v)}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900">
+                    <SelectTrigger className="h-12 bg-background border-border rounded-xl font-bold text-foreground">
                       <SelectValue placeholder="Select term" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 text-slate-700">
+                    <SelectContent className="bg-popover border-border text-popover-foreground">
                       <SelectItem value="1">First Term</SelectItem>
                       <SelectItem value="2">Second Term</SelectItem>
                       <SelectItem value="3">Third Term</SelectItem>
@@ -353,41 +353,41 @@ export default function SetupWizardPage() {
             className="space-y-10"
           >
             <div className="space-y-1">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Financial</h2>
-              <p className="text-slate-500 font-medium">Add your school's bank details (optional).</p>
+              <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Financial</h2>
+              <p className="text-muted-foreground font-medium">Add your school's bank details (optional).</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8">
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Official Bank Name (Optional)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">Official Bank Name (Optional)</Label>
                   <Input 
                     placeholder="e.g. Zenith Bank" 
                     value={formData.bankName}
                     onChange={e => update('bankName', e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"
+                    className="h-12 bg-background border-border rounded-xl font-bold text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Name (Optional)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">Account Name (Optional)</Label>
                   <Input 
                     placeholder="e.g. Klaxtrix Academy" 
                     value={formData.accountName}
                     onChange={e => update('accountName', e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"
+                    className="h-12 bg-background border-border rounded-xl font-bold text-foreground"
                   />
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-950">Account Number (Optional)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-foreground">Account Number (Optional)</Label>
                   <Input 
                     placeholder="10 Digits" 
                     maxLength={10}
                     value={formData.accountNumber}
                     onChange={e => update('accountNumber', e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900"
+                    className="h-12 bg-background border-border rounded-xl font-bold text-foreground"
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function SetupWizardPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center justify-center py-10 space-y-8 text-center"
           >
-            <div className="size-24 rounded-full bg-emerald-50 flex items-center justify-center relative">
+            <div className="size-24 rounded-full bg-emerald-500/10 flex items-center justify-center relative">
               <CheckCircle2 className="size-12 text-emerald-500" />
               <motion.div 
                 animate={{ scale: [1, 1.2, 1] }}
@@ -410,13 +410,13 @@ export default function SetupWizardPage() {
               />
             </div>
             <div className="space-y-2">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Ready to Finish</h2>
-              <p className="text-slate-500 font-medium max-w-md mx-auto">
+              <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Ready to Finish</h2>
+              <p className="text-muted-foreground font-medium max-w-md mx-auto">
                 Everything looks good. Click below to finish and open your dashboard.
               </p>
             </div>
             
-            <Badge variant="outline" className="py-2 px-6 border-slate-200 bg-white shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-600 gap-2">
+            <Badge variant="outline" className="py-2 px-6 border-border bg-card shadow-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground gap-2">
               <Sparkles className="size-3 text-amber-500" /> All set
             </Badge>
           </motion.div>
@@ -425,7 +425,7 @@ export default function SetupWizardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col p-8 pt-20">
+    <div className="min-h-screen bg-background flex flex-col p-8 pt-20">
       <div className="max-w-5xl mx-auto w-full space-y-8">
         {/* Modern Stepper */}
         <div className="grid grid-cols-4 gap-4 mb-8">
@@ -437,18 +437,18 @@ export default function SetupWizardPage() {
                <div key={step.id} className="relative">
                  <div className={cn(
                    "h-1 transition-all duration-500 rounded-full",
-                   active ? "bg-primary w-full" : completed ? "bg-primary/40 w-full" : "bg-slate-200 w-full"
+                   active ? "bg-primary w-full" : completed ? "bg-primary/40 w-full" : "bg-muted w-full"
                  )} />
                  <div className="mt-4 flex items-center gap-3">
                     <div className={cn(
                       "size-8 rounded-lg flex items-center justify-center transition-all",
-                      active ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" : completed ? "bg-primary/10 text-primary" : "bg-white text-slate-400 border border-slate-100"
+                      active ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110" : completed ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground border border-border"
                     )}>
                       <Icon className="size-4" />
                     </div>
                     <div>
-                      <p className={cn("text-[9px] font-black uppercase tracking-widest mb-0.5", active ? "text-primary" : "text-slate-400")}>Step 0{idx + 1}</p>
-                      <p className={cn("text-[11px] font-bold uppercase", active ? "text-slate-950" : "text-slate-400")}>{step.title}</p>
+                      <p className={cn("text-[9px] font-black uppercase tracking-widest mb-0.5", active ? "text-primary" : "text-muted-foreground")}>Step 0{idx + 1}</p>
+                      <p className={cn("text-[11px] font-bold uppercase", active ? "text-foreground" : "text-muted-foreground")}>{step.title}</p>
                     </div>
                  </div>
                </div>
@@ -457,18 +457,18 @@ export default function SetupWizardPage() {
         </div>
 
         {/* Main Content Card */}
-        <Card className="p-10 border-0 shadow-2xl shadow-slate-200/50 bg-white rounded-[2.5rem] relative overflow-hidden flex flex-col min-h-[500px]">
+        <Card className="p-10 border border-border shadow-2xl shadow-black/5 dark:shadow-black/40 bg-card rounded-[2.5rem] relative overflow-hidden flex flex-col min-h-[500px]">
            <AnimatePresence mode="wait">
              <motion.div key={currentStep}>
                 {renderStep()}
 
                 {/* Footer Navigation */}
-                <div className="mt-auto pt-10 flex items-center justify-between border-t border-slate-100">
+                <div className="mt-auto pt-10 flex items-center justify-between border-t border-border">
                    {currentStep > 0 ? (
                      <Button 
                        onClick={handlePrev} 
                        disabled={isSubmitting}
-                       className="px-10 h-14 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg gap-3 active:scale-95 group"
+                       className="px-10 h-14 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-black uppercase tracking-widest rounded-xl transition-all shadow-sm border border-border gap-3 active:scale-95 group"
                      >
                        <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" /> Back
                      </Button>
@@ -480,7 +480,7 @@ export default function SetupWizardPage() {
                      <Button 
                        onClick={handleCompleteSetup}
                        disabled={isSubmitting}
-                       className="px-10 h-14 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/20 gap-3 active:scale-95 group"
+                       className="px-10 h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/20 gap-3 active:scale-95 group"
                      >
                        {isSubmitting ? (
                          <Loader2 className="size-4 animate-spin" />
@@ -491,7 +491,7 @@ export default function SetupWizardPage() {
                    ) : (
                      <Button 
                        onClick={handleNext}
-                       className="px-10 h-14 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg gap-3 active:scale-95 group"
+                       className="px-10 h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/20 gap-3 active:scale-95 group"
                      >
                        Continue to {STEPS[currentStep + 1].title} <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                      </Button>
