@@ -171,26 +171,24 @@ export default function AdminAnalyticsPage() {
             <AnalyticsStatCard
               title="School Attendance"
               value={`${analyticsData.metrics.attendance.rate}%`}
-              trend={analyticsData.metrics.attendance.trend}
-              isPositive={analyticsData.metrics.attendance.rate >= 75}
+              trend={analyticsData.metrics.attendance.totalRecords > 0 ? analyticsData.metrics.attendance.trend : undefined}
+              isPositive={analyticsData.metrics.attendance.totalRecords > 0 ? analyticsData.metrics.attendance.rate >= 75 : undefined}
               icon={Clock}
               iconColor="text-blue-600 dark:text-blue-400"
               iconBg="bg-blue-500/10"
               description="Average student daily presence"
-              subValue={`${analyticsData.metrics.attendance.presentCount} present entries`}
             />
 
             {/* Card 2: Academic Score */}
             <AnalyticsStatCard
               title="Academic Score"
               value={`${analyticsData.metrics.academics.avgScore}%`}
-              trend={`Pass Rate: ${analyticsData.metrics.academics.passRate}%`}
-              isPositive={analyticsData.metrics.academics.avgScore >= 60}
+              trend={analyticsData.metrics.academics.totalResultsRecorded > 0 ? `Pass Rate: ${analyticsData.metrics.academics.passRate}%` : undefined}
+              isPositive={analyticsData.metrics.academics.totalResultsRecorded > 0 ? analyticsData.metrics.academics.avgScore >= 60 : undefined}
               icon={GraduationCap}
               iconColor="text-emerald-600 dark:text-emerald-400"
               iconBg="bg-emerald-500/10"
               description="Mean across term assessments"
-              subValue={`${analyticsData.metrics.academics.totalResultsRecorded} records recorded`}
             />
 
             {/* Card 3: Revenue Realization */}
@@ -203,12 +201,11 @@ export default function AdminAnalyticsPage() {
               iconColor="text-indigo-600 dark:text-indigo-400"
               iconBg="bg-indigo-500/10"
               description="Fee collection efficiency"
-              subValue={analyticsData.metrics.finance.targeted > 0 ? `Target: ₦${analyticsData.metrics.finance.targeted.toLocaleString()}` : "No fee structures set"}
             />
 
-            {/* Card 4: Community / Campus Activity */}
+            {/* Card 4: Community Activity */}
             <AnalyticsStatCard
-              title="Campus Community"
+              title="School Community"
               value={analyticsData.metrics.community.totalStudents.toString()}
               trend={`${analyticsData.metrics.community.totalTeachers} Faculty`}
               isPositive={true}
@@ -216,7 +213,6 @@ export default function AdminAnalyticsPage() {
               iconColor="text-amber-600 dark:text-amber-400"
               iconBg="bg-amber-500/10"
               description="Total enrolled student body"
-              subValue={`${analyticsData.metrics.community.totalActiveUsers} registered accounts`}
             />
           </div>
 
@@ -315,17 +311,15 @@ function AnalyticsStatCard({
   iconColor,
   iconBg,
   description,
-  subValue,
 }: {
   title: string;
   value: string;
-  trend: string;
-  isPositive: boolean;
+  trend?: string;
+  isPositive?: boolean;
   icon: any;
   iconColor: string;
   iconBg: string;
   description: string;
-  subValue?: string;
 }) {
   return (
     <Card className="bg-card border-border/80 shadow-sm p-4 rounded-xl relative overflow-hidden transition-all duration-200 hover:border-primary/40">
@@ -343,25 +337,23 @@ function AnalyticsStatCard({
           {value}
         </span>
 
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-0.5 ${
-          isPositive 
-            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
-            : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-        }`}>
-          {isPositive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-          {trend}
-        </span>
+        {trend && (
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-0.5 ${
+            isPositive === undefined
+              ? "bg-muted text-muted-foreground border-border"
+              : isPositive 
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+              : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+          }`}>
+            {isPositive !== undefined && (isPositive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />)}
+            {trend}
+          </span>
+        )}
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-1">
         {description}
       </p>
-
-      {subValue && (
-        <div className="mt-2 pt-2 border-t border-border/50 text-[10px] text-muted-foreground font-medium">
-          {subValue}
-        </div>
-      )}
     </Card>
   );
 }
