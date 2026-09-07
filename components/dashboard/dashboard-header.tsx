@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, Moon, Sun, Monitor, Menu, Calendar } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth-actions';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 interface DashboardHeaderProps {
   onMenuClick?: () => void;
@@ -38,7 +39,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const initial = schoolName.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between px-4 md:px-8 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between px-4 md:px-8 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors">
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
@@ -51,14 +52,14 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
       </div>
 
       {academicCycle && (
-        <div className="hidden md:flex items-center gap-4 px-5 py-2.5 bg-slate-500/[0.03] dark:bg-white/[0.02] backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] text-sm select-none animate-in fade-in slide-in-from-top-2 duration-500">
+        <div className="hidden md:flex items-center gap-4 px-5 py-2.5 bg-card/60 border border-border/80 shadow-xs backdrop-blur-md rounded-2xl text-sm select-none animate-in fade-in slide-in-from-top-2 duration-500">
           <div className="flex items-center gap-2 text-muted-foreground/80 font-medium">
             <Calendar className="size-4 text-primary/75" />
             <span className="font-bold text-foreground/90">{academicCycle.academicYear}</span>
             <span className="text-xs text-muted-foreground/50">Session</span>
           </div>
           
-          <span className="h-4 w-px bg-slate-200 dark:bg-white/10" />
+          <span className="h-4 w-px bg-border/60" />
           
           <div className="font-semibold text-foreground/80 flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground/50 font-medium">Term:</span>
@@ -69,7 +70,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             </span>
           </div>
 
-          <span className="h-4 w-px bg-slate-200 dark:bg-white/10" />
+          <span className="h-4 w-px bg-border/60" />
 
           <div className="flex items-center gap-2">
             {academicCycle.currentWeek ? (
@@ -88,15 +89,17 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
           </div>
         </div>
       )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-xl focus-visible:ring-1 focus-visible:ring-ring">
-            <Avatar className="h-10 w-10 border border-border shadow-sm">
-              <AvatarImage src={tenant?.logoUrl} alt={schoolName} className="object-contain p-1" />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
+      <div className="flex items-center gap-2.5">
+        <ThemeToggle />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-10 w-10 rounded-xl focus-visible:ring-1 focus-visible:ring-ring">
+              <Avatar className="h-10 w-10 border border-border shadow-sm">
+                <AvatarImage src={tenant?.logoUrl} alt={schoolName} className="object-contain p-1" />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold">{initial}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1 text-sm">
@@ -132,6 +135,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </header>
-  );
+    </div>
+  </header>
+);
 }
