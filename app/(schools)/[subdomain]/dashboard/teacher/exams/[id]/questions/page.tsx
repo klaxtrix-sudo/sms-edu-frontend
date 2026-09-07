@@ -311,7 +311,7 @@ export default function TeacherManageQuestionsPage() {
           </Card>
         ) : (
           questions.map((q, idx) => (
-            <Card key={q._id} className="group hover:border-primary/50 transition-colors shadow-sm bg-white border-none rounded-2xl overflow-hidden">
+            <Card key={q._id} className="group hover:border-primary/50 transition-colors shadow-sm bg-card border border-border/70 rounded-2xl overflow-hidden">
               <CardContent className="p-6">
                 <div className="flex justify-between gap-4">
                   <div className="flex-1 space-y-4">
@@ -324,7 +324,7 @@ export default function TeacherManageQuestionsPage() {
                       <p className="text-lg font-bold leading-relaxed">{q.text}</p>
                       
                       {q.imageUrl && (
-                        <div className="max-w-lg rounded-xl overflow-hidden border bg-slate-50 p-2">
+                        <div className="max-w-lg rounded-xl overflow-hidden border border-border bg-muted/40 p-2">
                           <img src={q.imageUrl} alt="Question Visual" className="max-h-64 object-contain rounded-lg w-full" />
                         </div>
                       )}
@@ -337,7 +337,7 @@ export default function TeacherManageQuestionsPage() {
                           className={cn(
                             "flex flex-col gap-2 p-4 rounded-xl border text-sm transition-all bg-card/30",
                             oIdx === q.correctIndex 
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-800 ring-1 ring-emerald-200/50 shadow-sm" 
+                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20 shadow-sm" 
                               : "bg-background border-border text-muted-foreground"
                           )}
                         >
@@ -348,12 +348,12 @@ export default function TeacherManageQuestionsPage() {
                             )}>
                               {String.fromCharCode(65 + oIdx)}
                             </div>
-                            <span className="flex-1 font-semibold text-slate-800">{opt || <span className="italic text-xs font-normal text-muted-foreground">Image Choice</span>}</span>
-                            {oIdx === q.correctIndex && <CheckCircle2 className="size-4 text-emerald-600" />}
+                            <span className="flex-1 font-semibold text-foreground">{opt || <span className="italic text-xs font-normal text-muted-foreground">Image Choice</span>}</span>
+                            {oIdx === q.correctIndex && <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />}
                           </div>
 
                           {q.optionImages?.[oIdx] && (
-                            <div className="rounded-lg overflow-hidden border bg-white max-h-32 mt-1">
+                            <div className="rounded-lg overflow-hidden border border-border bg-card max-h-32 mt-1">
                               <img src={q.optionImages[oIdx]} alt={`Option ${String.fromCharCode(65 + oIdx)}`} className="max-h-28 object-contain w-auto mx-auto p-1" />
                             </div>
                           )}
@@ -378,30 +378,30 @@ export default function TeacherManageQuestionsPage() {
 
       {/* Add/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">{editingQuestion ? "Edit Question" : "Add New Question"}</DialogTitle>
-            <DialogDescription>Create a multiple-choice question. You can add images for questions and answers.</DialogDescription>
+            <DialogTitle className="text-2xl font-bold text-foreground">{editingQuestion ? "Edit Question" : "Add New Question"}</DialogTitle>
+            <DialogDescription className="text-muted-foreground">Create a multiple-choice question. You can add images for questions and answers.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             {/* Question Text */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Question Text</label>
+              <label className="text-sm font-bold text-foreground">Question Text</label>
               <Textarea 
                 placeholder="Enter question text here..."
                 value={qText}
                 onChange={(e) => setQText(e.target.value)}
-                className="min-h-[100px] rounded-xl focus:ring-1"
+                className="min-h-[100px] rounded-xl focus:ring-1 bg-background border-border text-foreground"
               />
             </div>
 
             {/* Question Image Upload */}
-            <div className="space-y-3 p-4 bg-slate-50 border rounded-2xl">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-400">Question Diagram / Chart (Optional)</label>
+            <div className="space-y-3 p-4 bg-muted/30 border border-border rounded-2xl">
+              <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Question Diagram / Chart (Optional)</label>
               
               {qImageUrl ? (
-                <div className="relative group max-w-sm rounded-xl overflow-hidden border bg-white p-2">
+                <div className="relative group max-w-sm rounded-xl overflow-hidden border border-border bg-card p-2">
                   <img src={qImageUrl} alt="Question Upload Preview" className="max-h-40 object-contain w-full" />
                   <Button 
                     variant="destructive" 
@@ -415,7 +415,7 @@ export default function TeacherManageQuestionsPage() {
               ) : (
                 <div>
                   <label htmlFor="q-img-upload" className="cursor-pointer">
-                    <div className="flex items-center gap-2 px-4 py-2 border rounded-xl hover:bg-white transition-all text-sm font-bold text-slate-600 bg-slate-100/50 w-fit">
+                    <div className="flex items-center gap-2 px-4 py-2 border border-border rounded-xl hover:bg-accent transition-all text-sm font-bold text-foreground bg-muted/50 w-fit">
                       <ImageIcon className="size-4" />
                       Add Question Diagram
                     </div>
@@ -438,7 +438,7 @@ export default function TeacherManageQuestionsPage() {
               {qOptions.map((opt, idx) => (
                 <div key={idx} className="space-y-3 p-4 bg-card rounded-2xl border border-border/50">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-bold text-slate-700">Option {String.fromCharCode(65 + idx)}</label>
+                    <label className="text-sm font-bold text-foreground">Option {String.fromCharCode(65 + idx)}</label>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] uppercase text-muted-foreground mr-1 font-bold">Correct Option?</span>
                       <input 
@@ -458,13 +458,13 @@ export default function TeacherManageQuestionsPage() {
                       updated[idx] = e.target.value;
                       setQOptions(updated);
                     }}
-                    className="rounded-xl bg-background"
+                    className="rounded-xl bg-background border-border text-foreground"
                   />
 
                   {/* Option Image Upload */}
                   <div className="space-y-2">
                     {qOptionImages[idx] ? (
-                      <div className="relative group max-h-24 rounded-lg overflow-hidden border bg-white p-1 max-w-[120px]">
+                      <div className="relative group max-h-24 rounded-lg overflow-hidden border border-border bg-card p-1 max-w-[120px]">
                         <img src={qOptionImages[idx]} alt={`Preview Option ${String.fromCharCode(65 + idx)}`} className="max-h-20 object-contain w-auto mx-auto" />
                         <Button 
                           variant="destructive" 
@@ -482,7 +482,7 @@ export default function TeacherManageQuestionsPage() {
                     ) : (
                       <div>
                         <label htmlFor={`opt-img-${idx}`} className="cursor-pointer">
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg hover:bg-slate-100 transition-all text-xs font-bold text-slate-500 bg-background w-fit">
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg hover:bg-accent transition-all text-xs font-bold text-muted-foreground bg-background w-fit">
                             <ImageIcon className="size-3.5" />
                             Add Option Image
                           </div>

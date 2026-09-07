@@ -350,7 +350,7 @@ export default function TeacherDashboardPage() {
                           {/* Dot indicator */}
                           <div className="absolute -left-[31px] top-1.5 size-3 rounded-full bg-primary border-2 border-background group-hover:scale-125 transition-transform" />
                           
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50/50 border border-border/50 hover:bg-slate-50 transition-colors">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl bg-muted/30 border border-border/60 hover:bg-muted/60 transition-colors">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <Badge className="bg-primary/10 text-primary hover:bg-primary/15 rounded-lg font-semibold text-xs">
@@ -445,7 +445,7 @@ export default function TeacherDashboardPage() {
                   {formClasses.map((cls) => {
                     const status = attendanceStatus[cls.id] || { marked: false, present: 0, absent: 0 };
                     return (
-                      <Card key={cls.id} className="border border-border/60 shadow-none bg-slate-50/20 rounded-xl p-5 hover:bg-slate-50/50 transition-all">
+                      <Card key={cls.id} className="border border-border/60 shadow-none bg-muted/30 rounded-xl p-5 hover:bg-muted/60 transition-all">
                         <div className="flex items-center justify-between mb-3">
                           <Badge className="rounded-lg px-2.5 py-0.5 bg-primary/10 text-primary border-none font-semibold text-xs">
                             {cls.name}
@@ -510,7 +510,7 @@ export default function TeacherDashboardPage() {
               ) : (
                 recentAssignments.map((task) => (
                   <Link key={task._id} href={`/dashboard/teacher/assignments/${task._id}`} className="block group">
-                    <div className="border border-border/60 hover:border-primary/40 p-4 rounded-xl flex items-start gap-3 bg-slate-50/20 hover:bg-slate-50/50 transition-all h-full">
+                    <div className="border border-border/60 hover:border-primary/40 p-4 rounded-xl flex items-start gap-3 bg-muted/30 hover:bg-muted/60 transition-all h-full">
                       <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform min-w-[2rem]">
                         <FileText className="size-4" />
                       </div>
@@ -601,10 +601,10 @@ export default function TeacherDashboardPage() {
 
 function StatCard({ label, value, icon: Icon, color, description }: any) {
   const colorMap: any = {
-    blue: "text-blue-600 bg-blue-50 border-blue-100",
-    emerald: "text-emerald-600 bg-emerald-50 border-emerald-100",
-    amber: "text-amber-600 bg-amber-50 border-amber-100",
-    indigo: "text-indigo-600 bg-indigo-50 border-indigo-100"
+    blue: "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
+    emerald: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    amber: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
+    indigo: "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20"
   };
 
   return (
@@ -612,7 +612,7 @@ function StatCard({ label, value, icon: Icon, color, description }: any) {
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-muted-foreground tracking-tight">{label}</span>
-          <div className={cn("p-1.5 rounded-lg", colorMap[color] || "bg-muted text-muted-foreground")}>
+          <div className={cn("p-1.5 rounded-lg border", colorMap[color] || "bg-muted text-muted-foreground")}>
             <Icon className="size-4" />
           </div>
         </div>
@@ -629,7 +629,7 @@ function StatCard({ label, value, icon: Icon, color, description }: any) {
 
 function BulletinItem({ title, date, type }: any) {
   return (
-    <div className="flex items-center gap-3 group cursor-pointer text-left p-4 rounded-xl border border-border/60 bg-slate-50/20 hover:bg-slate-50/50 transition-all">
+    <div className="flex items-center gap-3 group cursor-pointer text-left p-4 rounded-xl border border-border/60 bg-muted/30 hover:bg-muted/60 transition-all">
       <div className="size-10 rounded-lg bg-muted border border-border/80 flex flex-col items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-all min-w-[2.5rem]">
         <span className="text-[9px] font-semibold uppercase leading-none">{date.split(' ')[0]}</span>
         <span className="text-xs font-bold mt-0.5">{date.split(' ')[1]}</span>

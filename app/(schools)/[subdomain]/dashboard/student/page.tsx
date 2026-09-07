@@ -198,7 +198,7 @@ function DashboardCard({
 
 function BulletinItem({ title, message, date, type }: { title: string; message: string; date: string; type: string }) {
   return (
-    <div className="flex flex-col justify-between p-5 rounded-xl border border-border/60 bg-slate-50/20 hover:bg-slate-50/50 transition-all duration-200 group relative h-full">
+    <div className="flex flex-col justify-between p-5 rounded-xl border border-border/60 bg-muted/30 hover:bg-muted/60 transition-all duration-200 group relative h-full">
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">

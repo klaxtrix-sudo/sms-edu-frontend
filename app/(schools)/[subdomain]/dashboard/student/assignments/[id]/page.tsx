@@ -197,7 +197,7 @@ export default function StudentAssignmentDetailsPage() {
                 <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:scale-125 transition-transform duration-1000">
                    <Send size={200} />
                 </div>
-                <h3 className="text-3xl font-black tracking-tighter leading-tight italic">Ready to submit?</h3>
+                <h3 className="text-3xl font-black tracking-tighter leading-tight">Ready to submit?</h3>
                 <p className="mt-4 text-white/80 font-bold text-sm leading-relaxed mb-10">Submit your work before the deadline so it counts toward your grade.</p>
                 
                 {isPastDue ? (
@@ -216,7 +216,7 @@ export default function StudentAssignmentDetailsPage() {
              </Card>
            )}
 
-           <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl p-8 rounded-[2.5rem] space-y-6">
+           <Card className="border border-border/60 shadow-2xl bg-card/60 backdrop-blur-xl p-8 rounded-[2.5rem] space-y-6">
               <div>
                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Before you submit</h4>
                  <div className="space-y-4">

@@ -166,7 +166,7 @@ export default function StudentExamsPage() {
         <TabsContent value="available" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {exams.map((exam) => (
-              <Card key={exam._id} className="group overflow-hidden border-none shadow-lg transition-all hover:shadow-xl bg-white">
+              <Card key={exam._id} className="group overflow-hidden border border-border/80 shadow-md transition-all hover:shadow-xl bg-card">
                 <div className="h-1.5 w-full bg-primary/20 group-hover:bg-primary transition-colors" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between mb-2">

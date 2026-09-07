@@ -193,27 +193,27 @@ export default function ExamPortalPage() {
 
   if (finished) return (
     <div className="h-full max-w-2xl mx-auto flex items-center justify-center py-20 animate-in zoom-in duration-500">
-      <Card className="w-full text-center border-none shadow-2xl bg-white overflow-hidden">
-        <div className="h-3 w-full bg-green-500" />
+      <Card className="w-full text-center border border-border shadow-2xl bg-card overflow-hidden">
+        <div className="h-3 w-full bg-emerald-500" />
         <CardContent className="pt-12 pb-12">
-          <div className="size-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="size-10 text-green-600" />
+          <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="size-10 text-emerald-500" />
           </div>
-          <h2 className="text-3xl font-bold mb-2">Exam Finished!</h2>
+          <h2 className="text-3xl font-bold mb-2 text-foreground">Exam Finished!</h2>
           <p className="text-muted-foreground mb-8">Your answers have been saved and graded.</p>
           
-          <div className="bg-accent/30 rounded-2xl p-8 mb-8">
+          <div className="bg-accent/30 rounded-2xl p-8 mb-8 border border-border/60">
             <div className="text-6xl font-black text-primary mb-2">
               {results?.score} <span className="text-2xl text-muted-foreground font-normal">/ {results?.totalMarks}</span>
             </div>
             <div className="text-sm font-semibold text-primary uppercase tracking-widest">Your Score</div>
             
-            <div className="mt-6 pt-6 border-t flex justify-around">
+            <div className="mt-6 pt-6 border-t border-border flex justify-around">
               <div>
                 <div className="text-2xl font-bold">{results?.percentage}%</div>
                 <div className="text-[10px] text-muted-foreground uppercase">Grade Percentage</div>
               </div>
-              <div className="border-l" />
+              <div className="border-l border-border" />
               <div>
                 <div className="text-2xl font-bold">{Math.round((results?.score / results?.totalMarks) * 100) >= 40 ? "PASS" : "FAIL"}</div>
                 <div className="text-[10px] text-muted-foreground uppercase">Remark</div>
@@ -234,16 +234,16 @@ export default function ExamPortalPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <header className="flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 border-b">
+      <header className="flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 border-b border-border">
         <div>
-          <h2 className="text-xl font-bold truncate max-w-[200px] md:max-w-none">{attempt?.examTitle}</h2>
+          <h2 className="text-xl font-bold truncate max-w-[200px] md:max-w-none text-foreground">{attempt?.examTitle}</h2>
           <p className="text-xs text-muted-foreground">Question {currentIdx + 1} of {totalQs}</p>
         </div>
         
         <div className="flex items-center gap-4">
           <div className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-full font-mono font-bold text-lg border-2 transition-colors shadow-sm",
-            timeLeft < 300 ? "bg-red-50 text-red-600 border-red-200 animate-pulse" : "bg-card text-primary border-border"
+            timeLeft < 300 ? "bg-destructive/10 text-destructive border-destructive/30 animate-pulse" : "bg-card text-primary border-border"
           )}>
             <Clock className="size-5" />
             {formatTime(timeLeft)}
@@ -257,7 +257,7 @@ export default function ExamPortalPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Question Area */}
         <div className="lg:col-span-3 space-y-6">
-          <Card className="border-none shadow-xl min-h-[400px]">
+          <Card className="border border-border shadow-xl min-h-[400px] bg-card">
             <CardHeader className="border-b bg-accent/5">
               <div className="flex items-center justify-between">
                 <Badge variant="outline" className="bg-background">Question {currentIdx + 1}</Badge>
@@ -316,7 +316,7 @@ export default function ExamPortalPage() {
 
         {/* Sidebar / Question Grid */}
         <div className="space-y-6">
-          <Card className="border-none shadow-xl bg-card">
+          <Card className="border border-border/80 shadow-xl bg-card">
             <CardHeader>
               <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Question Grid</CardTitle>
             </CardHeader>
