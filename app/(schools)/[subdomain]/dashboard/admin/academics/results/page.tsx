@@ -1,23 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createTenantClient } from "@/lib/supabase/client";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { useTenant } from "@/components/providers/tenant-provider";
 import { 
   Select, 
   SelectContent, 
@@ -26,71 +12,73 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { 
-  Loader2, 
-  Save, 
+  FileSpreadsheet, 
+  GraduationCap, 
+  PenTool, 
+  LayoutGrid, 
+  RefreshCw, 
   ChevronRight,
-  Filter,
-  CheckCircle2,
-  AlertCircle,
-  Settings,
-  Plus,
-  Trash2
+  BookOpen,
+  ArrowLeft,
+  Calendar,
+  Layers
 } from "lucide-react";
-import { calculateGrade } from "@/lib/utils";
-import { getResultMetrics, saveResultMetrics, saveResults } from "@/app/actions/admin-actions";
+import { 
+  getClasses, 
+  getClassCurriculumSubjects, 
+  getTermGradingReadiness,
+  TermGradingReadinessData 
+} from "@/app/actions/academic-actions";
+import { ResultsReadinessMatrix } from "@/components/admin/results/results-readiness-matrix";
+import { SubjectScoresheet } from "@/components/admin/results/subject-scoresheet";
+import { ClassBroadsheet } from "@/components/admin/results/class-broadsheet";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-interface Metric {
-  id?: string;
-  name: string;
-  weight: number;
-  school_id: string;
-  class_id?: string | null;
-  subject_id?: string | null;
-  is_custom?: boolean;
-}
 
 export default function AdminResultsPage() {
   const params = useParams();
   const subdomain = params.subdomain as string;
-  
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [schoolId, setSchoolId] = useState<string | null>(null);
-  const [academicYear, setAcademicYear] = useState<string>("2025/2026");
-  const [currentTerm, setCurrentTerm] = useState<number>(1);
-  
-  // Selection state
-  const [classes, setClasses] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
-  
-  // Metrics & Config state
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [isCustomMetrics, setIsCustomMetrics] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [configMetrics, setConfigMetrics] = useState<Metric[]>([]);
-  const [savingConfig, setSavingConfig] = useState(false);
+  const { tenant, academicCycle } = useTenant();
 
-  // Data state
-  const [students, setStudents] = useState<any[]>([]);
-  const [results, setResults] = useState<Record<string, any>>({});
-  
+  // Active Cycle Selection
+  const [academicYear, setAcademicYear] = useState<string>("2026/2027");
+  const [currentTerm, setCurrentTerm] = useState<number>(1);
+
+  // Classroom & Subject Filter Selection
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [classSubjects, setClassSubjects] = useState<any[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
+
+  // Mode: 'readiness' (no class selected), 'scoresheet', or 'broadsheet'
+  const [viewMode, setViewMode] = useState<"scoresheet" | "broadsheet">("scoresheet");
+
+  // Readiness Data state
+  const [readinessData, setReadinessData] = useState<TermGradingReadinessData | null>(null);
+  const [loadingReadiness, setLoadingReadiness] = useState(true);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+
   const supabase = createTenantClient();
 
-  const fetchInitialData = async () => {
+  // Sync initial academic cycle from tenant provider
+  useEffect(() => {
+    if (academicCycle?.academicYear) {
+      setAcademicYear(academicCycle.academicYear);
+    }
+    if (academicCycle?.currentTerm) {
+      setCurrentTerm(academicCycle.currentTerm);
+    }
+  }, [academicCycle]);
+
+  // Initial load
+  useEffect(() => {
+    initializeData();
+  }, [tenant?.id, academicYear, currentTerm]);
+
+  const initializeData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -102,576 +90,284 @@ export default function AdminResultsPage() {
         .single() as any;
 
       if (profile?.school_id) {
-        setSchoolId(profile.school_id as string);
+        setSchoolId(profile.school_id);
 
-        // Fetch school current cycle info
-        const { data: school } = await supabase
-          .from("schools")
-          .select("academic_year, current_term")
-          .eq("id", profile.school_id)
-          .single() as any;
+        // Fetch classes
+        const { data: classesData } = await supabase
+          .from("classes")
+          .select("id, name")
+          .eq("school_id", profile.school_id)
+          .order("name");
 
-        if (school) {
-          setAcademicYear(school.academic_year || "2025/2026");
-          setCurrentTerm(school.current_term || 1);
-        }
+        setClasses(classesData || []);
 
-        const [classesRes, subjectsRes] = await Promise.all([
-          (supabase as any)
-            .from("classes")
-            .select("id, name")
-            .eq("school_id", profile.school_id)
-            .order("name"),
-          (supabase as any)
-            .from("subjects")
-            .select("id, name")
-            .eq("school_id", profile.school_id)
-            .order("name")
-        ]);
-
-        setClasses(classesRes.data || []);
-        setSubjects(subjectsRes.data || []);
+        // Load readiness matrix
+        loadReadiness(profile.school_id, academicYear, currentTerm);
       }
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-      toast.error("Failed to load filter options");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Initialization error:", err);
     }
   };
 
-  const loadMetricsAndResults = async () => {
-    if (!selectedClass || !selectedSubject || !schoolId) return;
-
-    setLoading(true);
+  const loadReadiness = async (sId: string, year: string, term: number) => {
+    setLoadingReadiness(true);
     try {
-      // 1. Fetch active grading metrics (custom or fallback default)
-      const metricsRes = await getResultMetrics(selectedClass, selectedSubject, schoolId, subdomain);
-      let activeMetrics: Metric[] = [];
-      if (metricsRes.success && metricsRes.data) {
-        activeMetrics = metricsRes.data;
-        setMetrics(activeMetrics);
-        setIsCustomMetrics(!!metricsRes.isCustom);
-      } else {
-        // Fallback hardcoded defaults if error
-        activeMetrics = [
-          { name: "First Test", weight: 20, school_id: schoolId },
-          { name: "Second Test", weight: 20, school_id: schoolId },
-          { name: "Exam", weight: 60, school_id: schoolId }
-        ];
-        setMetrics(activeMetrics);
-        setIsCustomMetrics(false);
+      const res = await getTermGradingReadiness(year, term, sId, subdomain);
+      if (res.success && res.data) {
+        setReadinessData(res.data);
       }
-
-      // 2. Fetch Students in Class
-      const { data: studentsData, error: studentError } = await (supabase as any)
-        .from("students")
-        .select(`
-          id,
-          admission_no,
-          profiles!students_user_id_fkey (
-            full_name
-          )
-        `)
-        .eq("class_id", selectedClass)
-        .eq("school_id", schoolId)
-        .order("admission_no");
-
-      if (studentError) throw studentError;
-
-      // 3. Fetch Existing Results for this selection
-      const { data: resultsData, error: resultsError } = await (supabase as any)
-        .from("results")
-        .select("*")
-        .eq("class_id", selectedClass)
-        .eq("subject_id", selectedSubject)
-        .eq("academic_year", academicYear)
-        .eq("term", currentTerm);
-
-      if (resultsError) throw resultsError;
-
-      setStudents(studentsData || []);
-      
-      // Map results by student_id
-      const resultsMap: Record<string, any> = {};
-      resultsData?.forEach((r: any) => {
-        resultsMap[r.student_id] = {
-          id: r.id,
-          scores: r.scores || {},
-          grade: r.grade,
-          remark: r.remark
-        };
-      });
-      
-      // Initialize scores for students that don't have them
-      studentsData?.forEach((student: any) => {
-        if (!resultsMap[student.id]) {
-          const initialScores: Record<string, number> = {};
-          activeMetrics.forEach(m => {
-            const key = m.id || m.name;
-            initialScores[key] = 0;
-          });
-          resultsMap[student.id] = {
-            scores: initialScores,
-            grade: "F9",
-            remark: "Fail"
-          };
-        } else {
-          // Ensure every active metric has a score entry
-          activeMetrics.forEach(m => {
-            const key = m.id || m.name;
-            if (resultsMap[student.id].scores[key] === undefined) {
-              resultsMap[student.id].scores[key] = 0;
-            }
-          });
-        }
-      });
-
-      setResults(resultsMap);
-
-    } catch (error: any) {
-      console.error("Error fetching students/results:", error);
-      toast.error(error.message || "Failed to load class roster and results");
+    } catch (err) {
+      console.error("Readiness load error:", err);
     } finally {
-      setLoading(false);
+      setLoadingReadiness(false);
     }
   };
 
+  // When class changes, fetch its curriculum subjects (class-scoped!)
   useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedClass && selectedSubject) {
-      loadMetricsAndResults();
-    }
-  }, [selectedClass, selectedSubject]);
-
-  const handleScoreChange = (studentId: string, metricKey: string, value: string, maxWeight: number) => {
-    const numValue = value === "" ? 0 : parseFloat(value);
-    if (isNaN(numValue)) return;
-    if (numValue < 0 || numValue > maxWeight) {
-      toast.error(`Score must be between 0 and the metric weight: ${maxWeight}`);
+    if (!selectedClassId || !schoolId) {
+      setClassSubjects([]);
+      setSelectedSubjectId("");
       return;
     }
 
-    setResults(prev => {
-      const current = prev[studentId] || { scores: {} };
-      const updatedScores = { ...current.scores, [metricKey]: numValue };
-      
-      // Compute total sum from the current metrics configuration
-      const total = metrics.reduce((sum, m) => {
-        const key = m.id || m.name;
-        return sum + (updatedScores[key] || 0);
-      }, 0);
-
-      const grade = calculateGrade(total);
-      
-      return {
-        ...prev,
-        [studentId]: {
-          ...current,
-          scores: updatedScores,
-          grade: grade.grade,
-          remark: grade.remark
+    const loadSubjectsForClass = async () => {
+      setLoadingSubjects(true);
+      try {
+        const res = await getClassCurriculumSubjects(selectedClassId, schoolId, subdomain);
+        if (res.success && res.data) {
+          setClassSubjects(res.data);
+          // If previous subject not in this class, auto-pick first or reset
+          if (res.data.length > 0) {
+            setSelectedSubjectId(res.data[0].id);
+          } else {
+            setSelectedSubjectId("");
+          }
         }
-      };
-    });
-  };
-
-  const onSave = async () => {
-    if (!schoolId || !selectedClass || !selectedSubject) return;
-
-    setSaving(true);
-    try {
-      const dataToSave = students.map(student => {
-        const res = results[student.id] || { scores: {} };
-        const total = metrics.reduce((sum, m) => {
-          const key = m.id || m.name;
-          return sum + (res.scores[key] || 0);
-        }, 0);
-        const grade = calculateGrade(total);
-
-        return {
-          id: res.id || undefined, // upsert matching UUID if exists
-          student_id: student.id,
-          school_id: schoolId,
-          class_id: selectedClass,
-          subject_id: selectedSubject,
-          academic_year: academicYear,
-          term: currentTerm,
-          scores: res.scores,
-          total_score: total,
-          grade: grade.grade,
-          remark: grade.remark
-        };
-      });
-
-      const result = await saveResults(dataToSave, subdomain);
-      if (result.error) throw new Error(result.error);
-      
-      toast.success("Results saved.");
-      loadMetricsAndResults(); // reload to fetch newly assigned result IDs
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save results");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Metrics customization config handlers
-  const openConfigModal = () => {
-    setConfigMetrics(metrics.map(m => ({ ...m })));
-    setIsConfigOpen(true);
-  };
-
-  const handleAddConfigMetric = () => {
-    setConfigMetrics(prev => [...prev, { name: "", weight: 0, school_id: schoolId!, class_id: selectedClass, subject_id: selectedSubject, is_custom: true }]);
-  };
-
-  const handleRemoveConfigMetric = (index: number) => {
-    setConfigMetrics(prev => prev.filter((_, idx) => idx !== index));
-  };
-
-  const handleConfigMetricChange = (index: number, field: keyof Metric, val: any) => {
-    setConfigMetrics(prev => prev.map((m, idx) => {
-      if (idx === index) {
-        return { ...m, [field]: val };
+      } catch (err) {
+        console.error("Error loading class subjects:", err);
+      } finally {
+        setLoadingSubjects(false);
       }
-      return m;
-    }));
-  };
+    };
 
-  const configTotalWeight = configMetrics.reduce((sum, m) => sum + Number(m.weight || 0), 0);
+    loadSubjectsForClass();
+  }, [selectedClassId, schoolId]);
 
-  const saveConfig = async () => {
-    if (configTotalWeight !== 100) {
-      toast.error(`Total weight must equal exactly 100. Current total: ${configTotalWeight}`);
-      return;
-    }
-    const hasEmptyName = configMetrics.some(m => !m.name.trim());
-    if (hasEmptyName) {
-      toast.error("Please fill in all assessment metric names.");
-      return;
-    }
-
-    setSavingConfig(true);
-    try {
-      const payload = configMetrics.map(m => ({
-        school_id: schoolId,
-        class_id: selectedClass,
-        subject_id: selectedSubject,
-        name: m.name.trim(),
-        weight: Number(m.weight),
-        is_custom: true
-      }));
-
-      const res = await saveResultMetrics(payload, subdomain);
-      if (res.error) throw new Error(res.error);
-
-      toast.success("Custom results entry metrics updated!");
-      setIsConfigOpen(false);
-      loadMetricsAndResults(); // Reload grid layout
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update metrics");
-    } finally {
-      setSavingConfig(false);
+  // Handler when clicking on a class card in the readiness matrix
+  const handleSelectClassFromMatrix = (
+    classId: string,
+    initialMode: "scoresheet" | "broadsheet" = "scoresheet",
+    subjectId?: string
+  ) => {
+    setSelectedClassId(classId);
+    setViewMode(initialMode);
+    if (subjectId) {
+      setSelectedSubjectId(subjectId);
     }
   };
 
-  const resetToDefaultMetrics = async () => {
-    setSavingConfig(true);
-    try {
-      // Deleting custom class/subject metrics resets to school default fallback
-      const { error } = await (supabase as any)
-        .from("result_metrics")
-        .delete()
-        .eq("school_id", schoolId)
-        .eq("class_id", selectedClass)
-        .eq("subject_id", selectedSubject);
-
-      if (error) throw error;
-
-      toast.success("Reverted custom metrics to school-wide defaults.");
-      setIsConfigOpen(false);
-      loadMetricsAndResults();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to reset metrics");
-    } finally {
-      setSavingConfig(false);
-    }
-  };
+  const termLabel = currentTerm === 1 ? "1st Term" : currentTerm === 2 ? "2nd Term" : "3rd Term";
+  const selectedClassObj = classes.find(c => c.id === selectedClassId);
+  const selectedSubjectObj = classSubjects.find(s => s.id === selectedSubjectId);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 pb-12">
+      
+      {/* 1. Global Academic Results Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Academic Results</h1>
-          <p className="text-muted-foreground mt-1 text-lg">Record and manage student performance scores.</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Academic Results & BroadSheet Hub
+            </h1>
+            <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border-primary/20">
+              Institutional Records
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Record subject evaluations, inspect class master broadsheets, and publish terminal report cards.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          {selectedClass && selectedSubject && (
-            <Button
-              variant="outline"
-              onClick={openConfigModal}
-              className="border-primary/20 bg-background/50 hover:bg-accent"
-            >
-              <Settings className="mr-2 h-4 w-4 text-primary" />
-              Edit Weights
-            </Button>
-          )}
-          <Button 
-            onClick={onSave} 
-            disabled={saving || students.length === 0}
-            className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+
+        {/* Filters & Navigation Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          
+          {/* Academic Session Selector */}
+          <Select value={academicYear} onValueChange={setAcademicYear}>
+            <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-card border-border/80">
+              <Calendar className="size-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Session" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2026/2027" className="text-xs font-medium">2026/2027</SelectItem>
+              <SelectItem value="2025/2026" className="text-xs font-medium">2025/2026</SelectItem>
+              <SelectItem value="2024/2025" className="text-xs font-medium">2024/2025</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Term Selector */}
+          <Select value={currentTerm.toString()} onValueChange={(val) => setCurrentTerm(parseInt(val))}>
+            <SelectTrigger className="h-9 w-[115px] text-xs font-semibold rounded-xl bg-card border-border/80">
+              <SelectValue placeholder="Term" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1" className="text-xs font-medium">1st Term</SelectItem>
+              <SelectItem value="2" className="text-xs font-medium">2nd Term</SelectItem>
+              <SelectItem value="3" className="text-xs font-medium">3rd Term</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Classroom Selector */}
+          <Select 
+            value={selectedClassId || "all"} 
+            onValueChange={(val) => setSelectedClassId(val === "all" ? "" : val)}
           >
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save All Results
+            <SelectTrigger className="h-9 w-[150px] text-xs font-semibold rounded-xl bg-card border-border/80">
+              <GraduationCap className="size-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="All Classrooms" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs font-medium text-primary">
+                📊 All Classrooms (Readiness)
+              </SelectItem>
+              {classes.map(c => (
+                <SelectItem key={c.id} value={c.id} className="text-xs font-medium">
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Scoped Subject Selector (Only if a class is selected and in scoresheet mode) */}
+          {selectedClassId && viewMode === "scoresheet" && (
+            <Select 
+              value={selectedSubjectId} 
+              onValueChange={setSelectedSubjectId}
+              disabled={loadingSubjects || classSubjects.length === 0}
+            >
+              <SelectTrigger className="h-9 min-w-[150px] text-xs font-semibold rounded-xl bg-card border-border/80">
+                <BookOpen className="size-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder={loadingSubjects ? "Loading subjects..." : "Select Subject"} />
+              </SelectTrigger>
+              <SelectContent>
+                {classSubjects.map(s => (
+                  <SelectItem key={s.id} value={s.id} className="text-xs font-medium">
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* View Mode Toggle: Score Sheet vs BroadSheet */}
+          {selectedClassId && (
+            <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-xl border border-border">
+              <button
+                type="button"
+                onClick={() => setViewMode("scoresheet")}
+                className={cn(
+                  "flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  viewMode === "scoresheet" 
+                    ? "bg-card text-foreground shadow-xs" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <PenTool className="size-3" /> Scores
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("broadsheet")}
+                className={cn(
+                  "flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  viewMode === "broadsheet" 
+                    ? "bg-card text-foreground shadow-xs" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <FileSpreadsheet className="size-3 text-indigo-500" /> BroadSheet
+              </button>
+            </div>
+          )}
+
+          {/* Refresh Action */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => schoolId && loadReadiness(schoolId, academicYear, currentTerm)}
+            className="size-9 rounded-xl border-border hover:bg-muted"
+            title="Refresh"
+          >
+            <RefreshCw className={cn("size-3.5", loadingReadiness ? "animate-spin" : "")} />
           </Button>
         </div>
       </div>
 
-      <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <ChevronRight className="size-3 text-primary" /> Select Class
-              </label>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <ChevronRight className="size-3 text-primary" /> Select Subject
-              </label>
-              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="md:col-span-2 flex items-center justify-end">
-               <div className="text-xs text-muted-foreground flex items-center gap-2 bg-muted/50 px-3 py-2 rounded-lg border border-border/50">
-                  <Filter className="size-3" />
-                  Filtering for: <span className="text-foreground font-semibold">{academicYear} Academic Year • Term {currentTerm}</span>
-               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 2. Main Body Content Switcher */}
 
-      {!selectedClass || !selectedSubject ? (
-        <div className="h-[40vh] flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-accent/50 space-y-4">
-          <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <Filter className="size-6" />
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-medium">Ready to record results?</p>
-            <p className="text-muted-foreground">Select a class and subject above to load the student list.</p>
-          </div>
-        </div>
-      ) : loading ? (
-        <div className="h-[40vh] flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-muted-foreground">Fetching class roster & grading system...</p>
-        </div>
-      ) : (
-        <Card className="border-none shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="w-[120px]">Adm No</TableHead>
-                  <TableHead className="min-w-[200px]">Student Name</TableHead>
-                  {metrics.map((m, idx) => (
-                    <TableHead key={m.id || idx} className="w-[120px] text-center">
-                      {m.name} ({m.weight})
-                    </TableHead>
-                  ))}
-                  <TableHead className="w-[90px] text-center">Total (100)</TableHead>
-                  <TableHead className="w-[90px] text-center">Grade</TableHead>
-                  <TableHead className="min-w-[150px]">Remark</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student) => {
-                  const result = results[student.id] || { scores: {}, grade: "F9", remark: "Fail" };
-                  
-                  // Compute total
-                  const total = metrics.reduce((sum, m) => {
-                    const key = m.id || m.name;
-                    return sum + (result.scores[key] || 0);
-                  }, 0);
-
-                  const isPassing = total >= 40;
-
-                  return (
-                    <TableRow key={student.id} className="hover:bg-accent/30 transition-colors">
-                      <TableCell className="font-mono text-xs font-semibold">{student.admission_no}</TableCell>
-                      <TableCell className="font-medium">{student.profiles?.full_name}</TableCell>
-                      
-                      {metrics.map((m, idx) => {
-                        const key = m.id || m.name;
-                        const scoreVal = result.scores[key] !== undefined ? result.scores[key] : "";
-                        return (
-                          <TableCell key={m.id || idx} className="text-center">
-                            <Input 
-                              type="number" 
-                              className="w-24 mx-auto bg-background/50 h-9 text-center" 
-                              value={scoreVal} 
-                              onChange={(e) => handleScoreChange(student.id, key, e.target.value, m.weight)}
-                              max={m.weight}
-                              min={0}
-                              step="any"
-                            />
-                          </TableCell>
-                        );
-                      })}
-
-                      <TableCell className="text-center">
-                        <div className="font-bold text-base">{total}</div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className={cn(
-                          "size-8 rounded-lg flex items-center justify-center font-bold border mx-auto",
-                          isPassing 
-                          ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
-                          : 'bg-destructive/10 text-destructive border-destructive/20'
-                        )}>
-                          {result.grade}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          {isPassing 
-                            ? <CheckCircle2 className="size-3 text-emerald-500" /> 
-                            : <AlertCircle className="size-3 text-destructive" />
-                          }
-                          <span className={isPassing ? 'text-emerald-600 font-semibold' : 'text-destructive font-semibold'}>
-                            {result.remark}
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-          {students.length === 0 && (
-            <div className="py-12 text-center text-muted-foreground">
-              No students enrolled in this class yet.
-            </div>
-          )}
-        </Card>
+      {/* Case A: No Class Selected -> Render Institutional Readiness Matrix (Replaces Blank Void!) */}
+      {!selectedClassId && (
+        <ResultsReadinessMatrix
+          data={readinessData}
+          loading={loadingReadiness}
+          onSelectClass={handleSelectClassFromMatrix}
+        />
       )}
 
-      {/* Metrics Configuration Dialog */}
-      <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Grading Components</DialogTitle>
-            <DialogDescription>
-              Customize the distribution of evaluation marks for this class and subject. Total weight must sum to exactly 100.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Case B: Class Selected & BroadSheet Mode -> Render ClassBroadsheet */}
+      {selectedClassId && viewMode === "broadsheet" && (
+        <ClassBroadsheet
+          subdomain={subdomain}
+          schoolId={schoolId!}
+          classId={selectedClassId}
+          academicYear={academicYear}
+          term={currentTerm}
+          termLabel={termLabel}
+          onBack={() => setSelectedClassId("")}
+          onSelectSubject={(subjectId) => {
+            setSelectedSubjectId(subjectId);
+            setViewMode("scoresheet");
+          }}
+        />
+      )}
 
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-sm font-semibold text-muted-foreground">Metric Name</span>
-              <span className="text-sm font-semibold text-muted-foreground w-24 text-center">Max Points</span>
-            </div>
-
-            <div className="space-y-3 max-h-[25vh] overflow-y-auto pr-1">
-              {configMetrics.map((metric, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <Input
-                    placeholder="e.g. First Test"
-                    value={metric.name}
-                    onChange={(e) => handleConfigMetricChange(idx, "name", e.target.value)}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="20"
-                    value={metric.weight}
-                    onChange={(e) => handleConfigMetricChange(idx, "weight", Number(e.target.value))}
-                    className="w-24 text-center"
-                    min={0}
-                    max={100}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveConfigMetric(idx)}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
+      {/* Case C: Class Selected & ScoreSheet Mode -> Render SubjectScoresheet */}
+      {selectedClassId && viewMode === "scoresheet" && (
+        selectedSubjectId ? (
+          <SubjectScoresheet
+            subdomain={subdomain}
+            schoolId={schoolId!}
+            classId={selectedClassId}
+            className={selectedClassObj?.name || "Class"}
+            subjectId={selectedSubjectId}
+            subjectName={selectedSubjectObj?.name || "Subject"}
+            academicYear={academicYear}
+            term={currentTerm}
+            termLabel={termLabel}
+            onBack={() => setSelectedClassId("")}
+            onViewBroadsheet={() => setViewMode("broadsheet")}
+          />
+        ) : (
+          <div className="p-12 border border-dashed border-border/80 rounded-2xl bg-card/40 text-center space-y-3">
+            <BookOpen className="size-8 text-muted-foreground mx-auto" />
+            <h4 className="font-bold text-sm text-foreground">No Subject Selected</h4>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Please choose a subject from the dropdown above, or view the entire class BroadSheet.
+            </p>
             <Button
               variant="outline"
               size="sm"
-              onClick={handleAddConfigMetric}
-              className="w-full mt-2"
+              onClick={() => setViewMode("broadsheet")}
+              className="mt-2 text-xs font-semibold rounded-xl"
             >
-              <Plus className="mr-2 size-4" /> Add Metric Column
+              <FileSpreadsheet className="size-3.5 mr-1.5 text-indigo-500" />
+              Open {selectedClassObj?.name} Master BroadSheet
             </Button>
-
-            <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg border text-sm">
-              <span className="font-medium">Total weight (Target: 100):</span>
-              <span className={cn(
-                "font-black text-lg",
-                configTotalWeight === 100 ? "text-emerald-500" : "text-destructive"
-              )}>
-                {configTotalWeight} / 100
-              </span>
-            </div>
-
-            {isCustomMetrics && (
-              <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 p-3 rounded-lg text-xs flex gap-2">
-                <AlertCircle className="size-4 shrink-0" />
-                <span>This class-subject currently has a custom override. Removing custom configuration will revert this screen back to school defaults.</span>
-              </div>
-            )}
           </div>
+        )
+      )}
 
-          <DialogFooter className="gap-2">
-            {isCustomMetrics && (
-              <Button
-                variant="destructive"
-                disabled={savingConfig}
-                onClick={resetToDefaultMetrics}
-                className="mr-auto"
-              >
-                Reset to Default
-              </Button>
-            )}
-            <Button variant="ghost" onClick={() => setIsConfigOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={saveConfig} 
-              disabled={savingConfig || configTotalWeight !== 100}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {savingConfig && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Apply & Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
