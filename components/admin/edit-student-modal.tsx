@@ -187,16 +187,16 @@ export function EditStudentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 md:p-8 bg-white border-none shadow-2xl">
-        <DialogHeader className="space-y-1 border-b pb-4">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 md:p-8 bg-card text-card-foreground border border-border shadow-2xl">
+        <DialogHeader className="space-y-1 border-b border-border pb-4">
           <div className="flex items-center gap-2 text-primary font-bold">
             <Edit3 className="size-5" />
             <span>Edit Student Profile</span>
           </div>
-          <DialogTitle className="text-2xl font-black text-slate-900">
+          <DialogTitle className="text-2xl font-black text-foreground">
             {student?.profiles?.full_name || "Student"}
           </DialogTitle>
-          <DialogDescription className="font-medium text-slate-600">
+          <DialogDescription className="font-medium text-muted-foreground">
             Update passport photo, academic placement, demographics, and medical records.
           </DialogDescription>
         </DialogHeader>
@@ -209,8 +209,8 @@ export function EditStudentModal({
             </h4>
 
             {/* Passport Photograph */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-slate-50 border">
-              <div className="relative size-24 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-white shrink-0">
+            <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-muted/40 border border-border">
+              <div className="relative size-24 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-background shrink-0">
                 {passportPreview ? (
                   <>
                     <img
@@ -238,7 +238,7 @@ export function EditStudentModal({
                   </label>
                 )}
                 {uploading && (
-                  <div className="absolute inset-0 bg-white/85 flex flex-col items-center justify-center">
+                  <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center">
                     <Loader2 className="size-5 animate-spin text-primary" />
                     <span className="text-[9px] font-bold uppercase tracking-wider mt-1">
                       Uploading
@@ -255,7 +255,7 @@ export function EditStudentModal({
                 disabled={uploading}
               />
               <div className="space-y-1 text-center sm:text-left">
-                <Label htmlFor="edit-passport-input" className="font-bold text-slate-800 block">
+                <Label htmlFor="edit-passport-input" className="font-bold text-foreground block">
                   Passport Photograph
                 </Label>
                 <p className="text-xs text-muted-foreground font-medium">
@@ -266,7 +266,7 @@ export function EditStudentModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="font-bold text-slate-700">
+                <Label htmlFor="fullName" className="font-bold text-foreground">
                   Full Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -278,7 +278,7 @@ export function EditStudentModal({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="admissionNo" className="font-bold text-slate-700">
+                <Label htmlFor="admissionNo" className="font-bold text-foreground">
                   Admission No <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -293,7 +293,7 @@ export function EditStudentModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label className="font-bold text-slate-700">Assigned Class</Label>
+                <Label className="font-bold text-foreground">Assigned Class</Label>
                 <Select value={classId} onValueChange={setClassId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Class" />
@@ -310,7 +310,7 @@ export function EditStudentModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="font-bold text-slate-700">
+                <Label htmlFor="dateOfBirth" className="font-bold text-foreground">
                   Date of Birth
                 </Label>
                 <Input
@@ -322,7 +322,7 @@ export function EditStudentModal({
               </div>
 
               <div className="space-y-2">
-                <Label className="font-bold text-slate-700">Gender</Label>
+                <Label className="font-bold text-foreground">Gender</Label>
                 <Select value={gender} onValueChange={setGender}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Gender" />
@@ -336,7 +336,7 @@ export function EditStudentModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="previousSchool" className="font-bold text-slate-700">
+              <Label htmlFor="previousSchool" className="font-bold text-foreground">
                 Previous School Attended
               </Label>
               <Input
@@ -355,7 +355,7 @@ export function EditStudentModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="font-bold text-slate-700">State of Origin</Label>
+                <Label className="font-bold text-foreground">State of Origin</Label>
                 <Select
                   value={stateOfOrigin}
                   onValueChange={setStateOfOrigin}
@@ -374,7 +374,7 @@ export function EditStudentModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lga" className="font-bold text-slate-700">
+                <Label htmlFor="lga" className="font-bold text-foreground">
                   LGA
                 </Label>
                 <Input
@@ -388,7 +388,7 @@ export function EditStudentModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="religion" className="font-bold text-slate-700">
+                <Label htmlFor="religion" className="font-bold text-foreground">
                   Religion
                 </Label>
                 <Input
@@ -400,7 +400,7 @@ export function EditStudentModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address" className="font-bold text-slate-700">
+                <Label htmlFor="address" className="font-bold text-foreground">
                   Residential Address
                 </Label>
                 <Input
@@ -420,7 +420,7 @@ export function EditStudentModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bloodGroup" className="font-bold text-slate-700">
+                <Label htmlFor="bloodGroup" className="font-bold text-foreground">
                   Blood Group
                 </Label>
                 <Input
@@ -432,7 +432,7 @@ export function EditStudentModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="genotype" className="font-bold text-slate-700">
+                <Label htmlFor="genotype" className="font-bold text-foreground">
                   Genotype
                 </Label>
                 <Input
@@ -445,7 +445,7 @@ export function EditStudentModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="conditions" className="font-bold text-slate-700">
+              <Label htmlFor="conditions" className="font-bold text-foreground">
                 Medical Conditions / Allergies
               </Label>
               <Textarea

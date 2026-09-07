@@ -108,10 +108,10 @@ export function EditClassModal({ isOpen, onClose, onSuccess, schoolId, initialDa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-2 border-primary/20 bg-white shadow-2xl">
+      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/80 bg-card text-card-foreground shadow-2xl">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="text-2xl font-black tracking-tighter text-slate-900 outfit-heading">Edit Class</DialogTitle>
+            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground outfit-heading">Edit Class</DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">
               Modify class details and assigned teacher.
             </DialogDescription>
@@ -119,12 +119,12 @@ export function EditClassModal({ isOpen, onClose, onSuccess, schoolId, initialDa
           
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="edit-name" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Class Name</Label>
+              <Label htmlFor="edit-name" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Class Name</Label>
               <Input 
                 id="edit-name" 
                 {...form.register("name")} 
                 placeholder="e.g. JSS 1 Gold" 
-                className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
                 autoComplete="off"
               />
               {form.formState.errors.name && (
@@ -133,15 +133,15 @@ export function EditClassModal({ isOpen, onClose, onSuccess, schoolId, initialDa
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-teacherId" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Class Teacher (Optional)</Label>
+              <Label htmlFor="edit-teacherId" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Class Teacher (Optional)</Label>
               <Select 
                 onValueChange={(val) => form.setValue("teacherId", val === "none" ? "" : val)}
                 defaultValue={initialData.teacherId || "none"}
               >
-                <SelectTrigger className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors">
+                <SelectTrigger className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors">
                   <SelectValue placeholder="Select a teacher" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border text-popover-foreground">
                   <SelectItem value="none">None (No Teacher Assigned)</SelectItem>
                   {teachers.map((t) => (
                     <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
@@ -157,7 +157,7 @@ export function EditClassModal({ isOpen, onClose, onSuccess, schoolId, initialDa
               variant="outline" 
               onClick={onClose} 
               disabled={loading}
-              className="flex-1 h-11 rounded-xl border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold"
+              className="flex-1 h-11 rounded-xl border-border hover:bg-muted text-muted-foreground hover:text-foreground font-semibold"
             >
               Cancel
             </Button>

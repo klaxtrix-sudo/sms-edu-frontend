@@ -56,7 +56,7 @@ function SubjectSearchSelect({ subjects, selectedSubjectId, onSelect, disabledSu
   return (
     <div className="relative w-full">
       <div 
-        className="relative flex items-center bg-white border border-slate-200/80 rounded-xl px-3 py-2 cursor-pointer shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20"
+        className="relative flex items-center bg-background border border-border/80 rounded-xl px-3 py-2 cursor-pointer shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20"
         onClick={() => setIsOpen(true)}
       >
         <input
@@ -78,15 +78,15 @@ function SubjectSearchSelect({ subjects, selectedSubjectId, onSelect, disabledSu
             }, 200);
           }}
           placeholder="Select Subject..."
-          className="w-full bg-transparent border-none text-xs font-semibold focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+          className="w-full bg-transparent border-none text-xs font-semibold focus:outline-none placeholder:text-muted-foreground text-foreground"
         />
-        <ChevronDown className="size-4 text-slate-400 shrink-0" />
+        <ChevronDown className="size-4 text-muted-foreground shrink-0" />
       </div>
 
       {isOpen && (
-        <div className="absolute z-[9999] top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-[200px] overflow-y-auto custom-scrollbar p-1">
+        <div className="absolute z-[9999] top-full left-0 mt-1 w-full bg-popover border border-border rounded-xl shadow-xl max-h-[200px] overflow-y-auto custom-scrollbar p-1">
           {filtered.length === 0 ? (
-            <div className="py-2.5 px-3 text-xs text-slate-400 italic">No matches found</div>
+            <div className="py-2.5 px-3 text-xs text-muted-foreground italic">No matches found</div>
           ) : (
             filtered.map((s) => {
               const isDisabled = disabledSubjects.includes(s.id) && s.id !== selectedSubjectId;
@@ -101,10 +101,10 @@ function SubjectSearchSelect({ subjects, selectedSubjectId, onSelect, disabledSu
                   }}
                   className={`flex items-center justify-between py-2 px-3 text-xs font-semibold rounded-lg cursor-pointer transition-colors ${
                     s.id === selectedSubjectId 
-                      ? "bg-indigo-50 text-indigo-600" 
+                      ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" 
                       : isDisabled
-                      ? "opacity-40 cursor-not-allowed bg-slate-50"
-                      : "hover:bg-slate-50 text-slate-700"
+                      ? "opacity-40 cursor-not-allowed bg-muted/40"
+                      : "hover:bg-muted text-foreground"
                   }`}
                 >
                   <span>{s.name}</span>
@@ -248,14 +248,14 @@ export function ManageSubjectTeachersModal({
         <div className="p-6 md:p-8 pb-4 shrink-0">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="size-10 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600 shadow-sm">
+              <div className="size-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-500 shadow-sm">
                 <BookOpen className="size-5" />
               </div>
-              <DialogTitle className="text-2xl font-black tracking-tight text-slate-800">
+              <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
                 Subject Teachers: {classData.name}
               </DialogTitle>
             </div>
-            <DialogDescription className="font-medium text-slate-400">
+            <DialogDescription className="font-medium text-muted-foreground">
               Assign specialized educators to curriculum subjects for this classroom.
             </DialogDescription>
           </DialogHeader>
@@ -265,8 +265,8 @@ export function ManageSubjectTeachersModal({
         <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-6 space-y-4 min-h-[220px] max-h-[50vh] custom-scrollbar">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-2">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-              <p className="text-xs font-semibold text-slate-400">Syncing assignments...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+              <p className="text-xs font-semibold text-muted-foreground">Syncing assignments...</p>
             </div>
           ) : (
             <>
@@ -274,11 +274,11 @@ export function ManageSubjectTeachersModal({
                 {rows.map((row, index) => (
                   <div 
                     key={row.key}
-                    className="flex items-end gap-3 p-4 bg-slate-50/40 border border-slate-100 hover:border-slate-200/80 rounded-2xl transition-all"
+                    className="flex items-end gap-3 p-4 bg-muted/30 border border-border/80 hover:border-border rounded-2xl transition-all"
                   >
                     {/* Subject searchable dropdown */}
                     <div className="flex-1 min-w-0">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Subject</label>
+                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Subject</label>
                       <SubjectSearchSelect
                         subjects={subjects}
                         selectedSubjectId={row.subjectId}
@@ -289,16 +289,16 @@ export function ManageSubjectTeachersModal({
 
                     {/* Teacher dropdown select */}
                     <div className="flex-1 min-w-0">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Assigned Teacher</label>
+                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Assigned Teacher</label>
                       <Select 
                         value={row.teacherId || "none"} 
                         onValueChange={(val) => handleRowChange(index, "teacherId", val)}
                       >
-                        <SelectTrigger className="w-full h-10 bg-white border-slate-200/80 rounded-xl text-xs font-semibold shadow-sm focus:ring-0">
+                        <SelectTrigger className="w-full h-10 bg-background border-border/80 rounded-xl text-xs font-semibold text-foreground shadow-sm focus:ring-0">
                           <SelectValue placeholder="Assign teacher..." />
                         </SelectTrigger>
-                        <SelectContent className="border-slate-200">
-                          <SelectItem value="none" className="text-xs font-bold text-slate-500">Unassigned</SelectItem>
+                        <SelectContent className="bg-popover border-border text-popover-foreground">
+                          <SelectItem value="none" className="text-xs font-bold text-muted-foreground">Unassigned</SelectItem>
                           {teachers.map((t) => (
                             <SelectItem key={t.id} value={t.id} className="text-xs font-semibold">
                               {t.full_name}
@@ -313,7 +313,7 @@ export function ManageSubjectTeachersModal({
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRemoveRow(index)}
-                      className="size-10 rounded-xl text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all shrink-0"
+                      className="size-10 rounded-xl text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all shrink-0"
                     >
                       <X className="size-4" />
                     </Button>
@@ -325,7 +325,7 @@ export function ManageSubjectTeachersModal({
               <Button
                 variant="outline"
                 onClick={handleAddRow}
-                className="w-full py-5 border-dashed border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 font-extrabold rounded-2xl flex items-center justify-center gap-2 text-xs tracking-wider uppercase"
+                className="w-full py-5 border-dashed border-indigo-500/40 text-indigo-500 hover:bg-indigo-500/10 hover:border-indigo-500 font-extrabold rounded-2xl flex items-center justify-center gap-2 text-xs tracking-wider uppercase"
               >
                 <Plus className="size-4" /> Add Subject Assignment
               </Button>
@@ -334,11 +334,11 @@ export function ManageSubjectTeachersModal({
         </div>
 
         {/* Footer actions - Fixed cut-off by adding shrink-0 and large bottom padding */}
-        <div className="p-6 pb-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[2rem] shrink-0">
+        <div className="p-6 pb-8 bg-muted/20 border-t border-border flex justify-end gap-3 rounded-b-[2rem] shrink-0">
           <Button 
             variant="outline" 
             onClick={onClose}
-            className="h-11 rounded-xl text-xs font-black uppercase tracking-widest px-6"
+            className="h-11 rounded-xl text-xs font-black uppercase tracking-widest px-6 border-border hover:bg-muted"
             disabled={saving}
           >
             Cancel

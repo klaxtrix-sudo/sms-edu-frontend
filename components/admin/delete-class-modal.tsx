@@ -51,13 +51,13 @@ export function DeleteClassModal({ isOpen, onClose, onSuccess, classData }: Dele
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-2 border-destructive/20 bg-white shadow-2xl">
+      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-destructive/20 bg-card text-card-foreground shadow-2xl">
         <DialogHeader className="p-6 pb-0 flex flex-row items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
             <AlertTriangle className="h-6 w-6 text-destructive" />
           </div>
           <div>
-            <DialogTitle className="text-xl font-black tracking-tighter text-slate-900 outfit-heading">Delete Class</DialogTitle>
+            <DialogTitle className="text-xl font-black tracking-tighter text-foreground outfit-heading">Delete Class</DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">
               This action cannot be undone.
             </DialogDescription>
@@ -65,8 +65,8 @@ export function DeleteClassModal({ isOpen, onClose, onSuccess, classData }: Dele
         </DialogHeader>
         
         <div className="px-6 py-6">
-          <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Are you sure you want to delete <span className="font-black text-slate-900">"{classData.name}"</span>? 
+          <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+            Are you sure you want to delete <span className="font-black text-foreground">"{classData.name}"</span>? 
             All student enrollments and academic records associated with this class will need to be re-assigned.
           </p>
         </div>
@@ -77,7 +77,7 @@ export function DeleteClassModal({ isOpen, onClose, onSuccess, classData }: Dele
             variant="outline" 
             onClick={onClose} 
             disabled={loading}
-            className="flex-1 h-12 rounded-xl border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold"
+            className="flex-1 h-12 rounded-xl border-border hover:bg-muted text-muted-foreground hover:text-foreground font-semibold"
           >
             Cancel
           </Button>

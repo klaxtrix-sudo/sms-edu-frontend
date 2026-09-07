@@ -58,17 +58,17 @@ export function DeleteStudentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-2xl p-6 bg-white border-none shadow-2xl">
+      <DialogContent className="sm:max-w-md rounded-2xl p-6 bg-card text-card-foreground border border-destructive/20 shadow-2xl">
         <DialogHeader className="space-y-3">
           <div className="size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center">
             <AlertTriangle className="size-6" />
           </div>
-          <DialogTitle className="text-xl font-black text-slate-900">
+          <DialogTitle className="text-xl font-black text-foreground">
             Remove Student Record?
           </DialogTitle>
-          <DialogDescription className="font-medium text-slate-600 leading-relaxed">
+          <DialogDescription className="font-medium text-muted-foreground leading-relaxed">
             Are you sure you want to remove{" "}
-            <span className="font-bold text-slate-900">
+            <span className="font-bold text-foreground">
               {student.profiles?.full_name || student.admission_no}
             </span>{" "}
             ({student.admission_no}) from the student body? This action removes

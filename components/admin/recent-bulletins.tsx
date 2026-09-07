@@ -54,10 +54,10 @@ export function RecentBulletins() {
   };
 
   return (
-    <div className="lg:col-span-3 glass-panel rounded-[2rem] p-8 border border-white/5 bg-white/5 group overflow-hidden relative flex flex-col justify-between">
+    <div className="lg:col-span-3 glass-panel rounded-[2rem] p-8 border border-border/60 bg-card/60 group overflow-hidden relative flex flex-col justify-between">
       <div>
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-xl font-bold">Recent Bulletins</h3>
+          <h3 className="text-xl font-bold text-foreground">Recent Bulletins</h3>
           <Button variant="link" className="text-primary gap-2 p-0 group-hover:translate-x-1 transition-transform" asChild>
             <Link href="/dashboard/admin/communications">
               View All <ArrowRight className="size-4" />
@@ -86,19 +86,19 @@ export function RecentBulletins() {
                 <div 
                   key={broadcast._id} 
                   onClick={() => setSelectedBulletin(broadcast)}
-                  className="group/item glass-panel !bg-white/[0.03] rounded-2xl p-6 border-white/5 hover:border-primary/30 transition-colors cursor-pointer block"
+                  className="group/item glass-panel !bg-muted/40 rounded-2xl p-6 border border-border/60 hover:border-primary/40 transition-colors cursor-pointer block"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-blue-500/20 text-blue-400 pointer-events-none capitalize">
+                        <Badge className="bg-blue-500/20 text-blue-500 dark:text-blue-400 pointer-events-none capitalize">
                           {broadcast.channel}
                         </Badge>
                         <span className="text-xs text-muted-foreground font-medium">
                           Posted {formattedDate}
                         </span>
                       </div>
-                      <h4 className="font-bold text-lg group-hover/item:text-primary transition-colors">
+                      <h4 className="font-bold text-lg text-foreground group-hover/item:text-primary transition-colors">
                         {broadcast.title}
                       </h4>
                       <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
@@ -118,7 +118,7 @@ export function RecentBulletins() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedBulletin} onOpenChange={(open) => !open && setSelectedBulletin(null)}>
-        <DialogContent className="max-w-md rounded-2xl border bg-card p-6 shadow-lg">
+        <DialogContent className="max-w-md rounded-2xl border border-border bg-card text-card-foreground p-6 shadow-2xl">
           <DialogHeader className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
@@ -130,14 +130,14 @@ export function RecentBulletins() {
                 {selectedBulletin && new Date(selectedBulletin.createdAt).toLocaleDateString()}
               </span>
             </div>
-            <DialogTitle className="text-xl font-bold leading-snug">
+            <DialogTitle className="text-xl font-bold leading-snug text-foreground">
               {selectedBulletin?.title}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground/80">
               Audience: {selectedBulletin?.targetRoles.join(", ")}
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 border-t border-border pt-4">
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {selectedBulletin?.message}
             </p>

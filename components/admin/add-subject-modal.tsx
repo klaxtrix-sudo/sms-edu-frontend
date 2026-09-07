@@ -73,10 +73,10 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess, schoolId }: AddSub
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-2 border-primary/20 bg-white">
+      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/80 bg-card text-card-foreground shadow-2xl">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="text-2xl font-black tracking-tighter text-slate-900">Add New Subject</DialogTitle>
+            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">Add New Subject</DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">
               Define a new subject in the school curriculum.
             </DialogDescription>
@@ -84,12 +84,12 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess, schoolId }: AddSub
 
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Subject Name</Label>
+              <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Subject Name</Label>
               <Input 
                 id="name" 
                 {...form.register("name")} 
                 placeholder="e.g. Mathematics" 
-                className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
               />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive font-medium">{form.formState.errors.name.message}</p>
@@ -97,12 +97,12 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess, schoolId }: AddSub
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="code" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Subject Code</Label>
+              <Label htmlFor="code" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Subject Code</Label>
               <Input 
                 id="code" 
                 {...form.register("code")} 
                 placeholder="e.g. MATH" 
-                className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors uppercase"
+                className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors uppercase"
               />
               {form.formState.errors.code && (
                 <p className="text-xs text-destructive font-medium">{form.formState.errors.code.message}</p>
@@ -116,7 +116,7 @@ export function AddSubjectModal({ isOpen, onClose, onSuccess, schoolId }: AddSub
               variant="outline" 
               onClick={onClose} 
               disabled={loading}
-              className="flex-1 h-11 rounded-xl border-slate-200 hover:bg-slate-50"
+              className="flex-1 h-11 rounded-xl border-border hover:bg-muted text-muted-foreground hover:text-foreground"
             >
               Cancel
             </Button>

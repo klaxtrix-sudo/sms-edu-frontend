@@ -86,7 +86,7 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[620px] max-h-[92vh] flex flex-col overflow-hidden border-slate-200 bg-white shadow-2xl p-0">
+      <DialogContent className="sm:max-w-[620px] max-h-[92vh] flex flex-col overflow-hidden border-border/80 bg-card text-card-foreground shadow-2xl p-0">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary z-50" />
         
         {/* Scrollable Content Container */}
@@ -97,8 +97,8 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
                 <User className="size-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black tracking-tight text-glow">Teacher Profile</DialogTitle>
-                <DialogDescription className="font-medium">Comprehensive view of teacher records and access.</DialogDescription>
+                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">Teacher Profile</DialogTitle>
+                <DialogDescription className="font-medium text-muted-foreground">Comprehensive view of teacher records and access.</DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -107,18 +107,18 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
             {/* Header / Identity Section */}
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-indigo-500/5 rounded-3xl -m-2 opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
-              <div className="relative p-6 rounded-[2rem] bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-center gap-6">
-                <div className="size-20 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-primary/20 border-4 border-white group-hover:scale-105 transition-transform">
+              <div className="relative p-6 rounded-[2rem] bg-muted/40 border border-border/80 flex flex-col md:flex-row items-center gap-6">
+                <div className="size-20 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-primary/20 border-4 border-card group-hover:scale-105 transition-transform">
                   <User className="size-10" />
                 </div>
                 <div className="flex-1 text-center md:text-left space-y-2">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                    <h3 className="font-black text-2xl tracking-tight leading-none">{teacher.full_name}</h3>
+                    <h3 className="font-black text-2xl tracking-tight leading-none text-foreground">{teacher.full_name}</h3>
                     <Badge 
                       variant={teacher.is_archived ? "outline" : (teacher.is_active ? (teacher.onboarding_completed ? "default" : "secondary") : "secondary")} 
                       className={cn(
                         "w-fit mx-auto md:mx-0 rounded-full px-3 py-0.5 text-[10px] font-black uppercase tracking-widest",
-                        teacher.is_archived ? "bg-slate-500/10 text-slate-500 border-slate-500/20" : 
+                        teacher.is_archived ? "bg-muted text-muted-foreground border-border" : 
                         (teacher.is_active ? 
                           (teacher.onboarding_completed ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-indigo-500/10 text-indigo-500 border-indigo-500/20") 
                           : "bg-red-500/10 text-red-500 border-red-500/20")
@@ -199,16 +199,16 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.05 }}
                           key={idx} 
-                          className="flex items-center gap-3 p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 group hover:bg-indigo-50 transition-all hover:translate-x-1"
+                          className="flex items-center gap-3 p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 group hover:bg-indigo-500/15 transition-all hover:translate-x-1"
                         >
-                          <div className="size-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner">
+                          <div className="size-8 rounded-lg bg-indigo-500/20 text-indigo-500 flex items-center justify-center shadow-inner">
                             <BookOpen className="size-4" />
                           </div>
                           <div className="flex-grow min-w-0">
-                            <p className="font-bold text-xs text-slate-800 truncate">{sub.subjects?.name}</p>
-                            <p className="text-[9px] font-black text-indigo-500/75 uppercase tracking-widest leading-none mt-1">{sub.classes?.name}</p>
+                            <p className="font-bold text-xs text-foreground truncate">{sub.subjects?.name}</p>
+                            <p className="text-[9px] font-black text-indigo-500/80 uppercase tracking-widest leading-none mt-1">{sub.classes?.name}</p>
                           </div>
-                          <Badge variant="outline" className="font-mono bg-white text-slate-500 border-slate-200 text-[8px] font-bold">
+                          <Badge variant="outline" className="font-mono bg-background text-muted-foreground border-border text-[8px] font-bold">
                             {sub.subjects?.code}
                           </Badge>
                         </motion.div>
@@ -227,17 +227,17 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
               {/* Identity Details */}
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 flex items-center gap-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
                     <ShieldCheck className="size-3.5 text-primary" /> Roles
                   </h4>
                   <div className="grid grid-cols-1 gap-3">
                     {permissions.map((p, idx) => (
                       <div key={idx} className="flex gap-4 items-start group">
-                        <div className="mt-1 bg-emerald-500/10 rounded-lg p-1.5 border border-emerald-500/10 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                        <div className="mt-1 bg-emerald-500/10 rounded-lg p-1.5 border border-emerald-500/20 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                           <CheckCircle2 className="size-3.5" />
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-xs font-black tracking-tight">{p.title}</p>
+                          <p className="text-xs font-black tracking-tight text-foreground">{p.title}</p>
                           <p className="text-[10px] text-muted-foreground font-medium leading-tight">{p.desc}</p>
                         </div>
                       </div>
@@ -245,8 +245,8 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 mt-auto">
-                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">
+                <div className="pt-4 border-t border-border mt-auto">
+                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">
                         <div className="flex items-center gap-2">
                            <Clock className="size-3" />
                            Joined {new Date(teacher.created_at).toLocaleDateString()}
@@ -260,10 +260,10 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
         </div>
 
         {/* Fixed Footer */}
-        <div className="bg-slate-50 p-6 border-t border-slate-100 flex justify-end gap-3 shrink-0">
+        <div className="bg-muted/30 p-6 border-t border-border flex justify-end gap-3 shrink-0">
             <button 
               onClick={onClose}
-              className="text-xs font-black uppercase tracking-widest px-10 py-3.5 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 shadow-sm hover:shadow-primary/5"
+              className="text-xs font-black uppercase tracking-widest px-10 py-3.5 rounded-2xl bg-card border border-border hover:bg-muted text-foreground transition-all active:scale-95 shadow-sm"
             >
               Close
             </button>
