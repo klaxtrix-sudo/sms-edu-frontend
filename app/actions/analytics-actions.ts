@@ -198,7 +198,7 @@ export async function getSchoolAnalytics(
     const totalAttendanceEntries = attendanceRecords.length;
     const overallPresenceRate = totalAttendanceEntries > 0
       ? Math.round(((presentCount + lateCount) / totalAttendanceEntries) * 100)
-      : (students.length > 0 ? 85 : 0);
+      : 0;
 
     // Build trend chart points
     const sortedDates = Object.keys(dateMap).sort();
@@ -236,15 +236,7 @@ export async function getSchoolAnalytics(
         }
       }
     } else {
-      // Meaningful baseline preview if attendance has not yet been logged for this fresh period
-      performanceTrends = [
-        { label: "Week 1", attendance: 82 },
-        { label: "Week 2", attendance: 88 },
-        { label: "Week 3", attendance: 85 },
-        { label: "Week 4", attendance: 91 },
-        { label: "Week 5", attendance: 87 },
-        { label: "Week 6", attendance: 90 },
-      ];
+      performanceTrends = [];
     }
 
     // --- B. Academic Metrics ---
@@ -267,10 +259,10 @@ export async function getSchoolAnalytics(
     const totalResults = results.length;
     const academicAvgScore = totalResults > 0
       ? Math.round(totalScoreSum / totalResults)
-      : (students.length > 0 ? 72 : 0);
+      : 0;
     const academicPassRate = totalResults > 0
       ? Math.round((passCount / totalResults) * 100)
-      : (students.length > 0 ? 80 : 0);
+      : 0;
 
     // --- C. Financial Metrics ---
     // Calculate student count per class for targeted fees
@@ -429,13 +421,13 @@ export async function getSchoolAnalytics(
             presentCount,
             absentCount,
             totalRecords: totalAttendanceEntries,
-            trend: overallPresenceRate >= 80 ? "+2.4%" : "-1.8%",
+            trend: totalAttendanceEntries > 0 ? (overallPresenceRate >= 80 ? "+2.4%" : "-1.8%") : "No entries",
           },
           academics: {
             avgScore: academicAvgScore,
             passRate: academicPassRate,
             totalResultsRecorded: totalResults,
-            trend: academicAvgScore >= 70 ? "+1.2%" : "-0.8%",
+            trend: totalResults > 0 ? (academicAvgScore >= 70 ? "+1.2%" : "-0.8%") : "No records",
           },
           finance: {
             collected: collectedRevenue,
