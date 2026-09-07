@@ -203,29 +203,29 @@ export default function ParentsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">Parents</h1>
-        <p className="text-slate-500 mt-2 font-medium">Manage parent accounts and their linked children.</p>
+        <h1 className="text-3xl font-black tracking-tight text-foreground">Parents</h1>
+        <p className="text-muted-foreground mt-2 font-medium">Manage parent accounts and their linked children.</p>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-2 rounded-2xl border border-border/80 shadow-sm text-card-foreground">
         <div className="relative w-full sm:w-96 flex-shrink-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search by name or email..." 
-            className="pl-9 h-11 bg-slate-50 border-transparent rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:bg-white transition-all"
+            className="pl-9 h-11 bg-muted/40 border-transparent rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:bg-background transition-all text-foreground"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex bg-slate-100 p-1 rounded-xl mr-2">
+          <div className="flex bg-muted/50 p-1 rounded-xl mr-2">
             <button
               onClick={() => setActiveTab('active')}
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-bold transition-all",
                 activeTab === 'active' 
-                  ? "bg-white text-primary shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-card text-primary shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Active Parents
@@ -235,8 +235,8 @@ export default function ParentsPage() {
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-bold transition-all",
                 activeTab === 'archived' 
-                  ? "bg-white text-slate-900 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-card text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Archived
@@ -244,22 +244,22 @@ export default function ParentsPage() {
           </div>
           <Button 
             onClick={() => setIsAddModalOpen(true)}
-            className="h-11 rounded-xl gradient-brand font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] w-full sm:w-auto"
+            className="h-11 rounded-xl gradient-brand font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] w-full sm:w-auto text-white"
           >
             <UserPlus className="mr-2 h-4 w-4" /> Add Parent
           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/80 shadow-sm overflow-hidden text-card-foreground">
         <Table>
-          <TableHeader className="bg-slate-50/80 border-b border-slate-100">
+          <TableHeader className="bg-muted/40 border-b border-border/80">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[300px] text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 py-4 px-6">Parent Details</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 py-4 px-6">Contact Info</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 py-4 px-6">Children</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 py-4 px-6">Status</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 py-4 px-6">Joined</TableHead>
+              <TableHead className="w-[300px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground py-4 px-6">Parent Details</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground py-4 px-6">Contact Info</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground py-4 px-6">Children</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground py-4 px-6">Status</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground py-4 px-6">Joined</TableHead>
               <TableHead className="w-[80px] text-right py-4 px-6"></TableHead>
             </TableRow>
           </TableHeader>
@@ -297,18 +297,18 @@ export default function ParentsPage() {
                 const childrenCount = parent.students?.length || 0;
 
                 return (
-                  <TableRow key={parent.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <TableRow key={parent.id} className="group hover:bg-muted/50 transition-colors">
                     <TableCell className="py-4 px-6">
                       <div className="flex items-center gap-4">
-                        <Avatar className="h-10 w-10 border border-slate-100 shadow-sm shrink-0">
+                        <Avatar className="h-10 w-10 border border-border shadow-sm shrink-0">
                           <AvatarImage src={parent.avatar_url || ''} className="object-cover" />
                           <AvatarFallback className="bg-primary/5 text-primary font-bold text-xs">
                             {parent.full_name?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-900 truncate">{parent.full_name}</p>
-                          <p className="text-[11px] font-bold text-slate-400 tracking-wider uppercase truncate">
+                          <p className="font-bold text-foreground truncate">{parent.full_name}</p>
+                          <p className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase truncate">
                             PARENT ID: {parent.id.split('-')[0].toUpperCase()}
                           </p>
                         </div>
@@ -317,37 +317,37 @@ export default function ParentsPage() {
                     <TableCell className="py-4 px-6">
                       <div className="space-y-1.5">
                         {parent.email && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Mail className="size-3.5 text-slate-400" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="size-3.5 text-muted-foreground" />
                             <span className="truncate">{parent.email}</span>
                           </div>
                         )}
                         {parent.phone && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Phone className="size-3.5 text-slate-400" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="size-3.5 text-muted-foreground" />
                             <span>{parent.phone}</span>
                           </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="py-4 px-6">
-                      <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 font-bold">
                         {childrenCount} {childrenCount === 1 ? 'Child' : 'Children'}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         {isArchived && (
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border-slate-200">Archived</Badge>
+                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border-border">Archived</Badge>
                         )}
                         {isPendingSetup && (
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border-indigo-200">Pending Setup</Badge>
+                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">Pending Setup</Badge>
                         )}
                         {isSuspended && (
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600 border-red-200">Suspended</Badge>
+                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>
                         )}
                         {isActive && (
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border-emerald-200">Active</Badge>
+                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">Active</Badge>
                         )}
                       </div>
                     </TableCell>

@@ -181,10 +181,10 @@ export default function AcademicsPage() {
       {/* Executive Header */}
       <header className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tighter text-slate-900 flex items-center gap-2">
+          <h1 className="text-4xl font-black tracking-tighter text-foreground flex items-center gap-2">
             Academic Structure
           </h1>
-          <p className="text-slate-500 font-medium tracking-tight text-base sm:text-lg">
+          <p className="text-muted-foreground font-medium tracking-tight text-base sm:text-lg">
             Set up classes, assign class teachers, and manage subjects.
           </p>
         </div>
@@ -280,18 +280,18 @@ export default function AcademicsPage() {
 
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="w-full">
         {/* Navigation & Controls Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-          <TabsList className="grid grid-cols-2 w-full md:w-[340px] h-12 bg-slate-100/60 border border-slate-200/50 p-1 rounded-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
+          <TabsList className="grid grid-cols-2 w-full md:w-[340px] h-12 bg-muted/50 border border-border/80 p-1 rounded-2xl">
             <TabsTrigger 
               value="classes" 
-              className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-indigo-600 transition-all flex items-center justify-center gap-2"
+              className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 transition-all flex items-center justify-center gap-2"
             >
               <Users className="w-4 h-4" />
               Class List ({classes.length})
             </TabsTrigger>
             <TabsTrigger 
               value="subjects" 
-              className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-emerald-600 transition-all flex items-center justify-center gap-2"
+              className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 transition-all flex items-center justify-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
               Subject List ({subjects.length})
@@ -300,14 +300,14 @@ export default function AcademicsPage() {
           
           {/* View Switcher Controls */}
           <div className="flex items-center gap-3 self-end md:self-auto">
-            <div className="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/60 shadow-inner">
+            <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/80 shadow-inner">
               <button
                 onClick={() => handleViewModeChange("table")}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
                   viewMode === "table"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Table View"
               >
@@ -319,8 +319,8 @@ export default function AcademicsPage() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
                   viewMode === "cards"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Cards View"
               >
@@ -480,10 +480,10 @@ export default function AcademicsPage() {
                           {/* Class Name */}
                           <TableCell className="py-4 pl-6 font-bold">
                             <div className="flex items-center gap-3">
-                              <div className="size-9 rounded-xl bg-indigo-50 border border-indigo-100/60 flex items-center justify-center text-indigo-600 shrink-0 font-black text-xs">
+                              <div className="size-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 font-black text-xs">
                                 <GraduationCap className="w-4 h-4" />
                               </div>
-                              <span className="text-base font-black text-slate-900 tracking-tight">
+                              <span className="text-base font-black text-foreground tracking-tight">
                                 {cls.name}
                               </span>
                             </div>
@@ -846,10 +846,10 @@ export default function AcademicsPage() {
                           {/* Subject Name */}
                           <TableCell className="py-4 pl-6 font-bold">
                             <div className="flex items-center gap-3">
-                              <div className="size-9 rounded-xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center text-emerald-600 shrink-0 font-black text-xs">
+                              <div className="size-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 font-black text-xs">
                                 <BookOpen className="w-4 h-4" />
                               </div>
-                              <span className="text-base font-black text-slate-900 tracking-tight">
+                              <span className="text-base font-black text-foreground tracking-tight">
                                 {sub.name}
                               </span>
                             </div>

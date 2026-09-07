@@ -226,12 +226,12 @@ export default function AcademicSettings() {
           {/* Header row with title + save */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="p-3.5 bg-gradient-to-br from-purple-100 to-violet-100 rounded-2xl shadow-sm">
-                <Calendar className="w-6 h-6 text-purple-600" />
+              <div className="p-3.5 bg-purple-500/10 border border-purple-500/20 rounded-2xl shadow-sm text-purple-600 dark:text-purple-400">
+                <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h2 className="text-2xl font-heading font-extrabold text-slate-900">Academic Calendar</h2>
-                <p className="text-sm text-slate-500 font-medium tracking-tight">Manage your school&apos;s current session and active term cycle.</p>
+                <h2 className="text-2xl font-heading font-extrabold text-foreground">Academic Calendar</h2>
+                <p className="text-sm text-muted-foreground font-medium tracking-tight">Manage your school&apos;s current session and active term cycle.</p>
               </div>
             </div>
             <Button 
@@ -365,12 +365,12 @@ export default function AcademicSettings() {
       <div className="glass-panel p-8 rounded-[2rem] space-y-8 mt-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-indigo-100 rounded-2xl">
-              <Award className="w-6 h-6 text-indigo-600" />
+            <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-indigo-600 dark:text-indigo-400">
+              <Award className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-extrabold text-slate-900">Default Result Assessment Metrics</h2>
-              <p className="text-sm text-slate-500 font-medium tracking-tight">Set the default result components (e.g. Tests, Assignments, Exams) for the whole school. They must add up to 100.</p>
+              <h2 className="text-2xl font-heading font-extrabold text-foreground">Default Result Assessment Metrics</h2>
+              <p className="text-sm text-muted-foreground font-medium tracking-tight">Set the default result components (e.g. Tests, Assignments, Exams) for the whole school. They must add up to 100.</p>
             </div>
           </div>
           
@@ -389,7 +389,7 @@ export default function AcademicSettings() {
                   setIsEditingMetrics(false);
                   loadMetrics(schoolId!);
                 }} 
-                className="h-12 px-6 rounded-xl border-slate-200"
+                className="h-12 px-6 rounded-xl border-border"
               >
                 Cancel
               </Button>

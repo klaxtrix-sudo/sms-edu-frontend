@@ -263,11 +263,11 @@ export default function TeachersPage() {
               Add Teacher
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-2 border-primary/20 bg-white">
+          <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/80 bg-card text-card-foreground shadow-2xl">
             <form onSubmit={handleAddTeacher}>
               <DialogHeader className="p-6 pb-0">
-                <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Register New Teacher</DialogTitle>
-                <DialogDescription className="text-slate-500">
+                <DialogTitle className="text-2xl font-bold tracking-tight text-foreground">Register New Teacher</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                   Set up the new teacher's login and contact details.
                 </DialogDescription>
               </DialogHeader>
@@ -275,23 +275,23 @@ export default function TeachersPage() {
               <div className="max-h-[60vh] overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">First Name</Label>
+                    <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">First Name</Label>
                     <Input 
                       id="firstName" 
                       placeholder="e.g. Amaka" 
                       required 
-                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                      className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
                       value={formData.firstName}
                       onChange={e => setFormData({...formData, firstName: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Last Name</Label>
                     <Input 
                       id="lastName" 
                       placeholder="e.g. Adebayo" 
                       required 
-                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                      className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
                       value={formData.lastName}
                       onChange={e => setFormData({...formData, lastName: e.target.value})}
                     />
@@ -299,34 +299,34 @@ export default function TeachersPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Login Email</Label>
+                  <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Login Email</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="e.g. teacher@school.edu.ng" 
                     required 
-                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                    className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Initial Password</Label>
+                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Initial Password</Label>
                   <PasswordInput 
                     id="password" 
                     placeholder="••••••••" 
                     required 
-                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                    className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
                     value={formData.password}
                     onChange={e => setFormData({...formData, password: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Phone Number</Label>
                   <Input 
                     id="phone" 
                     placeholder="+234..." 
-                    className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors"
+                    className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
                     value={formData.phone}
                     onChange={e => setFormData({...formData, phone: e.target.value})}
                   />
@@ -334,13 +334,13 @@ export default function TeachersPage() {
 
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
                   <AlertCircle className="size-5 text-primary shrink-0 mt-0.5" />
-                  <div className="text-[11px] leading-relaxed text-slate-600">
+                  <div className="text-[11px] leading-relaxed text-muted-foreground">
                     <span className="font-bold text-primary italic">Note:</span> You can assign subjects and classes from the <Link href="/dashboard/admin/academics" className="text-primary hover:underline font-bold">Academics</Link> or the teacher's profile after adding subjects.
                   </div>
                 </div>
               </div>
 
-              <DialogFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
+              <DialogFooter className="p-6 bg-muted/30 border-t border-border">
                 <Button 
                   type="submit" 
                   disabled={isSubmitting}
@@ -355,57 +355,57 @@ export default function TeachersPage() {
 
         {/* Password Reset Dialog */}
         <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
-          <DialogContent className="sm:max-w-[400px] border-2 border-primary/20 bg-white p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-[400px] border border-border/80 bg-card text-card-foreground shadow-2xl p-0 overflow-hidden">
             <form onSubmit={handleResetPassword}>
               <DialogHeader className="p-6 pb-0">
-                <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">Reset Password</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-xl font-bold tracking-tight text-foreground">Reset Password</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                   Set a new password for <span className="font-bold text-primary">{selectedTeacher?.full_name}</span>.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="p-6 space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword" title="At least 8 chars, 1 number, 1 special char" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">New Secure Password</Label>
+                  <Label htmlFor="newPassword" title="At least 8 chars, 1 number, 1 special char" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">New Secure Password</Label>
                   <div className="relative">
                     <Input 
                       id="newPassword" 
                       type={showNewPassword ? "text" : "password"}
                       placeholder="••••••••"
                       required
-                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors pr-12"
+                      className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors pr-12"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
                     >
                       {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-tight">
-                    Must be <span className="text-slate-600 font-medium">8+ characters</span> with at least <span className="text-slate-600 font-medium">one number</span> and <span className="text-slate-600 font-medium">one special character</span>.
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Must be <span className="text-foreground font-medium">8+ characters</span> with at least <span className="text-foreground font-medium">one number</span> and <span className="text-foreground font-medium">one special character</span>.
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Confirm New Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Confirm New Password</Label>
                   <div className="relative">
                     <Input 
                       id="confirmPassword" 
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
                       required
-                      className="bg-slate-50 border-slate-200 h-12 rounded-xl text-slate-900 focus:bg-white transition-colors pr-12"
+                      className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors pr-12"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
                     >
                       {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
@@ -413,7 +413,7 @@ export default function TeachersPage() {
                 </div>
               </div>
 
-              <DialogFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
+              <DialogFooter className="p-6 bg-muted/30 border-t border-border">
                 <Button 
                   type="submit" 
                   disabled={isResetting}
@@ -450,7 +450,7 @@ export default function TeachersPage() {
             onClick={() => setActiveTab('active')}
             className={cn(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all",
-              activeTab === 'active' ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === 'active' ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Active Teachers
@@ -459,7 +459,7 @@ export default function TeachersPage() {
             onClick={() => setActiveTab('archived')}
             className={cn(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all",
-              activeTab === 'archived' ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === 'archived' ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
           >
             Archived

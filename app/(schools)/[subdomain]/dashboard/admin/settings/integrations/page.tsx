@@ -273,35 +273,32 @@ export default function IntegrationSettings() {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      
-      {/* Top Title Section */}
-      <div className="space-y-1 px-2">
-        <h1 className="text-4xl font-black tracking-tighter text-slate-900">
+    <div className="space-y-10 animate-fade-in pb-16">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-black tracking-tighter text-foreground">
           Platform Integrations
         </h1>
-        <p className="text-slate-500 font-medium tracking-tight text-base sm:text-lg">
-          Manage your school profile, academic year, and integrations.
+        <p className="text-muted-foreground font-medium tracking-tight text-base sm:text-lg">
+          Connect your school with communications, payment gateways, and notification networks.
         </p>
       </div>
 
-      <div className="flex flex-col gap-8">
-        
+      <div className="space-y-8">
         {/* 1. SMS Gateway (Termii) */}
-        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/20 rounded-bl-[8rem] -z-10" />
+        <div className="relative overflow-hidden bg-card border border-border/80 text-card-foreground rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-bl-[8rem] -z-10" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="size-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm shadow-indigo-100/50">
+              <div className="size-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 shadow-sm">
                 <Zap className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">SMS Gateway</h2>
-                  <Badge variant="outline" className="bg-indigo-50/50 text-indigo-600 border-indigo-100 font-extrabold text-[10px] px-2 py-0.5">Termii</Badge>
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">SMS Gateway</h2>
+                  <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-extrabold text-[10px] px-2 py-0.5">Termii</Badge>
                 </div>
-                <p className="text-sm text-slate-500 font-medium tracking-tight">
+                <p className="text-sm text-muted-foreground font-medium tracking-tight">
                   Send parent alerts and OTPs via Termii SMS.
                 </p>
               </div>
@@ -311,21 +308,21 @@ export default function IntegrationSettings() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-border">
             <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">API Key</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">API Key</Label>
               <div className="relative">
                 <Input 
                   type={showKeys['sms'] ? 'text' : 'password'}
                   value={termiiConfig.apiKey}
                   onChange={(e) => setTermiiConfig({...termiiConfig, apiKey: e.target.value})}
                   placeholder="TL-xxxxxxxxxxxxxxxx"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-indigo-500 focus:border-indigo-300"
+                  className="h-14 bg-background border-border text-foreground rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-indigo-500 focus:border-indigo-300"
                 />
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-muted text-muted-foreground"
                   onClick={() => toggleKey('sms')}
                 >
                   {showKeys['sms'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -334,12 +331,12 @@ export default function IntegrationSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender ID</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Sender ID</Label>
               <Input 
                 value={termiiConfig.senderId}
                 onChange={(e) => setTermiiConfig({...termiiConfig, senderId: e.target.value})}
                 placeholder="KLAXTRIX"
-                className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-indigo-500 focus:border-indigo-300 placeholder:font-normal placeholder:text-slate-400"
+                className="h-14 bg-background border-border text-foreground rounded-2xl font-bold uppercase pl-5 focus:ring-indigo-500 focus:border-indigo-300 placeholder:font-normal placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -347,10 +344,10 @@ export default function IntegrationSettings() {
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <Badge className={`border font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl ${
               isSmsEnabled 
-                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
-                : "bg-slate-50 text-slate-400 border-slate-200"
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+                : "bg-muted text-muted-foreground border-border"
             }`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${isSmsEnabled ? "text-emerald-500" : "text-slate-300"}`} />
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isSmsEnabled ? "text-emerald-500" : "text-muted-foreground/40"}`} />
               {isSmsEnabled ? "Connected & Active" : "Not Set Up"}
             </Badge>
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -363,7 +360,7 @@ export default function IntegrationSettings() {
                 Save & Verify
               </Button>
               {isSmsEnabled && (
-                <Button variant="ghost" className="text-xs font-black text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all gap-2 rounded-xl px-4 py-2">
+                <Button variant="ghost" className="text-xs font-black text-indigo-600 hover:bg-indigo-500/10 hover:text-indigo-500 transition-all gap-2 rounded-xl px-4 py-2">
                   View SMS Analytics <ExternalLink className="w-3.5 h-3.5" />
                 </Button>
               )}
@@ -372,20 +369,20 @@ export default function IntegrationSettings() {
         </div>
 
         {/* 2. Payment Gateway (Paystack) */}
-        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50/20 rounded-bl-[8rem] -z-10" />
+        <div className="relative overflow-hidden bg-card border border-border/80 text-card-foreground rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[8rem] -z-10" />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="size-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm shadow-emerald-100/50">
+              <div className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-sm">
                 <CreditCard className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Payments (Paystack)</h2>
-                  <Badge variant="outline" className="bg-emerald-50/50 text-emerald-600 border-emerald-100 font-extrabold text-[10px] px-2 py-0.5">Paystack</Badge>
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">Payments (Paystack)</h2>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-extrabold text-[10px] px-2 py-0.5">Paystack</Badge>
                 </div>
-                <p className="text-sm text-slate-500 font-medium tracking-tight">
+                <p className="text-sm text-muted-foreground font-medium tracking-tight">
                   Collect school fees and track payments securely.
                 </p>
               </div>
@@ -395,22 +392,22 @@ export default function IntegrationSettings() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 mt-8 border-t border-border">
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Secret Key (SK)</Label>
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Secret Key (SK)</Label>
                 <div className="relative">
                   <Input 
                     type={showKeys['paystack'] ? 'text' : 'password'}
                     value={paystackConfig.secretKey}
                     onChange={(e) => setPaystackConfig({...paystackConfig, secretKey: e.target.value})}
                     placeholder="sk_live_xxxxxxxxxxxxxxxx"
-                    className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-emerald-500 focus:border-emerald-300"
+                    className="h-14 bg-background border-border text-foreground rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-emerald-500 focus:border-emerald-300"
                   />
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-muted text-muted-foreground"
                     onClick={() => toggleKey('paystack')}
                   >
                     {showKeys['paystack'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -419,36 +416,36 @@ export default function IntegrationSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Public Key (PK)</Label>
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Public Key (PK)</Label>
                 <Input 
                   type="text"
                   value={paystackConfig.publicKey}
                   onChange={(e) => setPaystackConfig({...paystackConfig, publicKey: e.target.value})}
                   placeholder="pk_live_xxxxxxxxxxxxxxxx"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-emerald-500 focus:border-emerald-300"
+                  className="h-14 bg-background border-border text-foreground rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-emerald-500 focus:border-emerald-300"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Used by parents/students to open the Paystack checkout popup.</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Used by parents/students to open the Paystack checkout popup.</p>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-2xl">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+              <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium leading-relaxed">
                   Payments are encrypted and handled securely by Paystack.
                 </p>
               </div>
             </div>
 
             {/* Webhook Configuration Guide */}
-            <div className="space-y-4 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+            <div className="space-y-4 bg-muted/40 p-6 rounded-2xl border border-border/80">
               <div className="space-y-1">
-                <h4 className="text-sm font-black text-slate-800">Paystack Webhook Endpoint</h4>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <h4 className="text-sm font-black text-foreground">Paystack Webhook Endpoint</h4>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                   Provide this URL in your Paystack Dashboard Developer Settings to receive real-time payment notifications.
                 </p>
               </div>
               
               <div className="flex items-center gap-2">
-                <code className="flex-1 bg-white border border-slate-200 px-4 py-2.5 rounded-xl font-mono text-xs text-slate-600 truncate">
+                <code className="flex-1 bg-background border border-border px-4 py-2.5 rounded-xl font-mono text-xs text-foreground truncate">
                   {webhookUrl}
                 </code>
                 <Button 
@@ -456,7 +453,7 @@ export default function IntegrationSettings() {
                   onClick={handleCopyWebhook} 
                   variant="outline"
                   size="icon"
-                  className="size-11 rounded-xl bg-white border-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all shrink-0"
+                  className="size-11 rounded-xl bg-card border-border hover:border-emerald-500 hover:text-emerald-600 transition-all shrink-0 text-foreground"
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 </Button>
@@ -467,10 +464,10 @@ export default function IntegrationSettings() {
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <Badge className={`border font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl ${
               isPaymentEnabled 
-                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
-                : "bg-slate-50 text-slate-400 border-slate-200"
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+                : "bg-muted text-muted-foreground border-border"
             }`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${isPaymentEnabled ? "text-emerald-500" : "text-slate-300"}`} />
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isPaymentEnabled ? "text-emerald-500" : "text-muted-foreground/40"}`} />
               {isPaymentEnabled ? "Active (Live/Test)" : "Not Set Up"}
             </Badge>
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -483,7 +480,7 @@ export default function IntegrationSettings() {
                 Save & Verify
               </Button>
               {isPaymentEnabled && (
-                <Button className="h-12 bg-slate-900 hover:bg-slate-800 text-white px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+                <Button className="h-12 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
                   Verify Webhooks
                 </Button>
               )}
@@ -492,20 +489,20 @@ export default function IntegrationSettings() {
         </div>
 
         {/* 3. Unified Email (Resend) */}
-        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/20 rounded-bl-[8rem] -z-10" />
+        <div className="relative overflow-hidden bg-card border border-border/80 text-card-foreground rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[8rem] -z-10" />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="size-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shadow-blue-100/50">
+              <div className="size-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-sm">
                 <Mail className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Email (Resend)</h2>
-                  <Badge variant="outline" className="bg-blue-50/50 text-blue-600 border-blue-100 font-extrabold text-[10px] px-2 py-0.5">Resend</Badge>
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">Email (Resend)</h2>
+                  <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-extrabold text-[10px] px-2 py-0.5">Resend</Badge>
                 </div>
-                <p className="text-sm text-slate-500 font-medium tracking-tight">
+                <p className="text-sm text-muted-foreground font-medium tracking-tight">
                   Send branded emails for results, report cards, and portal invitations from your own domain.
                 </p>
               </div>
@@ -515,22 +512,22 @@ export default function IntegrationSettings() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 mt-8 border-t border-border">
             {/* Resend API Key */}
             <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Resend API Key</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Resend API Key</Label>
               <div className="relative">
                 <Input 
                   type={showKeys['resend'] ? 'text' : 'password'}
                   value={resendConfig.apiKey}
                   onChange={(e) => setResendConfig({...resendConfig, apiKey: e.target.value})}
                   placeholder="re_xxxxxxxxxxxxxx"
-                  className="h-14 bg-white border-slate-200 rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-slate-400"
+                  className="h-14 bg-background border-border text-foreground rounded-2xl font-mono text-sm tracking-widest pl-5 pr-12 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-muted-foreground"
                 />
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-slate-100 text-slate-400"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-muted text-muted-foreground"
                   onClick={() => toggleKey('resend')}
                 >
                   {showKeys['resend'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -540,23 +537,23 @@ export default function IntegrationSettings() {
 
             {/* Institutional Sender Name */}
             <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Name</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Sender Name</Label>
               <Input 
                 value={resendConfig.fromName}
                 onChange={(e) => setResendConfig({...resendConfig, fromName: e.target.value})}
                 placeholder="Klaxtrix Academy"
-                className="h-14 bg-white border-slate-200 rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:normal-case placeholder:text-slate-400"
+                className="h-14 bg-background border-border text-foreground rounded-2xl font-bold uppercase pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:normal-case placeholder:text-muted-foreground"
               />
             </div>
 
             {/* Sender Email (From) - Full Width */}
             <div className="space-y-2 col-span-1 md:col-span-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Sender Email (From)</Label>
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Sender Email (From)</Label>
               <Input 
                 value={resendConfig.fromEmail}
                 onChange={(e) => setResendConfig({...resendConfig, fromEmail: e.target.value})}
                 placeholder="portal@yourdomain.com"
-                className="h-14 bg-white border-slate-200 rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-slate-400"
+                className="h-14 bg-background border-border text-foreground rounded-2xl font-bold pl-5 focus:ring-blue-500 focus:border-blue-300 placeholder:font-normal placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -564,10 +561,10 @@ export default function IntegrationSettings() {
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <Badge className={`border font-extrabold gap-1.5 px-3.5 py-1.5 rounded-xl ${
               isResendExpanded 
-                ? "bg-blue-50 text-blue-700 border-blue-100" 
-                : "bg-slate-50 text-slate-400 border-slate-200"
+                ? "bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/20" 
+                : "bg-muted text-muted-foreground border-border"
             }`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${isResendExpanded ? "text-blue-500" : "text-slate-300"}`} />
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isResendExpanded ? "text-blue-500" : "text-muted-foreground/40"}`} />
               {isResendExpanded ? "Email Gateway Active" : "Not Set Up"}
             </Badge>
             <div className="flex items-center gap-3 w-full sm:w-auto">

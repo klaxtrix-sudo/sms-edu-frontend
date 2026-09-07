@@ -213,26 +213,26 @@ export default function GeneralSettings() {
 
         <div className="glass-panel p-8 rounded-[2rem] space-y-8 col-span-1 md:col-span-2 relative">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 rounded-2xl">
-              <Building2 className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-2xl">
+              <Building2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-extrabold text-slate-900">School Profile</h2>
-              <p className="text-sm text-slate-500 font-medium tracking-tight">Manage your school's official brand and contact details.</p>
+              <h2 className="text-2xl font-heading font-extrabold text-foreground">School Profile</h2>
+              <p className="text-sm text-muted-foreground font-medium tracking-tight">Manage your school's official brand and contact details.</p>
             </div>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Logo Upload */}
-            <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+            <div className="bg-card p-6 rounded-3xl border border-border flex flex-col md:flex-row items-center gap-8 shadow-sm">
               <SchoolLogoUpload
                 schoolId={schoolId!}
                 value={form.watch('logo_url')}
                 onChange={(url) => form.setValue('logo_url', url)}
               />
               <div className="flex flex-col text-center md:text-left space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">School Logo</h3>
-                <p className="text-sm text-slate-500 max-w-sm">
+                <h3 className="text-lg font-bold text-foreground">School Logo</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
                   Upload your official school logo. This will be displayed across all student, teacher, and parent portals.
                 </p>
               </div>
@@ -241,63 +241,63 @@ export default function GeneralSettings() {
             {/* Form Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="school-name" className="text-xs font-black uppercase tracking-widest text-slate-400">School Name</Label>
+                <Label htmlFor="school-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">School Name</Label>
                 <div className="relative">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input id="school-name" {...form.register('name')} className="pl-14 h-14 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 font-medium text-slate-800" />
+                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input id="school-name" {...form.register('name')} className="pl-14 h-14 bg-background border-border rounded-2xl focus:ring-primary font-medium text-foreground" />
                 </div>
                 {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="motto" className="text-xs font-black uppercase tracking-widest text-slate-400">Motto / Slogan</Label>
+                <Label htmlFor="motto" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Motto / Slogan</Label>
                 <div className="relative">
-                  <Quote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input id="motto" {...form.register('motto')} className="pl-12 h-14 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 font-medium text-slate-700" />
+                  <Quote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input id="motto" {...form.register('motto')} className="pl-12 h-14 bg-background border-border rounded-2xl focus:ring-primary font-medium text-foreground" />
                 </div>
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-slate-400">Address</Label>
+                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Address</Label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-6 w-4 h-4 text-slate-400" />
-                  <Textarea id="address" {...form.register('address')} className="pl-12 pt-4 min-h-[100px] bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 text-slate-700" />
+                  <MapPin className="absolute left-4 top-6 w-4 h-4 text-muted-foreground" />
+                  <Textarea id="address" {...form.register('address')} className="pl-12 pt-4 min-h-[100px] bg-background border-border rounded-2xl focus:ring-primary text-foreground" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-slate-400">Official Phone</Label>
+                <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Official Phone</Label>
                 <div className="relative">
-                  <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input id="phone" {...form.register('official_phone')} className="pl-12 h-14 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 font-bold text-slate-700" />
+                  <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input id="phone" {...form.register('official_phone')} className="pl-12 h-14 bg-background border-border rounded-2xl focus:ring-primary font-bold text-foreground" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="website" className="text-xs font-black uppercase tracking-widest text-slate-400">Official Website</Label>
+                <Label htmlFor="website" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Official Website</Label>
                 <div className="relative">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input id="website" {...form.register('official_website')} className="pl-12 h-14 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-blue-500 text-slate-700 font-medium" />
+                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input id="website" {...form.register('official_website')} className="pl-12 h-14 bg-background border-border rounded-2xl focus:ring-primary text-foreground font-medium" />
                 </div>
               </div>
             </div>
 
             {/* Official Bank & Settlement Account Section */}
-            <div className="pt-10 border-t border-slate-100 space-y-6">
+            <div className="pt-10 border-t border-border space-y-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-600 dark:text-emerald-400">
                   <Landmark className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-heading font-extrabold text-slate-900">Official Bank & Settlement Account</h3>
-                  <p className="text-xs text-slate-500 font-medium">Bank details presented to parents for direct tuition deposits and fee settlement.</p>
+                  <h3 className="text-xl font-heading font-extrabold text-foreground">Official Bank & Settlement Account</h3>
+                  <p className="text-xs text-muted-foreground font-medium">Bank details presented to parents for direct tuition deposits and fee settlement.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 bg-slate-50/60 p-6 rounded-3xl border border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 bg-card/50 p-6 rounded-3xl border border-border">
                 {/* Bank Name Selector */}
                 <div className="space-y-2">
-                  <Label htmlFor="bank-select" className="text-xs font-black uppercase tracking-widest text-slate-400">Official Bank</Label>
+                  <Label htmlFor="bank-select" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Official Bank</Label>
                   <Select
                     value={
                       isCustomBank
@@ -317,10 +317,10 @@ export default function GeneralSettings() {
                       }
                     }}
                   >
-                    <SelectTrigger id="bank-select" className="h-14 bg-white border-slate-200 rounded-2xl font-medium text-slate-800">
+                    <SelectTrigger id="bank-select" className="h-14 bg-background border-border rounded-2xl font-medium text-foreground">
                       <SelectValue placeholder="Select official bank" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl max-h-60">
+                    <SelectContent className="rounded-2xl max-h-60 bg-popover border-border text-popover-foreground">
                       {NIGERIAN_BANKS.map((b) => (
                         <SelectItem key={b} value={b} className="font-medium">
                           {b}
@@ -333,28 +333,28 @@ export default function GeneralSettings() {
                 {/* Custom Bank Name Input (if Other chosen) */}
                 {isCustomBank && (
                   <div className="space-y-2">
-                    <Label htmlFor="custom-bank-name" className="text-xs font-black uppercase tracking-widest text-slate-400">Specify Bank Name</Label>
+                    <Label htmlFor="custom-bank-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Specify Bank Name</Label>
                     <Input
                       id="custom-bank-name"
                       placeholder="e.g. Standard Chartered Bank"
                       value={form.watch('bank_name') || ''}
                       onChange={(e) => form.setValue('bank_name', e.target.value)}
-                      className="h-14 bg-white border-slate-200 rounded-2xl font-medium text-slate-800"
+                      className="h-14 bg-background border-border rounded-2xl font-medium text-foreground"
                     />
                   </div>
                 )}
 
                 {/* Account Number */}
                 <div className="space-y-2">
-                  <Label htmlFor="account-number" className="text-xs font-black uppercase tracking-widest text-slate-400">Account Number (10 Digits NUBAN)</Label>
+                  <Label htmlFor="account-number" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Account Number (10 Digits NUBAN)</Label>
                   <div className="relative">
-                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="account-number"
                       maxLength={10}
                       placeholder="0123456789"
                       {...form.register('account_number')}
-                      className="pl-12 h-14 bg-white border-slate-200 rounded-2xl font-mono text-base tracking-wider font-bold text-slate-800"
+                      className="pl-12 h-14 bg-background border-border rounded-2xl font-mono text-base tracking-wider font-bold text-foreground"
                     />
                   </div>
                   {form.formState.errors.account_number && (
@@ -364,19 +364,19 @@ export default function GeneralSettings() {
 
                 {/* Account Name */}
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="account-name" className="text-xs font-black uppercase tracking-widest text-slate-400">Account Beneficiary Name</Label>
+                  <Label htmlFor="account-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Account Beneficiary Name</Label>
                   <Input
                     id="account-name"
                     placeholder="e.g. Glorydays Academy Operations"
                     {...form.register('account_name')}
-                    className="h-14 bg-white border-slate-200 rounded-2xl font-bold text-slate-800"
+                    className="h-14 bg-background border-border rounded-2xl font-bold text-foreground"
                   />
                 </div>
 
                 {/* Verification callout */}
-                <div className="md:col-span-2 flex items-start gap-3 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+                <div className="md:col-span-2 flex items-start gap-3 p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium leading-relaxed">
                     This account is verified and displayed to parents in their portal for direct tuition transfers, bank app transfers, and over-the-counter teller deposits.
                   </p>
                 </div>

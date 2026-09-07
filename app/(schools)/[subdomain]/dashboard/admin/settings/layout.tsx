@@ -50,18 +50,18 @@ export default function SettingsLayout({
   return (
     <div className="flex flex-col gap-8 h-full">
       <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-heading font-extrabold tracking-tight text-slate-900 drop-shadow-sm flex items-center gap-3">
-          <Settings className="w-10 h-10 text-blue-600" />
+        <h1 className="text-4xl font-heading font-extrabold tracking-tight text-foreground drop-shadow-sm flex items-center gap-3">
+          <Settings className="w-10 h-10 text-primary" />
           Settings
         </h1>
-        <p className="text-slate-500 font-medium">
+        <p className="text-muted-foreground font-medium">
           Manage your school profile, academic year, and integrations.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
         {/* Settings Navigation */}
-        <div className="glass-panel p-4 rounded-[2rem] space-y-2">
+        <div className="glass-panel p-4 rounded-[2rem] space-y-2 border border-border/60 bg-card/60">
           {settingsLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -71,27 +71,27 @@ export default function SettingsLayout({
                 className={cn(
                   "group flex items-start gap-4 p-4 rounded-2xl transition-all duration-300",
                   isActive 
-                    ? "bg-blue-600 text-white shadow-lg scale-[1.02]" 
-                    : "hover:bg-blue-50 text-slate-600"
+                    ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]" 
+                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
                 )}
               >
                 <div className={cn(
                   "p-2 rounded-xl transition-colors duration-300",
-                  isActive ? "bg-white/20" : "bg-slate-100 group-hover:bg-white"
+                  isActive ? "bg-white/20 text-white" : "bg-muted group-hover:bg-card text-muted-foreground"
                 )}>
-                  <link.icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-600")} />
+                  <link.icon className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold">{link.title}</span>
                   <span className={cn(
                     "text-xs font-medium opacity-80",
-                    isActive ? "text-blue-50" : "text-slate-400"
+                    isActive ? "text-primary-foreground/80" : "text-muted-foreground"
                   )}>
                     {link.description}
                   </span>
                 </div>
                 {isActive && (
-                  <ChevronRight className="w-5 h-5 ml-auto self-center text-white/50" />
+                  <ChevronRight className="w-5 h-5 ml-auto self-center text-primary-foreground/50" />
                 )}
               </Link>
             );
