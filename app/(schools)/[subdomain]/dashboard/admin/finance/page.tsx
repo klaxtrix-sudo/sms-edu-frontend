@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { 
   CreditCard, 
   Plus, 
@@ -18,18 +19,38 @@ import {
   Landmark,
   Check,
   X,
+  Download,
+  Layers,
+  GraduationCap,
+  Calendar,
+  AlertCircle,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Receipt,
+  FileSpreadsheet,
+  Banknote,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardDescription 
-} from "@/components/ui/card";
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { 
   Table, 
   TableBody, 
@@ -38,79 +59,118 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { motion, AnimatePresence } from "framer-motion";
 import { createTenantClient } from "@/lib/supabase/client";
+import { useTenant } from "@/components/providers/tenant-provider";
+import { getFinanceOverview } from "@/app/actions/finance-actions";
 import { formatNGN, cn, getBackendUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { AddFeeStructureModal } from "@/components/admin/add-fee-structure-modal";
+import { EditFeeStructureModal } from "@/components/admin/edit-fee-structure-modal";
+import { DeleteFeeStructureModal } from "@/components/admin/delete-fee-structure-modal";
+import { RecordManualPaymentModal } from "@/components/admin/record-manual-payment-modal";
 
 export default function FinanceDashboard() {
+  const params = useParams();
+  const subdomain = params?.subdomain as string;
+  const { tenant, academicCycle } = useTenant();
+  const supabase = createTenantClient();
+
+  const [activeTab, setActiveTab] = useState<"payments" | "structures" | "debtors">("payments");
+  const [loading, setLoading] = useState(true);
+
+  // Data states
   const [payments, setPayments] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({
+  const [feeStructures, setFeeStructures] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [schoolBank, setSchoolBank] = useState<any>(null);
+  const [stats, setStats] = useState({
     totalRevenue: 0,
     pendingAmount: 0,
-    successCount: 0,
-    totalCount: 0
+    pendingTransfersCount: 0,
+    uniquePayeesCount: 0,
+    totalTransactionsCount: 0,
+    successfulCount: 0,
   });
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [schoolBank, setSchoolBank] = useState<{
-    bank_name: string | null;
-    account_name: string | null;
-    account_number: string | null;
-  } | null>(null);
+
+  // Action states
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
-  const supabase = createTenantClient();
+  const [editingFee, setEditingFee] = useState<any>(null);
+  const [deletingFee, setDeletingFee] = useState<any>(null);
+
+  // Filter states for Payments Ledger
+  const [searchTerm, setSearchTerm] = useState("");
+  const [channelFilter, setChannelFilter] = useState<"all" | "online" | "bank_transfer" | "cash" | "pos">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "success" | "pending" | "failed">("all");
+  const [periodFilter, setPeriodFilter] = useState<"current" | "all">("current");
+
+  // Filter states for Fee Structures
+  const [structureSessionFilter, setStructureSessionFilter] = useState<string>("all");
+  const [structureTermFilter, setStructureTermFilter] = useState<string>("all");
+  const [structureClassFilter, setStructureClassFilter] = useState<string>("all");
+
+  // Tab 3: Debtors & Student Balances
+  const [selectedClassForDebtors, setSelectedClassForDebtors] = useState<string>("");
+  const [classStudents, setClassStudents] = useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
 
   const fetchFinanceData = async () => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const res = await getFinanceOverview(subdomain);
+      if (res.error) throw new Error(res.error);
 
-      // 1. Fetch Payments
-      const { data: paymentsData, error: paymentsError } = await supabase
-        .from("fee_payments")
-        .select(`
-          *,
-          students(admission_no, profiles!students_user_id_fkey(full_name)),
-          fee_structures(name)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (paymentsError) throw paymentsError;
-      setPayments(paymentsData || []);
-
-      // 2. Fetch School Bank Details
-      const { data: schoolData } = await supabase
-        .from("schools")
-        .select("bank_name, account_name, account_number")
-        .maybeSingle();
-
-      if (schoolData) {
-        setSchoolBank(schoolData);
+      setPayments(res.payments || []);
+      setFeeStructures(res.feeStructures || []);
+      setClasses(res.classes || []);
+      setSchoolBank(res.schoolBank || null);
+      if (res.stats) {
+        setStats(res.stats);
       }
 
-      // 3. Calculate Stats
-      const calculatedStats = (paymentsData || []).reduce((acc: any, curr: any) => {
-        if (curr.status === 'success') {
-          acc.totalRevenue += Number(curr.amount);
-          acc.successCount += 1;
-        } else if (curr.status === 'pending') {
-          acc.pendingAmount += Number(curr.amount);
-        }
-        acc.totalCount += 1;
-        return acc;
-      }, { totalRevenue: 0, pendingAmount: 0, successCount: 0, totalCount: 0 });
-
-      setStats(calculatedStats);
-    } catch (error) {
-      toast.error("Failed to load payments.");
+      // If no class selected for debtors yet, default to first class
+      if (!selectedClassForDebtors && res.classes && res.classes.length > 0) {
+        setSelectedClassForDebtors(res.classes[0].id);
+      }
+    } catch (error: any) {
+      console.error("[Finance] Failed to load data:", error);
+      toast.error(error.message || "Failed to load finance data.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyTransfer = async (paymentId: string, action: 'approve' | 'reject') => {
+  useEffect(() => {
+    if (subdomain) {
+      fetchFinanceData();
+    }
+  }, [subdomain]);
+
+  // Fetch students for Debtors tab when class changes
+  useEffect(() => {
+    if (!selectedClassForDebtors || !tenant?.id) return;
+
+    setLoadingStudents(true);
+    supabase
+      .from("students")
+      .select(`
+        id,
+        admission_no,
+        class_id,
+        profiles!students_user_id_fkey(full_name)
+      `)
+      .eq("class_id", selectedClassForDebtors)
+      .eq("school_id", tenant.id)
+      .order("admission_no")
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setClassStudents(data);
+        }
+        setLoadingStudents(false);
+      });
+  }, [selectedClassForDebtors, tenant?.id, supabase]);
+
+  const handleVerifyTransfer = async (paymentId: string, action: "approve" | "reject") => {
     setVerifyingId(paymentId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -125,7 +185,7 @@ export default function FinanceDashboard() {
       });
       const result = await res.json();
       if (!result.success) throw new Error(result.message || "Verification failed");
-      toast.success(action === 'approve' ? "Transfer approved successfully!" : "Transfer rejected.");
+      toast.success(action === "approve" ? "Bank transfer approved successfully!" : "Transfer rejected.");
       fetchFinanceData();
     } catch (err: any) {
       toast.error(err.message || "Failed to verify transfer");
@@ -134,36 +194,181 @@ export default function FinanceDashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchFinanceData();
-  }, []);
+  // Safe search & filtered payments
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p) => {
+      // Period filter (Current Term vs All)
+      if (periodFilter === "current" && academicCycle) {
+        const isCurrentYear = !p.fee_structures?.academic_year || p.fee_structures?.academic_year === academicCycle.academicYear;
+        const isCurrentTerm = !p.fee_structures?.term || p.fee_structures?.term === academicCycle.currentTerm;
+        if (!isCurrentYear || !isCurrentTerm) return false;
+      }
 
-  const filteredPayments = payments.filter(p => 
-    p.students?.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.metadata?.senderName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.metadata?.bankReference?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      // Status filter
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+
+      // Channel filter
+      if (channelFilter !== "all") {
+        if (channelFilter === "online" && p.channel === "bank_transfer") return false;
+        if (channelFilter !== "online" && p.channel !== channelFilter) return false;
+      }
+
+      // Search term
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        const studentName = p.students?.profiles?.full_name?.toLowerCase() || "";
+        const admissionNo = p.students?.admission_no?.toLowerCase() || "";
+        const feeName = p.fee_structures?.name?.toLowerCase() || "";
+        const reference = p.reference?.toLowerCase() || "";
+        const senderName = p.metadata?.senderName?.toLowerCase() || "";
+        const bankRef = p.metadata?.bankReference?.toLowerCase() || "";
+
+        return (
+          studentName.includes(term) ||
+          admissionNo.includes(term) ||
+          feeName.includes(term) ||
+          reference.includes(term) ||
+          senderName.includes(term) ||
+          bankRef.includes(term)
+        );
+      }
+
+      return true;
+    });
+  }, [payments, periodFilter, academicCycle, statusFilter, channelFilter, searchTerm]);
+
+  // Filtered Fee Structures
+  const filteredFeeStructures = useMemo(() => {
+    return feeStructures.filter((fs) => {
+      if (structureSessionFilter !== "all" && fs.academic_year !== structureSessionFilter) return false;
+      if (structureTermFilter !== "all" && String(fs.term) !== structureTermFilter) return false;
+      if (structureClassFilter !== "all" && fs.class_id !== structureClassFilter) return false;
+      return true;
+    });
+  }, [feeStructures, structureSessionFilter, structureTermFilter, structureClassFilter]);
+
+  // Debtors calculation for selected class
+  const debtorsData = useMemo(() => {
+    if (!selectedClassForDebtors) return [];
+
+    // Applicable fee structures for this class in current cycle
+    const applicableFees = feeStructures.filter((fs) => {
+      const classMatch = fs.class_id === selectedClassForDebtors;
+      const yearMatch = !academicCycle || fs.academic_year === academicCycle.academicYear;
+      const termMatch = !academicCycle || fs.term === academicCycle.currentTerm;
+      return classMatch && yearMatch && termMatch;
+    });
+
+    const totalExpectedPerStudent = applicableFees.reduce((sum, fs) => sum + Number(fs.amount || 0), 0);
+
+    return classStudents.map((s) => {
+      // Find all successful payments for this student for applicable fees
+      const studentPayments = payments.filter(
+        (p) => p.student_id === s.id && p.status === "success" && applicableFees.some((f) => f.id === p.fee_structure_id)
+      );
+      const pendingTransfers = payments.filter(
+        (p) => p.student_id === s.id && p.status === "pending" && applicableFees.some((f) => f.id === p.fee_structure_id)
+      );
+
+      const totalPaid = studentPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const balance = Math.max(0, totalExpectedPerStudent - totalPaid);
+
+      let status: "paid" | "partial" | "pending_verification" | "unpaid" = "unpaid";
+      if (totalExpectedPerStudent > 0 && totalPaid >= totalExpectedPerStudent) {
+        status = "paid";
+      } else if (totalPaid > 0) {
+        status = "partial";
+      } else if (pendingTransfers.length > 0) {
+        status = "pending_verification";
+      }
+
+      return {
+        student: s,
+        expected: totalExpectedPerStudent,
+        paid: totalPaid,
+        balance,
+        status,
+        applicableFees,
+      };
+    });
+  }, [selectedClassForDebtors, feeStructures, classStudents, payments, academicCycle]);
+
+  // Dynamic session list for fee structures filter
+  const availableSessions = useMemo(() => {
+    const sessions = new Set(feeStructures.map((f) => f.academic_year));
+    if (academicCycle?.academicYear) sessions.add(academicCycle.academicYear);
+    return Array.from(sessions).sort();
+  }, [feeStructures, academicCycle]);
+
+  // Export CSV
+  const exportPaymentsCSV = () => {
+    if (!filteredPayments.length) {
+      toast.error("No payments to export.");
+      return;
+    }
+    const headers = [
+      "Student Name",
+      "Admission No",
+      "Fee Title",
+      "Reference",
+      "Amount (NGN)",
+      "Channel",
+      "Status",
+      "Sender Name",
+      "Bank Ref",
+      "Date",
+    ];
+    const rows = filteredPayments.map((p) => [
+      `"${(p.students?.profiles?.full_name || "Unknown").replace(/"/g, '""')}"`,
+      `"${(p.students?.admission_no || "").replace(/"/g, '""')}"`,
+      `"${(p.fee_structures?.name || "General Fee").replace(/"/g, '""')}"`,
+      `"${p.reference}"`,
+      Number(p.amount || 0),
+      `"${p.channel || "online"}"`,
+      `"${p.status}"`,
+      `"${(p.metadata?.senderName || "").replace(/"/g, '""')}"`,
+      `"${(p.metadata?.bankReference || "").replace(/"/g, '""')}"`,
+      `"${new Date(p.created_at).toISOString()}"`,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `payments_ledger_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Payments ledger exported to CSV.");
+  };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Header */}
-      <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-10 group bg-white/5 border-white/10 text-foreground">
+      <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-8 md:p-10 group bg-white/5 border-white/10 text-foreground">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider mb-2">
-              Finance
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
-              Fee <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Management</span>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
+                Institutional Finance
+              </Badge>
+              {academicCycle && (
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-2.5 py-1 text-xs font-semibold">
+                  {academicCycle.academicYear} • Term {academicCycle.currentTerm}
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-glow">
+              Fee & <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Revenue Engine</span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-xl font-medium">
-              Track school fees, revenue, and pending payments.
+            <p className="text-muted-foreground text-sm md:text-base max-w-xl font-medium">
+              Manage class fee structures, audit incoming receipts, and track school collections.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               href="settings/general"
               className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all group backdrop-blur-md"
@@ -175,13 +380,14 @@ export default function FinanceDashboard() {
                 <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Settlement Account</p>
                 <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                   {schoolBank?.account_number
-                    ? `${schoolBank.bank_name || 'Bank'} • ****${schoolBank.account_number.slice(-4)}`
-                    : '⚠️ Not Configured (Set Up)'}
+                    ? `${schoolBank.bank_name || "Bank"} • ****${schoolBank.account_number.slice(-4)}`
+                    : "⚠️ Not Configured"}
                 </p>
               </div>
             </Link>
 
-            <AddFeeStructureModal onSuccess={fetchFinanceData} />
+            <RecordManualPaymentModal feeStructures={feeStructures} onSuccess={fetchFinanceData} />
+            <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
           </div>
         </div>
         
@@ -189,195 +395,618 @@ export default function FinanceDashboard() {
         <div className="absolute -top-24 -right-24 size-64 bg-primary/20 blur-[100px] rounded-full group-hover:bg-primary/30 transition-colors" />
       </header>
 
-      {/* Bento Metric Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Primary Revenue Card */}
-        <div className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-gradient-to-br from-primary to-blue-700 text-white overflow-hidden relative">
-          <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-             <TrendingUp className="size-32" />
+      {/* Bento Metric Grid with Period Scope Toggle */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Calendar className="size-3.5" />
+            Financial Overview Scope:
           </div>
-          <div className="relative z-10 space-y-4">
-            <div className="size-12 rounded-2xl bg-white/20 p-3 shadow-lg backdrop-blur-md">
-              <Wallet className="size-full text-white" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-white/70 uppercase tracking-widest">Total Revenue</span>
-              <div className="text-3xl font-black">{formatNGN(stats.totalRevenue)}</div>
-              <p className="text-[10px] font-bold text-white/60 flex items-center gap-1 uppercase tracking-tighter pt-1">
-                <ArrowUpRight size={12} /> From {stats.successCount} successful txns
-              </p>
-            </div>
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1 text-xs">
+            <button
+              onClick={() => setPeriodFilter("current")}
+              className={cn(
+                "px-3 py-1 rounded-lg font-bold transition-all",
+                periodFilter === "current" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Active Cycle ({academicCycle?.academicYear || "Current"})
+            </button>
+            <button
+              onClick={() => setPeriodFilter("all")}
+              className={cn(
+                "px-3 py-1 rounded-lg font-bold transition-all",
+                periodFilter === "all" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              All Time
+            </button>
           </div>
         </div>
 
-        <MetricCard 
-          title="Pending Collections" 
-          value={formatNGN(stats.pendingAmount)} 
-          subText={`From ${stats.totalCount - stats.successCount} pending payments`}
-          icon={Clock}
-          color="orange"
-        />
-        
-        <MetricCard 
-          title="Success Rate" 
-          value={`${stats.totalCount > 0 ? Math.round((stats.successCount / stats.totalCount) * 100) : 0}%`} 
-          subText="Share of payments that completed"
-          icon={CheckCircle2}
-          color="green"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Revenue Card */}
+          <div className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-gradient-to-br from-primary to-blue-700 text-white overflow-hidden relative">
+            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+              <TrendingUp className="size-32" />
+            </div>
+            <div className="relative z-10 space-y-4">
+              <div className="size-12 rounded-2xl bg-white/20 p-3 shadow-lg backdrop-blur-md">
+                <Wallet className="size-full text-white" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-white/70 uppercase tracking-widest">
+                  {periodFilter === "current" ? "Active Cycle Revenue" : "All-Time Revenue"}
+                </span>
+                <div className="text-3xl font-black">{formatNGN(stats.totalRevenue)}</div>
+                <p className="text-[10px] font-bold text-white/60 flex items-center gap-1 uppercase tracking-tighter pt-1">
+                  <ArrowUpRight size={12} /> From {stats.successfulCount} verified payments
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <MetricCard 
-          title="Active Payees" 
-          value={stats.successCount.toString()} 
-          subText="Students who have paid"
-          icon={Users}
-          color="blue"
-        />
+          <MetricCard 
+            title="Pending Collections" 
+            value={formatNGN(stats.pendingAmount)} 
+            subText={`${stats.pendingTransfersCount} bank transfers awaiting review`}
+            icon={Clock}
+            color="orange"
+          />
+          
+          <MetricCard 
+            title="Verified Payees" 
+            value={stats.uniquePayeesCount.toString()} 
+            subText="Unique students who have paid"
+            icon={Users}
+            color="blue"
+          />
+
+          <MetricCard 
+            title="Active Fee Items" 
+            value={feeStructures.length.toString()} 
+            subText="Configured class fee schedules"
+            icon={Layers}
+            color="green"
+          />
+        </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-              <Activity className="size-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black">Payment History</h2>
-              <p className="text-sm text-muted-foreground font-medium italic opacity-70">Every payment your school has received.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search student or ref..." 
-                className="pl-9 w-64 bg-white/5 border-white/10 rounded-xl focus-visible:ring-primary focus-visible:bg-white/10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button variant="outline" size="icon" className="shrink-0 rounded-xl border-white/10 hover:bg-white/10 transition-all">
-              <Filter className="size-4" />
+      {/* Main Tabs Navigation */}
+      <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-12">
+            <TabsTrigger value="payments" className="rounded-xl px-5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Receipt className="size-4 mr-2" /> Payments Ledger ({filteredPayments.length})
+            </TabsTrigger>
+            <TabsTrigger value="structures" className="rounded-xl px-5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Layers className="size-4 mr-2" /> Fee Structures ({feeStructures.length})
+            </TabsTrigger>
+            <TabsTrigger value="debtors" className="rounded-xl px-5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+              <GraduationCap className="size-4 mr-2" /> Student Balances & Debtors
+            </TabsTrigger>
+          </TabsList>
+
+          {activeTab === "payments" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportPaymentsCSV}
+              className="rounded-xl h-10 border-white/10 hover:bg-white/10 gap-2 font-bold text-xs"
+            >
+              <Download className="size-4 text-primary" />
+              Export CSV Ledger
             </Button>
-          </div>
+          )}
+
+          {activeTab === "structures" && (
+            <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
+          )}
         </div>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="size-12 animate-spin text-primary" />
-            <p className="text-muted-foreground animate-pulse font-medium">Loading transactions...</p>
-          </div>
-        ) : (
-            <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
-              <Table>
-                <TableHeader className="bg-white/10">
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="font-bold py-5 text-foreground h-auto pl-6">Student</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Fee Structure</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Reference</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Amount</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto">Status</TableHead>
-                    <TableHead className="font-bold py-5 text-foreground h-auto pr-6">Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPayments.length === 0 ? (
-                    <TableRow className="border-white/5">
-                      <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic font-medium">
-                        No payments match your search.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredPayments.map((p) => (
-                      <TableRow key={p.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                        <TableCell className="pl-6">
-                          <div className="font-bold text-foreground group-hover:text-primary transition-colors">
-                            {p.students?.profiles?.full_name}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{p.students?.admission_no}</div>
-                        </TableCell>
-                        <TableCell className="font-medium text-muted-foreground">{p.fee_structures?.name}</TableCell>
-                        <TableCell>
-                          <div className="font-mono text-[10px] opacity-70 uppercase tracking-tighter">{p.reference}</div>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 border-white/20 text-muted-foreground">
-                              {p.channel === 'bank_transfer' ? 'Bank Transfer' : 'Online'}
-                            </Badge>
-                            {p.metadata?.bankReference && (
-                              <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">
-                                {p.metadata.bankReference}
-                              </span>
-                            )}
-                          </div>
-                          {p.metadata?.senderName && (
-                            <div className="text-[10px] text-muted-foreground italic mt-0.5">
-                              From: {p.metadata.senderName}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-black text-lg">{formatNGN(p.amount)}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1.5">
-                            <Badge 
-                              variant={p.status === 'success' ? 'default' : p.status === 'pending' ? 'outline' : 'destructive'}
-                              className={cn(
-                                "capitalize rounded-xl px-4 py-1 font-black tracking-tight text-[10px] shadow-sm",
-                                p.status === 'success' && "bg-emerald-500 hover:bg-emerald-600 text-white border-none",
-                                p.status === 'pending' && "border-orange-500/30 text-orange-500 bg-orange-500/10 animate-pulse"
-                              )}
-                            >
-                              {p.status}
-                            </Badge>
+        {/* TAB 1: PAYMENTS LEDGER */}
+        <TabsContent value="payments" className="space-y-6 mt-0">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-6 md:p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
+            
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                  <Activity className="size-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-black">Transaction Ledger</h2>
+                  <p className="text-xs text-muted-foreground font-medium">Real-time payment records and proof-of-transfer submissions.</p>
+                </div>
+              </div>
 
-                            {p.status === 'pending' && p.channel === 'bank_transfer' && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Button
-                                  size="sm"
-                                  disabled={verifyingId === p.id}
-                                  onClick={() => handleVerifyTransfer(p.id, 'approve')}
-                                  className="h-6 px-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg gap-1"
-                                >
-                                  {verifyingId === p.id ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
-                                  Confirm
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  disabled={verifyingId === p.id}
-                                  onClick={() => handleVerifyTransfer(p.id, 'reject')}
-                                  className="h-6 px-1.5 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold rounded-lg"
-                                >
-                                  <X className="size-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground font-bold pr-6">
-                          {new Date(p.created_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search student, ref, payer..." 
+                    className="pl-9 bg-white/5 border-white/10 rounded-xl focus-visible:ring-primary focus-visible:bg-white/10 text-xs h-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                {/* Filter Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/10 h-10 gap-2 text-xs font-bold">
+                      <Filter className="size-3.5" />
+                      Filter
+                      {(statusFilter !== "all" || channelFilter !== "all") && (
+                        <span className="size-2 rounded-full bg-primary" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2">
+                    <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                      Status
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setStatusFilter("all")} className="font-medium text-xs">
+                      All Statuses {statusFilter === "all" && "✓"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter("success")} className="font-medium text-xs text-emerald-400">
+                      Successful Only {statusFilter === "success" && "✓"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter("pending")} className="font-medium text-xs text-orange-400">
+                      Pending Review {statusFilter === "pending" && "✓"}
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                      Channel / Method
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setChannelFilter("all")} className="font-medium text-xs">
+                      All Channels {channelFilter === "all" && "✓"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setChannelFilter("bank_transfer")} className="font-medium text-xs">
+                      Bank Transfer Only {channelFilter === "bank_transfer" && "✓"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setChannelFilter("online")} className="font-medium text-xs">
+                      Paystack Online {channelFilter === "online" && "✓"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setChannelFilter("cash")} className="font-medium text-xs">
+                      Bursary Cash {channelFilter === "cash" && "✓"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setChannelFilter("pos")} className="font-medium text-xs">
+                      POS Terminal {channelFilter === "pos" && "✓"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {(statusFilter !== "all" || channelFilter !== "all" || searchTerm) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setChannelFilter("all");
+                      setSearchTerm("");
+                    }}
+                    className="h-10 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="size-10 animate-spin text-primary" />
+                <p className="text-muted-foreground animate-pulse text-xs font-medium">Loading ledger...</p>
+              </div>
+            ) : (
+              <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
+                <Table>
+                  <TableHeader className="bg-white/10">
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="font-bold py-4 text-foreground text-xs pl-6">Student</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Fee Item</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Reference & Method</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Amount</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Status</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs pr-6">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPayments.length === 0 ? (
+                      <TableRow className="border-white/5">
+                        <TableCell colSpan={6} className="text-center py-16 text-muted-foreground italic text-xs font-medium">
+                          No payments match the current filters.
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      filteredPayments.map((p) => (
+                        <TableRow key={p.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                          <TableCell className="pl-6 py-4">
+                            <div className="font-bold text-foreground group-hover:text-primary transition-colors text-sm">
+                              {p.students?.profiles?.full_name || "Unknown Student"}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider">
+                              {p.students?.admission_no || "NO-ADM"}
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="py-4">
+                            <div className="font-semibold text-xs text-foreground/90">{p.fee_structures?.name || "School Fee"}</div>
+                            {p.fee_structures?.academic_year && (
+                              <div className="text-[10px] text-muted-foreground">
+                                {p.fee_structures.academic_year} • Term {p.fee_structures.term}
+                              </div>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="py-4">
+                            <div className="font-mono text-[11px] font-semibold text-foreground/80 tracking-tight">{p.reference}</div>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 border-white/20 text-muted-foreground capitalize">
+                                {p.channel === "bank_transfer" ? "Bank Transfer" : p.channel === "cash" ? "Cash (Counter)" : p.channel === "pos" ? "POS" : "Online"}
+                              </Badge>
+                              {p.metadata?.bankReference && (
+                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">
+                                  {p.metadata.bankReference}
+                                </span>
+                              )}
+                            </div>
+                            {p.metadata?.senderName && (
+                              <div className="text-[10px] text-muted-foreground italic mt-0.5">
+                                Payer: {p.metadata.senderName}
+                              </div>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="py-4 font-black text-base tabular-nums">
+                            {formatNGN(p.amount)}
+                          </TableCell>
+
+                          <TableCell className="py-4">
+                            <div className="space-y-1.5">
+                              <Badge 
+                                variant={p.status === "success" ? "default" : p.status === "pending" ? "outline" : "destructive"}
+                                className={cn(
+                                  "capitalize rounded-xl px-3 py-0.5 font-bold tracking-tight text-[10px] shadow-sm",
+                                  p.status === "success" && "bg-emerald-500 hover:bg-emerald-600 text-white border-none",
+                                  p.status === "pending" && "border-orange-500/30 text-orange-500 bg-orange-500/10 animate-pulse"
+                                )}
+                              >
+                                {p.status}
+                              </Badge>
+
+                              {p.status === "pending" && p.channel === "bank_transfer" && (
+                                <div className="flex items-center gap-1 mt-1.5">
+                                  <Button
+                                    size="sm"
+                                    disabled={verifyingId === p.id}
+                                    onClick={() => handleVerifyTransfer(p.id, "approve")}
+                                    className="h-6 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg gap-1 shadow-sm"
+                                  >
+                                    {verifyingId === p.id ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+                                    Confirm
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    disabled={verifyingId === p.id}
+                                    onClick={() => handleVerifyTransfer(p.id, "reject")}
+                                    className="h-6 px-1.5 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold rounded-lg"
+                                  >
+                                    <X className="size-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="py-4 text-xs text-muted-foreground font-semibold pr-6">
+                            {new Date(p.created_at).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </motion.div>
+        </TabsContent>
+
+        {/* TAB 2: FEE STRUCTURES CATALOG */}
+        <TabsContent value="structures" className="space-y-6 mt-0">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-6 md:p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
+            
+            {/* Filters Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                  <Layers className="size-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-black">Fee Structures Catalog</h2>
+                  <p className="text-xs text-muted-foreground font-medium">Defined fee items, amounts, and collection progress per class.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Session Filter */}
+                <Select value={structureSessionFilter} onValueChange={setStructureSessionFilter}>
+                  <SelectTrigger className="w-36 h-10 rounded-xl bg-white/5 border-white/10 text-xs font-semibold">
+                    <SelectValue placeholder="All Sessions" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="all">All Sessions</SelectItem>
+                    {availableSessions.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Term Filter */}
+                <Select value={structureTermFilter} onValueChange={setStructureTermFilter}>
+                  <SelectTrigger className="w-32 h-10 rounded-xl bg-white/5 border-white/10 text-xs font-semibold">
+                    <SelectValue placeholder="All Terms" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="all">All Terms</SelectItem>
+                    <SelectItem value="1">1st Term</SelectItem>
+                    <SelectItem value="2">2nd Term</SelectItem>
+                    <SelectItem value="3">3rd Term</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Class Filter */}
+                <Select value={structureClassFilter} onValueChange={setStructureClassFilter}>
+                  <SelectTrigger className="w-36 h-10 rounded-xl bg-white/5 border-white/10 text-xs font-semibold">
+                    <SelectValue placeholder="All Classes" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="all">All Classes</SelectItem>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-      </motion.div>
+
+            {/* Fee Structures Grid */}
+            {filteredFeeStructures.length === 0 ? (
+              <div className="text-center py-20 rounded-3xl border border-dashed border-white/10 p-8 space-y-4">
+                <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                  <Layers className="size-6" />
+                </div>
+                <div className="space-y-1 max-w-sm mx-auto">
+                  <h3 className="font-black text-base text-foreground">No Fee Structures Found</h3>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    No fee structures match the selected filters. Click below to add fee items for your classes.
+                  </p>
+                </div>
+                <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredFeeStructures.map((fs) => {
+                  const coveragePercent = fs.enrolledCount > 0 
+                    ? Math.min(100, Math.round((fs.uniqueStudentsPaid / fs.enrolledCount) * 100))
+                    : 0;
+
+                  return (
+                    <div 
+                      key={fs.id}
+                      className="glass-panel border border-white/10 rounded-[1.8rem] p-6 space-y-5 group hover:border-primary/40 hover:bg-white/[0.07] transition-all relative overflow-hidden"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
+                              {fs.classes?.name || "General"}
+                            </Badge>
+                            <Badge variant="outline" className="bg-white/5 border-white/10 text-[10px] text-muted-foreground font-semibold">
+                              {fs.academic_year} • T{fs.term}
+                            </Badge>
+                          </div>
+                          <h3 className="font-black text-lg text-foreground tracking-tight group-hover:text-primary transition-colors pt-1">
+                            {fs.name}
+                          </h3>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setEditingFee(fs)}
+                            className="size-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                          >
+                            <Edit2 className="size-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setDeletingFee(fs)}
+                            className="size-8 rounded-xl hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="pt-1">
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Fee Amount</span>
+                        <div className="text-2xl font-black text-foreground tabular-nums">
+                          {formatNGN(fs.amount)}
+                        </div>
+                      </div>
+
+                      {/* Collection Progress */}
+                      <div className="space-y-2 pt-2 border-t border-white/5">
+                        <div className="flex items-center justify-between text-[11px] font-semibold">
+                          <span className="text-muted-foreground">Collection Coverage</span>
+                          <span className="text-foreground font-bold">{coveragePercent}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full transition-all duration-500" 
+                            style={{ width: `${coveragePercent}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-0.5">
+                          <span>{fs.uniqueStudentsPaid} / {fs.enrolledCount} students paid</span>
+                          <span>{formatNGN(fs.totalCollected || 0)} collected</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        </TabsContent>
+
+        {/* TAB 3: STUDENT BALANCES & DEBTORS */}
+        <TabsContent value="debtors" className="space-y-6 mt-0">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-6 md:p-8 rounded-[2rem] border-white/5 bg-white/5 space-y-6">
+            
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                  <GraduationCap className="size-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-black">Student Fee Balances</h2>
+                  <p className="text-xs text-muted-foreground font-medium">Track who has paid, partial balances, and record offline cash/POS receipts.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-muted-foreground">Select Class:</span>
+                <Select value={selectedClassForDebtors} onValueChange={setSelectedClassForDebtors}>
+                  <SelectTrigger className="w-44 h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold">
+                    <SelectValue placeholder="Select Class" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {loadingStudents ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="size-10 animate-spin text-primary" />
+                <p className="text-muted-foreground animate-pulse text-xs font-medium">Loading student balances...</p>
+              </div>
+            ) : debtorsData.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground italic text-xs">
+                No enrolled students found in this class.
+              </div>
+            ) : (
+              <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
+                <Table>
+                  <TableHeader className="bg-white/10">
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="font-bold py-4 text-foreground text-xs pl-6">Student</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Total Assigned Fees</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Total Paid</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Outstanding Balance</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs">Payment Status</TableHead>
+                      <TableHead className="font-bold py-4 text-foreground text-xs text-right pr-6">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {debtorsData.map((row) => (
+                      <TableRow key={row.student.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                        <TableCell className="pl-6 py-4">
+                          <div className="font-bold text-foreground text-sm">
+                            {row.student.profiles?.full_name || "Unknown"}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground font-mono font-bold uppercase">
+                            {row.student.admission_no}
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="py-4 font-bold text-xs">
+                          {formatNGN(row.expected)}
+                        </TableCell>
+
+                        <TableCell className="py-4 font-bold text-xs text-emerald-400">
+                          {formatNGN(row.paid)}
+                        </TableCell>
+
+                        <TableCell className="py-4 font-black text-xs">
+                          {row.balance > 0 ? (
+                            <span className="text-rose-400">{formatNGN(row.balance)}</span>
+                          ) : (
+                            <span className="text-muted-foreground">₦0.00</span>
+                          )}
+                        </TableCell>
+
+                        <TableCell className="py-4">
+                          <Badge
+                            className={cn(
+                              "capitalize rounded-xl px-3 py-0.5 font-bold text-[10px]",
+                              row.status === "paid" && "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+                              row.status === "partial" && "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+                              row.status === "pending_verification" && "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+                              row.status === "unpaid" && "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                            )}
+                          >
+                            {row.status === "pending_verification" ? "Pending Review" : row.status}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="py-4 text-right pr-6">
+                          <RecordManualPaymentModal 
+                            feeStructures={row.applicableFees.length > 0 ? row.applicableFees : feeStructures} 
+                            onSuccess={fetchFinanceData} 
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </motion.div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit Fee Structure Modal */}
+      <EditFeeStructureModal
+        isOpen={!!editingFee}
+        onClose={() => setEditingFee(null)}
+        onSuccess={fetchFinanceData}
+        feeStructure={editingFee}
+        classes={classes}
+      />
+
+      {/* Delete Fee Structure Modal (With Pre-flight Payment Protection) */}
+      <DeleteFeeStructureModal
+        isOpen={!!deletingFee}
+        onClose={() => setDeletingFee(null)}
+        onSuccess={fetchFinanceData}
+        feeStructure={deletingFee}
+      />
     </div>
   );
 }
 
 function MetricCard({ title, value, subText, icon: Icon, color }: any) {
   const colorMap: any = {
-    green: "text-green-600 bg-green-500/10",
-    orange: "text-orange-600 bg-orange-500/10",
-    blue: "text-blue-600 bg-blue-500/10",
+    green: "text-green-500 bg-green-500/10",
+    orange: "text-orange-500 bg-orange-500/10",
+    blue: "text-blue-500 bg-blue-500/10",
     primary: "text-primary bg-primary/10"
   };
 
@@ -397,7 +1026,6 @@ function MetricCard({ title, value, subText, icon: Icon, color }: any) {
           {subText}
         </p>
       </div>
-      {/* Subtle background glow */}
       <div className="absolute -bottom-10 -right-10 size-24 bg-white/5 blur-2xl rounded-full" />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Loader2, Sparkles, Layers } from "lucide-react";
+import { Loader2, Edit3 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -31,8 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTenant } from "@/components/providers/tenant-provider";
-import { createFeeStructure } from "@/app/actions/finance-actions";
+import { updateFeeStructure } from "@/app/actions/finance-actions";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -44,33 +42,37 @@ const formSchema = z.object({
   term: z.string().min(1, "Term is required"),
 });
 
-interface AddFeeStructureModalProps {
+interface EditFeeStructureModalProps {
+  isOpen: boolean;
+  onClose: () => void;
   onSuccess: () => void;
-  classes?: Array<{ id: string; name: string }>;
+  feeStructure: {
+    id: string;
+    name: string;
+    class_id: string;
+    amount: number;
+    academic_year: string;
+    term: number;
+  } | null;
+  classes: Array<{ id: string; name: string }>;
 }
 
-export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: AddFeeStructureModalProps) {
-  const [open, setOpen] = useState(false);
+export function EditFeeStructureModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  feeStructure,
+  classes,
+}: EditFeeStructureModalProps) {
   const [loading, setLoading] = useState(false);
-  const [classes, setClasses] = useState<any[]>(initialClasses || []);
-  const { tenant, academicCycle, supabase } = useTenant();
   const params = useParams();
-  const subdomain = (params?.subdomain as string) || tenant?.subdomain || "";
+  const subdomain = params?.subdomain as string;
 
-  // Dynamic session years around current year
   const currentYear = new Date().getFullYear();
   const academicYears = Array.from({ length: 5 }, (_, i) => {
     const start = currentYear - 2 + i;
     return `${start}/${start + 1}`;
   });
-
-  const defaultYear = academicCycle?.academicYear || `${currentYear}/${currentYear + 1}`;
-  if (!academicYears.includes(defaultYear)) {
-    academicYears.push(defaultYear);
-    academicYears.sort();
-  }
-
-  const defaultTerm = String(academicCycle?.currentTerm || 1);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -78,38 +80,28 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
       name: "",
       classId: "",
       amount: "",
-      academicYear: defaultYear,
-      term: defaultTerm,
+      academicYear: `${currentYear}/${currentYear + 1}`,
+      term: "1",
     },
   });
 
-  // When modal opens, sync defaults with active academic cycle
   useEffect(() => {
-    if (open) {
+    if (feeStructure && isOpen) {
       form.reset({
-        name: "",
-        classId: "",
-        amount: "",
-        academicYear: academicCycle?.academicYear || defaultYear,
-        term: String(academicCycle?.currentTerm || 1),
+        name: feeStructure.name,
+        classId: feeStructure.class_id,
+        amount: String(feeStructure.amount),
+        academicYear: feeStructure.academic_year,
+        term: String(feeStructure.term),
       });
-
-      if (!initialClasses && supabase && tenant?.id) {
-        supabase
-          .from("classes")
-          .select("id, name")
-          .order("name")
-          .then(({ data }) => {
-            if (data) setClasses(data);
-          });
-      }
     }
-  }, [open, academicCycle, initialClasses, supabase, tenant?.id, defaultYear]);
+  }, [feeStructure, isOpen, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!feeStructure) return;
     setLoading(true);
     try {
-      const res = await createFeeStructure(subdomain, {
+      const res = await updateFeeStructure(subdomain, feeStructure.id, {
         name: values.name,
         classId: values.classId,
         amount: Number(values.amount),
@@ -122,38 +114,28 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
         return;
       }
 
-      const countMsg = res.count && res.count > 1 
-        ? `Fee structure created for ${res.count} classes!` 
-        : "Fee structure created successfully!";
-      toast.success(countMsg);
-
-      setOpen(false);
-      form.reset();
+      toast.success("Fee structure updated successfully.");
+      onClose();
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || "Failed to create fee structure");
+      toast.error(error.message || "Failed to update fee structure");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="font-bold shadow-lg shadow-primary/20 rounded-2xl h-11 px-5">
-          <Plus className="mr-2 size-4" /> Create Fee Structure
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[520px] rounded-3xl p-7">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px] rounded-3xl p-7">
         <DialogHeader className="space-y-1.5 pb-2">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-xl bg-primary/10 text-primary">
-              <Sparkles className="size-4" />
+              <Edit3 className="size-4" />
             </span>
-            <DialogTitle className="text-xl font-black">Add Fee Structure</DialogTitle>
+            <DialogTitle className="text-xl font-black">Edit Fee Structure</DialogTitle>
           </div>
           <DialogDescription className="text-xs font-medium text-muted-foreground">
-            Define mandatory or optional fees for a specific class or across all classes.
+            Update fee name, amount, or academic term.
           </DialogDescription>
         </DialogHeader>
 
@@ -166,11 +148,7 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fee Title</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="e.g. 1st Term Tuition Fees, PTA Levy, Uniform" 
-                      className="rounded-xl h-11 font-medium bg-muted/30" 
-                      {...field} 
-                    />
+                    <Input className="rounded-xl h-11 font-medium bg-muted/30" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -183,17 +161,14 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
                 name="classId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Class</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Class</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="rounded-xl h-11 font-medium bg-muted/30">
                           <SelectValue placeholder="Select Class" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="rounded-2xl max-h-64">
-                        <SelectItem value="ALL" className="font-bold text-primary flex items-center gap-2">
-                          ✦ All Classes (School-wide)
-                        </SelectItem>
+                      <SelectContent className="rounded-2xl max-h-60">
                         {classes.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.name}
@@ -216,7 +191,6 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
                       <Input 
                         type="number" 
                         min="1"
-                        placeholder="50000" 
                         className="rounded-xl h-11 font-black bg-muted/30" 
                         {...field} 
                       />
@@ -233,14 +207,7 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
                 name="academicYear"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Academic Year</FormLabel>
-                      {academicCycle?.academicYear === field.value && (
-                        <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                          Current
-                        </span>
-                      )}
-                    </div>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Academic Year</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="rounded-xl h-11 font-medium bg-muted/30">
@@ -250,7 +217,7 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
                       <SelectContent className="rounded-2xl">
                         {academicYears.map((yr) => (
                           <SelectItem key={yr} value={yr} className="font-semibold">
-                            {yr} {yr === academicCycle?.academicYear ? "(Active Session)" : ""}
+                            {yr}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -265,14 +232,7 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
                 name="term"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Term</FormLabel>
-                      {String(academicCycle?.currentTerm) === field.value && (
-                        <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                          Active Term
-                        </span>
-                      )}
-                    </div>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Term</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="rounded-xl h-11 font-medium bg-muted/30">
@@ -291,14 +251,23 @@ export function AddFeeStructureModal({ onSuccess, classes: initialClasses }: Add
               />
             </div>
 
-            <DialogFooter className="pt-4 sm:pt-6">
+            <DialogFooter className="pt-4 sm:pt-6 flex gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                disabled={loading}
+                className="flex-1 h-12 rounded-2xl font-bold"
+              >
+                Cancel
+              </Button>
               <Button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full h-12 rounded-2xl font-black text-sm shadow-md"
+                className="flex-1 h-12 rounded-2xl font-black shadow-md"
               >
                 {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Create Fee Structure
+                Save Changes
               </Button>
             </DialogFooter>
           </form>
