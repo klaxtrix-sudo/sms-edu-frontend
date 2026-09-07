@@ -398,78 +398,117 @@ export default function FinanceDashboard() {
       </header>
 
       {/* Bento Metric Grid with Period Scope Toggle */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            <Calendar className="size-3.5" />
-            Financial Overview Scope:
+      <div className="space-y-4">
+        {/* Scope Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-xs">
+              <Calendar className="size-4" />
+            </div>
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-foreground">
+                Financial Overview Scope
+              </h2>
+              <p className="text-[11px] text-muted-foreground font-medium">
+                {periodFilter === "current"
+                  ? `Active Cycle (${academicCycle?.academicYear || "Current"} • Term ${academicCycle?.currentTerm || "1"})`
+                  : "Cumulative All-Time Institutional Records"}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1 text-xs">
+
+          <div className="flex items-center bg-card/90 dark:bg-muted/40 border border-border/80 rounded-2xl p-1 text-xs self-start sm:self-auto shadow-xs backdrop-blur-md">
             <button
+              type="button"
               onClick={() => setPeriodFilter("current")}
               className={cn(
-                "px-3 py-1 rounded-lg font-bold transition-all",
-                periodFilter === "current" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-2",
+                periodFilter === "current"
+                  ? "bg-primary text-white shadow-sm shadow-primary/25"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
+              <span className={cn("size-1.5 rounded-full transition-all", periodFilter === "current" ? "bg-white" : "bg-muted-foreground/40")} />
               Active Cycle ({academicCycle?.academicYear || "Current"})
             </button>
             <button
+              type="button"
               onClick={() => setPeriodFilter("all")}
               className={cn(
-                "px-3 py-1 rounded-lg font-bold transition-all",
-                periodFilter === "all" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-2",
+                periodFilter === "all"
+                  ? "bg-primary text-white shadow-sm shadow-primary/25"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
+              <span className={cn("size-1.5 rounded-full transition-all", periodFilter === "all" ? "bg-white" : "bg-muted-foreground/40")} />
               All Time
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Revenue Card */}
-          <div className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-gradient-to-br from-primary to-blue-700 text-white overflow-hidden relative">
-            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-              <TrendingUp className="size-32" />
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+          {/* Revenue Card (Hero Card) */}
+          <div className="relative rounded-[2rem] p-6 sm:p-7 overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-primary/15 hover:-translate-y-1 bg-gradient-to-br from-blue-600 via-primary to-indigo-700 text-white border border-blue-400/25 flex flex-col justify-between min-h-[185px] shadow-lg shadow-primary/10">
+            {/* Background ambient lighting & watermark */}
+            <div className="absolute -right-6 -bottom-6 opacity-15 group-hover:opacity-25 group-hover:scale-110 transition-all duration-500 pointer-events-none">
+              <TrendingUp className="size-36 stroke-[1.5]" />
             </div>
-            <div className="relative z-10 space-y-4">
-              <div className="size-12 rounded-2xl bg-white/20 p-3 shadow-lg backdrop-blur-md">
-                <Wallet className="size-full text-white" />
+            <div className="absolute top-0 right-0 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-100/90">
+                {periodFilter === "current" ? "Active Cycle Revenue" : "All-Time Revenue"}
+              </span>
+              <div className="size-11 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-md flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                <Wallet className="size-5 text-white" />
               </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-white/70 uppercase tracking-widest">
-                  {periodFilter === "current" ? "Active Cycle Revenue" : "All-Time Revenue"}
-                </span>
-                <div className="text-3xl font-black">{formatNGN(stats.totalRevenue)}</div>
-                <p className="text-[10px] font-bold text-white/60 flex items-center gap-1 uppercase tracking-tighter pt-1">
-                  <ArrowUpRight size={12} /> From {stats.successfulCount} verified payments
-                </p>
+            </div>
+
+            <div className="relative z-10 mt-5 space-y-2.5">
+              <div className="text-2xl sm:text-3xl lg:text-[2rem] font-black tracking-tight leading-none text-white drop-shadow-xs truncate">
+                {formatNGN(stats.totalRevenue)}
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white shadow-xs">
+                <ArrowUpRight className="size-3.5 text-blue-200" />
+                <span>From {stats.successfulCount} verified payment{stats.successfulCount === 1 ? "" : "s"}</span>
               </div>
             </div>
           </div>
 
+          {/* Pending Collections Card */}
           <MetricCard 
             title="Pending Collections" 
             value={formatNGN(stats.pendingAmount)} 
-            subText={`${stats.pendingTransfersCount} bank transfers awaiting review`}
+            badgeText={
+              stats.pendingTransfersCount > 0 
+                ? `${stats.pendingTransfersCount} awaiting bursar review` 
+                : "All bank transfers verified"
+            }
+            badgeVariant={stats.pendingTransfersCount > 0 ? "warning" : "neutral"}
             icon={Clock}
-            color="orange"
+            color="amber"
           />
           
+          {/* Verified Payees Card */}
           <MetricCard 
             title="Verified Payees" 
             value={stats.uniquePayeesCount.toString()} 
-            subText="Unique students who have paid"
+            badgeText="Unique student payers"
+            badgeVariant="neutral"
             icon={Users}
-            color="blue"
+            color="sky"
           />
 
+          {/* Active Fee Items Card */}
           <MetricCard 
             title="Active Fee Items" 
             value={feeStructures.length.toString()} 
-            subText="Configured class fee schedules"
+            badgeText={`${feeStructures.length} configured fee schedule${feeStructures.length === 1 ? "" : "s"}`}
+            badgeVariant="neutral"
             icon={Layers}
-            color="green"
+            color="emerald"
           />
         </div>
       </div>
@@ -1037,31 +1076,76 @@ export default function FinanceDashboard() {
   );
 }
 
-function MetricCard({ title, value, subText, icon: Icon, color }: any) {
-  const colorMap: any = {
-    green: "text-green-500 bg-green-500/10",
-    orange: "text-orange-500 bg-orange-500/10",
-    blue: "text-blue-500 bg-blue-500/10",
-    primary: "text-primary bg-primary/10"
-  };
+interface MetricCardProps {
+  title: string;
+  value: string;
+  badgeText: string;
+  badgeVariant?: "warning" | "neutral" | "success";
+  icon: any;
+  color: "amber" | "sky" | "emerald" | "purple" | "primary";
+}
+
+function MetricCard({ title, value, badgeText, badgeVariant = "neutral", icon: Icon, color }: MetricCardProps) {
+  const colorStyles = {
+    amber: {
+      iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+      accentGlow: "from-amber-500/5 to-transparent",
+      dotColor: "bg-amber-500",
+    },
+    sky: {
+      iconBg: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+      accentGlow: "from-sky-500/5 to-transparent",
+      dotColor: "bg-sky-500",
+    },
+    emerald: {
+      iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+      accentGlow: "from-emerald-500/5 to-transparent",
+      dotColor: "bg-emerald-500",
+    },
+    purple: {
+      iconBg: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+      accentGlow: "from-purple-500/5 to-transparent",
+      dotColor: "bg-purple-500",
+    },
+    primary: {
+      iconBg: "bg-primary/10 text-primary border-primary/20",
+      accentGlow: "from-primary/5 to-transparent",
+      dotColor: "bg-primary",
+    }
+  }[color];
 
   return (
-    <div className="glass-panel border border-white/5 bg-white/5 rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 relative overflow-hidden">
-      <div className="flex flex-row items-center justify-between pb-2">
-        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+    <div className="relative rounded-[2rem] p-6 sm:p-7 bg-card border border-border/80 shadow-xs hover:shadow-lg hover:shadow-black/5 hover:border-border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between min-h-[185px] group overflow-hidden">
+      {/* Subtle corner highlight */}
+      <div className={cn("absolute -top-12 -right-12 size-28 bg-gradient-to-br rounded-full blur-xl pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-500", colorStyles.accentGlow)} />
+
+      <div className="relative z-10 flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
-        <div className={cn("p-2 rounded-xl backdrop-blur-md shadow-sm", colorMap[color] || colorMap.primary)}>
-          <Icon size={18} />
+        <div className={cn("size-11 rounded-2xl border flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-xs", colorStyles.iconBg)}>
+          <Icon className="size-5" />
         </div>
       </div>
-      <div className="mt-4">
-        <div className="text-3xl font-black tabular-nums tracking-tighter">{value}</div>
-        <p className="text-[10px] text-muted-foreground mt-2 font-bold uppercase tracking-tighter opacity-70 leading-relaxed italic">
-          {subText}
-        </p>
+
+      <div className="relative z-10 mt-5 space-y-2.5">
+        <div className="text-2xl sm:text-3xl lg:text-[2rem] font-black tracking-tight leading-none text-foreground tabular-nums truncate">
+          {value}
+        </div>
+        <div className="flex items-center gap-1.5 pt-0.5">
+          {badgeVariant === "warning" ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[11px] font-semibold">
+              <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+              {badgeText}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <span className={cn("size-1.5 rounded-full opacity-60", colorStyles.dotColor)} />
+              {badgeText}
+            </span>
+          )}
+        </div>
       </div>
-      <div className="absolute -bottom-10 -right-10 size-24 bg-white/5 blur-2xl rounded-full" />
     </div>
   );
 }
