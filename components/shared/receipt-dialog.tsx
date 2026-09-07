@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -18,19 +17,12 @@ import {
   CheckCircle2, 
   Receipt, 
   Loader2, 
-  Building2,
-  Calendar,
-  CreditCard,
   User,
   GraduationCap
 } from "lucide-react";
 import { formatNGN } from "@/lib/utils";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import { PaymentReceiptPDF } from "@/components/shared/payment-receipt-template";
-
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  { ssr: false }
-);
 
 export interface ReceiptData {
   reference: string;
@@ -57,6 +49,12 @@ export function ReceiptDialog({
   receipt,
   schoolName = "Klaxtrix Institution",
 }: ReceiptDialogProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   if (!receipt) return null;
 
   const handlePrint = () => {
@@ -163,35 +161,46 @@ export function ReceiptDialog({
             <Printer className="size-4" /> Print
           </Button>
 
-          <PDFDownloadLink
-            document={
-              <PaymentReceiptPDF
-                receipt={{
-                  reference: receipt.reference,
-                  parentName: receipt.parentName,
-                  studentName: receipt.studentName,
-                  admissionNo: receipt.admissionNo,
-                  description: receipt.description,
-                  date: receipt.date,
-                  amount: receipt.amount,
-                }}
-                schoolName={schoolName}
-              />
-            }
-            fileName={`receipt-${receipt.reference}.pdf`}
-            className="flex-1"
-          >
-            {({ loading }: any) => (
-              <Button
-                type="button"
-                disabled={loading}
-                className="w-full h-11 rounded-2xl font-bold gap-2 text-xs bg-primary text-white shadow-md"
-              >
-                {loading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-                Download PDF
-              </Button>
-            )}
-          </PDFDownloadLink>
+          {isMounted ? (
+            <PDFDownloadLink
+              document={
+                <PaymentReceiptPDF
+                  receipt={{
+                    reference: receipt.reference,
+                    parentName: receipt.parentName,
+                    studentName: receipt.studentName,
+                    admissionNo: receipt.admissionNo,
+                    description: receipt.description,
+                    date: receipt.date,
+                    amount: receipt.amount,
+                  }}
+                  schoolName={schoolName}
+                />
+              }
+              fileName={`receipt-${receipt.reference}.pdf`}
+              className="flex-1"
+            >
+              {({ loading }: any) => (
+                <Button
+                  type="button"
+                  disabled={loading}
+                  className="w-full h-11 rounded-2xl font-bold gap-2 text-xs bg-primary text-white shadow-md"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                  Download PDF
+                </Button>
+              )}
+            </PDFDownloadLink>
+          ) : (
+            <Button
+              type="button"
+              disabled
+              className="flex-1 h-11 rounded-2xl font-bold gap-2 text-xs bg-primary text-white shadow-md"
+            >
+              <Loader2 className="size-4 animate-spin" />
+              Preparing PDF...
+            </Button>
+          )}
 
           <Button
             type="button"

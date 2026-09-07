@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,23 +21,14 @@ import {
   AlertCircle,
   Loader2,
   ArrowRight,
-  Phone,
-  Mail,
   CheckCircle2,
   Download,
-  Receipt,
   Clock,
-  Sparkles,
-  Printer,
 } from "lucide-react";
 import { formatNGN, getBackendUrl } from "@/lib/utils";
 import { toast } from "sonner";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import { PaymentReceiptPDF } from "@/components/shared/payment-receipt-template";
-
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  { ssr: false }
-);
 
 declare const PaystackPop: any;
 
@@ -76,6 +65,11 @@ export function FeePaymentModal({
 }: FeePaymentModalProps) {
   const hasPaystack = !!paystackPublicKey;
   const hasBankDetails = !!(schoolBank?.accountNumber && schoolBank?.bankName);
+
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Modal Step: 'checkout' | 'paystack_success' | 'transfer_submitted'
   const [modalStep, setModalStep] = useState<"checkout" | "paystack_success" | "transfer_submitted">("checkout");
@@ -316,31 +310,42 @@ export function FeePaymentModal({
 
             {/* Action Buttons */}
             <div className="space-y-3 pt-2">
-              <PDFDownloadLink
-                document={
-                  <PaymentReceiptPDF
-                    receipt={completedReceipt}
-                    schoolName={schoolName}
-                  />
-                }
-                fileName={`receipt-${completedReceipt.reference}.pdf`}
-                className="w-full"
-              >
-                {({ loading }: any) => (
-                  <Button
-                    type="button"
-                    disabled={loading}
-                    className="w-full h-12 rounded-2xl font-black text-sm gap-2 bg-primary text-white shadow-lg shadow-primary/20"
-                  >
-                    {loading ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Download className="size-4" />
-                    )}
-                    Download Official Receipt (PDF)
-                  </Button>
-                )}
-              </PDFDownloadLink>
+              {isMounted ? (
+                <PDFDownloadLink
+                  document={
+                    <PaymentReceiptPDF
+                      receipt={completedReceipt}
+                      schoolName={schoolName}
+                    />
+                  }
+                  fileName={`receipt-${completedReceipt.reference}.pdf`}
+                  className="w-full"
+                >
+                  {({ loading }: any) => (
+                    <Button
+                      type="button"
+                      disabled={loading}
+                      className="w-full h-12 rounded-2xl font-black text-sm gap-2 bg-primary text-white shadow-lg shadow-primary/20"
+                    >
+                      {loading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Download className="size-4" />
+                      )}
+                      Download Official Receipt (PDF)
+                    </Button>
+                  )}
+                </PDFDownloadLink>
+              ) : (
+                <Button
+                  type="button"
+                  disabled
+                  className="w-full h-12 rounded-2xl font-black text-sm gap-2 bg-primary text-white shadow-lg shadow-primary/20"
+                >
+                  <Loader2 className="size-4 animate-spin" />
+                  Preparing PDF...
+                </Button>
+              )}
 
               <Button
                 type="button"
