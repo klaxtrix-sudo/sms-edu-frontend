@@ -22,6 +22,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { toast } from 'sonner';
 import { getResultMetrics, saveResultMetrics } from '@/app/actions/admin-actions';
+import { HolidayManager } from '@/components/admin/holiday-manager';
 
 export default function AcademicSettings() {
   const params = useParams();
@@ -360,6 +361,9 @@ export default function AcademicSettings() {
           </div>
         </div>
       </div>
+
+      {/* School Holidays & Term Recesses Manager */}
+      <HolidayManager />
 
       {/* Default Grading Metrics Panel */}
       <div className="glass-panel p-8 rounded-[2rem] space-y-8 mt-8">
