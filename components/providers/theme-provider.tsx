@@ -6,10 +6,14 @@ import { usePathname } from 'next/navigation';
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname?.endsWith('/login');
+  
+  // Public marketing, legal, and authentication pages are strictly locked to clean Light Mode.
+  // Dashboard workspaces (/dashboard/*) maintain user-configured dark/light/system themes.
+  const isDashboardRoute = pathname?.includes('/dashboard');
+  const isForcedLight = !isDashboardRoute;
 
   return (
-    <NextThemesProvider {...props} forcedTheme={isAuthPage ? 'light' : undefined}>
+    <NextThemesProvider {...props} forcedTheme={isForcedLight ? 'light' : undefined}>
       {children}
     </NextThemesProvider>
   );

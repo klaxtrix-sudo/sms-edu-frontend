@@ -49,7 +49,13 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
       </head>
       <body className={`${outfit.variable} ${plusJakartaSans.variable} font-sans antialiased text-foreground bg-background`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="system" 
+          enableSystem 
+          disableTransitionOnChange
+          storageKey="klaxtrix_dashboard_theme"
+        >
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>
