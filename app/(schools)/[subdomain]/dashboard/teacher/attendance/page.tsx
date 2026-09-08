@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { 
   Calendar, 
   Users, 
@@ -10,8 +10,14 @@ import {
   AlertCircle,
   Save,
   Loader2,
-  ChevronRight,
-  Search
+  Search,
+  Percent,
+  CheckCheck,
+  RotateCcw,
+  Sun,
+  Coffee,
+  GraduationCap,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -42,35 +48,35 @@ import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAcademicSync } from "@/hooks/use-academic-sync";
-
-type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
+import { getSchoolSessionStatus } from "@/lib/utils/attendance-session";
+import { 
+  AttendanceStudentRow, 
+  type AttendanceStatus 
+} from "@/components/teacher/attendance-student-row";
 
 export default function TeacherAttendancePage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [students, setStudents] = useState<any[]>([]);
-  const [attendance, setAttendance] = useState<Record<string, { status: AttendanceStatus, remarks: string }>>({});
+  const [attendance, setAttendance] = useState<Record<string, { status: AttendanceStatus; remarks: string }>>({});
   const [loading, setLoading] = useState(true);
+  const [rosterLoading, setRosterLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isExistingRecord, setIsExistingRecord] = useState(false);
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  const { supabase, isLoading: isTenantLoading } = useTenant();
+  const { supabase, isLoading: isTenantLoading, academicCycle } = useTenant();
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  useEffect(() => {
-    if (supabase) fetchInitialData(true);
-  }, [supabase]);
+  // Determine instructional session status for the currently selected date
+  const sessionStatus = useMemo(() => {
+    return getSchoolSessionStatus(date, academicCycle);
+  }, [date, academicCycle]);
 
-  // Real-time synchronization: silently refresh class roster and handle selection transitions
-  useAcademicSync(() => {
-    fetchInitialData(false);
-  });
+  const isInstructional = sessionStatus === "IN_SESSION_ACTIVE";
 
-  useEffect(() => {
-    if (supabase && selectedClass) fetchStudents();
-  }, [selectedClass, date, supabase]);
-
-  const fetchInitialData = async (isInitial = true) => {
+  const fetchInitialData = useCallback(async (isInitial = true) => {
     if (!supabase) return;
     if (isInitial) setLoading(true);
     try {
@@ -87,11 +93,9 @@ export default function TeacherAttendancePage() {
       setClasses(newClasses);
 
       setSelectedClass((prevSelected) => {
-        // If current selection is still in the assigned classes, retain it
         if (prevSelected && newClasses.some((c) => c.id === prevSelected)) {
           return prevSelected;
         }
-        // Otherwise default to first available class, or clear if none
         return newClasses.length > 0 ? newClasses[0].id : "";
       });
     } catch (error) {
@@ -99,11 +103,20 @@ export default function TeacherAttendancePage() {
     } finally {
       if (isInitial) setLoading(false);
     }
-  };
+  }, [supabase]);
 
-  const fetchStudents = async () => {
-    if (!supabase) return;
-    setLoading(true);
+  useEffect(() => {
+    if (supabase) fetchInitialData(true);
+  }, [supabase, fetchInitialData]);
+
+  // Real-time synchronization: silently refresh class roster and handle selection transitions
+  useAcademicSync(() => {
+    fetchInitialData(false);
+  });
+
+  const fetchStudents = useCallback(async () => {
+    if (!supabase || !selectedClass) return;
+    setRosterLoading(true);
     try {
       // 1. Fetch Students
       const { data: studentData, error: studentError } = await supabase
@@ -127,14 +140,16 @@ export default function TeacherAttendancePage() {
 
       if (attnError) throw attnError;
 
-      const initialAttendance: Record<string, { status: AttendanceStatus, remarks: string }> = {};
-      
-      // Default all to present if no existing records
-      (studentData || []).forEach(s => {
-        const existing = existingAttendance?.find(a => a.student_id === s.id);
+      const hasExisting = Boolean(existingAttendance && existingAttendance.length > 0);
+      setIsExistingRecord(hasExisting);
+
+      const initialAttendance: Record<string, { status: AttendanceStatus; remarks: string }> = {};
+
+      (studentData || []).forEach((s: any) => {
+        const existing = existingAttendance?.find((a: any) => a.student_id === s.id);
         initialAttendance[s.id] = existing 
           ? { status: existing.status as AttendanceStatus, remarks: existing.remarks || "" }
-          : { status: 'present', remarks: "" };
+          : { status: "present", remarks: "" };
       });
 
       setAttendance(initialAttendance);
@@ -143,26 +158,57 @@ export default function TeacherAttendancePage() {
       const message = error?.message || error?.details || "Error fetching class roster";
       toast.error(message);
     } finally {
-      setLoading(false);
+      setRosterLoading(false);
     }
-  };
+  }, [supabase, selectedClass, date]);
 
-  const updateStatus = (studentId: string, status: AttendanceStatus) => {
-    setAttendance(prev => ({
-      ...prev,
-      [studentId]: { ...prev[studentId], status }
-    }));
-  };
+  useEffect(() => {
+    if (supabase && selectedClass) {
+      fetchStudents();
+    }
+  }, [selectedClass, date, supabase, fetchStudents]);
 
-  const updateRemarks = (studentId: string, remarks: string) => {
-    setAttendance(prev => ({
+  // Isolated callbacks for memoized AttendanceStudentRow
+  const handleStatusChange = useCallback((studentId: string, status: AttendanceStatus) => {
+    setAttendance((prev) => ({
       ...prev,
-      [studentId]: { ...prev[studentId], remarks }
+      [studentId]: {
+        status,
+        remarks: prev[studentId]?.remarks || "",
+      },
     }));
-  };
+  }, []);
+
+  const handleRemarksChange = useCallback((studentId: string, remarks: string) => {
+    setAttendance((prev) => {
+      if (prev[studentId]?.remarks === remarks) return prev;
+      return {
+        ...prev,
+        [studentId]: {
+          status: prev[studentId]?.status || "present",
+          remarks,
+        },
+      };
+    });
+  }, []);
+
+  // 1-Click Batch Action: Mark All Present
+  const handleMarkAllPresent = useCallback(() => {
+    setAttendance((prev) => {
+      const next = { ...prev };
+      students.forEach((s) => {
+        next[s.id] = {
+          status: "present",
+          remarks: next[s.id]?.remarks || "",
+        };
+      });
+      return next;
+    });
+    toast.success("All students marked as Present");
+  }, [students]);
 
   const handleSubmit = async () => {
-    if (!supabase) return;
+    if (!supabase || !isInstructional) return;
     setSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -182,15 +228,22 @@ export default function TeacherAttendancePage() {
         school_id: profile.school_id,
         date,
         status: data.status,
-        remarks: data.remarks
+        remarks: data.remarks,
       }));
 
       const { error } = await supabase
         .from("attendance")
-        .upsert(records, { onConflict: 'student_id,date' });
+        .upsert(records, { onConflict: "student_id,date" });
 
       if (error) throw error;
-      toast.success(`Attendance saved for ${new Date(date).toDateString()}`);
+      setIsExistingRecord(true);
+
+      const formattedDate = new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+      toast.success(`Attendance successfully finalized for ${formattedDate}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to save attendance records");
@@ -199,15 +252,27 @@ export default function TeacherAttendancePage() {
     }
   };
 
-  const filteredStudents = students.filter(s => 
-    s.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.admission_no.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = useMemo(() => {
+    return students.filter((s) => 
+      s.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.admission_no.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [students, searchTerm]);
 
-  const stats = Object.values(attendance).reduce((acc, curr) => {
-    acc[curr.status]++;
-    return acc;
-  }, { present: 0, absent: 0, late: 0, excused: 0 });
+  const stats = useMemo(() => {
+    return Object.values(attendance).reduce(
+      (acc, curr) => {
+        acc[curr.status]++;
+        return acc;
+      },
+      { present: 0, absent: 0, late: 0, excused: 0 }
+    );
+  }, [attendance]);
+
+  const totalStudents = students.length;
+  const attendanceRate = totalStudents > 0
+    ? Math.round(((stats.present + stats.late) / totalStudents) * 100)
+    : 0;
 
   if (isTenantLoading || (loading && classes.length === 0)) {
     return (
@@ -218,12 +283,58 @@ export default function TeacherAttendancePage() {
     );
   }
 
+  // Empty state when teacher has no assigned form classes
+  if (!loading && classes.length === 0) {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
+          <h1 className="text-4xl font-black tracking-tighter text-primary">Student Attendance</h1>
+          <p className="text-muted-foreground text-lg mt-1">Daily presence tracking for your assigned classes.</p>
+        </div>
+        <Card className="border border-border/60 bg-card/50 backdrop-blur-xl rounded-3xl p-12 text-center shadow-xl">
+          <div className="max-w-md mx-auto flex flex-col items-center gap-4">
+            <div className="size-16 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+              <GraduationCap className="size-8 opacity-60" />
+            </div>
+            <h3 className="text-xl font-bold">No Classroom Assigned</h3>
+            <p className="text-sm text-muted-foreground">
+              You are currently not designated as a Class Teacher for any form class. Once school administration assigns you to a classroom, your student roster and attendance roll call will appear here automatically.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const selectedClassName = classes.find((c) => c.id === selectedClass)?.name || "Class";
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tighter text-primary">Student Attendance</h1>
-          <p className="text-muted-foreground text-lg">Daily presence tracking for your assigned classes.</p>
+      {/* 1. Header Toolbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-4xl font-black tracking-tighter text-primary">Student Attendance</h1>
+            {isExistingRecord ? (
+              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+                <CheckCircle className="size-3.5" />
+                <span>Saved Record</span>
+              </Badge>
+            ) : isInstructional ? (
+              <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+                <Clock className="size-3.5" />
+                <span>New Session (Unsaved)</span>
+              </Badge>
+            ) : (
+              <Badge className="bg-muted text-muted-foreground border-border text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+                <Info className="size-3.5" />
+                <span>Non-Instructional Day</span>
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground text-lg">
+            Daily presence tracking and session logs for your assigned classes.
+          </p>
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
@@ -244,10 +355,11 @@ export default function TeacherAttendancePage() {
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Session Date</label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <Input 
                 type="date" 
                 value={date} 
+                max={todayStr}
                 onChange={(e) => setDate(e.target.value)}
                 className="pl-10 w-[180px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold"
               />
@@ -256,28 +368,102 @@ export default function TeacherAttendancePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 2. Strict Guard Banner for Non-Instructional Days */}
+      {sessionStatus === "HOLIDAY_BREAK" && (
+        <div className="flex items-start gap-4 p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200">
+          <Sun className="size-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <div className="space-y-1 text-sm">
+            <div className="font-bold flex items-center gap-2">
+              <span>Academic Term Recess / Holiday Break</span>
+              <Badge variant="outline" className="bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] uppercase font-black">
+                Viewing Mode
+              </Badge>
+            </div>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              The school is currently on term break. Regular attendance recording is paused to prevent skewing academic metrics. You can freely review past session logs by picking an earlier date above.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {sessionStatus === "WEEKEND" && (
+        <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-500/10 border border-slate-500/20 text-slate-900 dark:text-slate-200">
+          <Coffee className="size-5 shrink-0 mt-0.5 text-slate-600 dark:text-slate-400" />
+          <div className="space-y-1 text-sm">
+            <div className="font-bold flex items-center gap-2">
+              <span>Weekend Recess (Non-Instructional Day)</span>
+              <Badge variant="outline" className="bg-slate-500/20 text-slate-800 dark:text-slate-300 border-slate-500/30 text-[10px] uppercase font-black">
+                Viewing Mode
+              </Badge>
+            </div>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Attendance cannot be submitted on Saturdays or Sundays. Select an active school weekday (Monday – Friday) to conduct student roll call.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 3. 5-Metric KPI Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard label="Present" value={stats.present} icon={CheckCircle} color="emerald" />
         <StatCard label="Absent" value={stats.absent} icon={XCircle} color="rose" />
         <StatCard label="Late" value={stats.late} icon={Clock} color="amber" />
         <StatCard label="Excused" value={stats.excused} icon={AlertCircle} color="blue" />
+        <StatCard 
+          label="Attendance Rate" 
+          value={`${attendanceRate}%`} 
+          icon={Percent} 
+          color={attendanceRate >= 90 ? "emerald" : attendanceRate >= 75 ? "amber" : "rose"} 
+        />
       </div>
 
+      {/* 4. Roster Table Card */}
       <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-xl overflow-hidden rounded-3xl">
-        <CardHeader className="border-b border-border/50 bg-muted/30 p-8">
+        <CardHeader className="border-b border-border/50 bg-muted/30 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-black">Class Roster</CardTitle>
-              <CardDescription className="text-base">Mark attendance for each student in {classes.find(c => c.id === selectedClass)?.name}.</CardDescription>
+              <CardDescription className="text-base">
+                Mark attendance for each student in {selectedClassName}. Total enrolled: {totalStudents}.
+              </CardDescription>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search name or ID..." 
-                className="pl-10 w-64 bg-background/50 border-none ring-1 ring-border shadow-inner"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Batch Action Toolbar */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!isInstructional || students.length === 0}
+                onClick={handleMarkAllPresent}
+                className="h-9 px-3 rounded-xl border-border/80 font-bold text-xs gap-1.5 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30"
+                title="Mark all enrolled students as present"
+              >
+                <CheckCheck className="size-3.5" />
+                <span>Mark All Present</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={students.length === 0}
+                onClick={fetchStudents}
+                className="h-9 px-3 rounded-xl font-bold text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                title="Reload saved attendance"
+              >
+                <RotateCcw className="size-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </Button>
+
+              {/* Search Filter */}
+              <div className="relative w-full sm:w-60">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search name or ID..." 
+                  className="pl-10 h-9 bg-background/50 border-none ring-1 ring-border shadow-inner text-xs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -285,13 +471,13 @@ export default function TeacherAttendancePage() {
           <Table>
             <TableHeader className="bg-muted/50 border-b border-border/50">
               <TableRow>
-                <TableHead className="py-5 pl-8 font-black text-sm">Student Information</TableHead>
-                <TableHead className="py-5 font-black text-sm text-center">Status Assignment</TableHead>
-                <TableHead className="py-5 pr-8 font-black text-sm">Notes / Remarks</TableHead>
+                <TableHead className="py-4 pl-6 md:pl-8 font-black text-xs md:text-sm">Student Information</TableHead>
+                <TableHead className="py-4 font-black text-xs md:text-sm text-center">Status Assignment</TableHead>
+                <TableHead className="py-4 pr-6 md:pr-8 font-black text-xs md:text-sm">Notes / Remarks</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {rosterLoading ? (
                 <TableRow>
                   <TableCell colSpan={3} className="py-20">
                     <div className="flex flex-col items-center gap-3">
@@ -303,68 +489,20 @@ export default function TeacherAttendancePage() {
               ) : filteredStudents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="py-20 text-center text-muted-foreground italic">
-                    No students discovered in this classroom.
+                    {students.length === 0 ? "No students discovered in this classroom." : "No matching students found."}
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredStudents.map((s) => (
-                  <TableRow key={s.id} className="hover:bg-accent/30 transition-colors group border-b border-border/30">
-                    <TableCell className="py-6 pl-8">
-                      <div className="flex items-center gap-4">
-                        <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary group-hover:scale-110 transition-transform">
-                          {s.profiles?.full_name?.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-black text-base text-foreground group-hover:text-primary transition-colors">
-                            {s.profiles?.full_name}
-                          </div>
-                          <div className="text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-70">
-                            {s.admission_no}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <StatusButton 
-                          status="present" 
-                          active={attendance[s.id]?.status === 'present'} 
-                          onClick={() => updateStatus(s.id, 'present')} 
-                          label="P"
-                          color="bg-emerald-500"
-                        />
-                        <StatusButton 
-                          status="absent" 
-                          active={attendance[s.id]?.status === 'absent'} 
-                          onClick={() => updateStatus(s.id, 'absent')} 
-                          label="A"
-                          color="bg-rose-500"
-                        />
-                        <StatusButton 
-                          status="late" 
-                          active={attendance[s.id]?.status === 'late'} 
-                          onClick={() => updateStatus(s.id, 'late')} 
-                          label="L"
-                          color="bg-amber-500"
-                        />
-                        <StatusButton 
-                          status="excused" 
-                          active={attendance[s.id]?.status === 'excused'} 
-                          onClick={() => updateStatus(s.id, 'excused')} 
-                          label="E"
-                          color="bg-blue-500"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-6 pr-8">
-                      <Input 
-                        placeholder="Add optional note..." 
-                        value={attendance[s.id]?.remarks || ""} 
-                        onChange={(e) => updateRemarks(s.id, e.target.value)}
-                        className="bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 italic text-sm placeholder:opacity-50"
-                      />
-                    </TableCell>
-                  </TableRow>
+                  <AttendanceStudentRow
+                    key={s.id}
+                    student={s}
+                    status={attendance[s.id]?.status || "present"}
+                    remarks={attendance[s.id]?.remarks || ""}
+                    disabled={!isInstructional}
+                    onStatusChange={handleStatusChange}
+                    onRemarksChange={handleRemarksChange}
+                  />
                 ))
               )}
             </TableBody>
@@ -372,12 +510,29 @@ export default function TeacherAttendancePage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end pt-4 pb-12">
+      {/* 5. Submit Action */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 pb-12">
+        <div className="text-xs text-muted-foreground font-medium">
+          {!isInstructional ? (
+            <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+              <Info className="size-4" />
+              Submission disabled: Selected date is outside active school sessions.
+            </span>
+          ) : isExistingRecord ? (
+            <span>Existing session record found. Re-submitting will update records for {date}.</span>
+          ) : (
+            <span>Ready to finalize roll call for {filteredStudents.length} student(s).</span>
+          )}
+        </div>
+
         <Button 
           size="lg" 
           onClick={handleSubmit} 
-          disabled={submitting || students.length === 0}
-          className="h-14 px-10 rounded-2xl font-black text-lg shadow-xl hover:shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          disabled={submitting || students.length === 0 || !isInstructional}
+          className={cn(
+            "h-14 px-10 rounded-2xl font-black text-base md:text-lg shadow-xl transition-all",
+            isInstructional && "hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+          )}
         >
           {submitting ? (
             <>
@@ -387,7 +542,7 @@ export default function TeacherAttendancePage() {
           ) : (
             <>
               <Save className="mr-3 size-5" />
-              Finalize Attendance
+              {isExistingRecord ? "Update Attendance Record" : "Finalize Attendance"}
             </>
           )}
         </Button>
@@ -396,37 +551,32 @@ export default function TeacherAttendancePage() {
   );
 }
 
-function StatusButton({ active, onClick, label, color }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "size-10 rounded-xl font-black text-sm transition-all duration-300 transform active:scale-90",
-        active 
-          ? cn(color, "text-white shadow-lg scale-110") 
-          : "bg-muted text-muted-foreground hover:bg-muted/80"
-      )}
-    >
-      {label}
-    </button>
-  );
-}
-
-function StatCard({ label, value, icon: Icon, color }: any) {
-  const colors: any = {
+function StatCard({ 
+  label, 
+  value, 
+  icon: Icon, 
+  color 
+}: { 
+  label: string; 
+  value: string | number; 
+  icon: React.ComponentType<{ className?: string }>; 
+  color: "emerald" | "rose" | "amber" | "blue" | "indigo";
+}) {
+  const colors: Record<string, string> = {
     emerald: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
     rose: "text-rose-600 bg-rose-500/10 border-rose-500/20",
     amber: "text-amber-600 bg-amber-500/10 border-amber-500/20",
-    blue: "text-blue-600 bg-blue-500/10 border-blue-500/20"
+    blue: "text-blue-600 bg-blue-500/10 border-blue-500/20",
+    indigo: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20",
   };
 
   return (
-    <div className={cn("p-6 rounded-3xl border flex items-center justify-between backdrop-blur-md shadow-lg", colors[color])}>
+    <div className={cn("p-6 rounded-3xl border flex items-center justify-between backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02]", colors[color])}>
       <div>
         <div className="text-3xl font-black leading-none">{value}</div>
-        <div className="text-xs font-bold uppercase tracking-widest mt-1 opacity-70">{label}</div>
+        <div className="text-xs font-bold uppercase tracking-widest mt-1 opacity-75">{label}</div>
       </div>
-      <Icon className="size-8 opacity-40" />
+      <Icon className="size-8 opacity-40 shrink-0" />
     </div>
   );
 }

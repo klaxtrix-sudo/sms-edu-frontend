@@ -17,7 +17,9 @@ import {
   FileText,
   Bookmark,
   Smartphone,
-  Megaphone
+  Megaphone,
+  Sun,
+  Coffee
 } from "lucide-react";
 import { 
   Card, 
@@ -39,6 +41,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAcademicSync } from "@/hooks/use-academic-sync";
+import { getSchoolSessionStatus, getAttendanceCardConfig } from "@/lib/utils/attendance-session";
 
 export default function TeacherDashboardPage() {
   const { supabase, tenant, academicCycle, isLoading: isTenantLoading } = useTenant();
@@ -243,6 +246,7 @@ export default function TeacherDashboardPage() {
   const currentDay = new Date().getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const isWeekend = currentDay === 0 || currentDay === 6;
   const targetScheduleDay = isWeekend ? 1 : currentDay; // Default to Monday on weekends
+  const todaySessionStatus = getSchoolSessionStatus(new Date(), academicCycle);
 
   const todayPeriods = timetableSlots.filter(
     (slot) => slot.day_of_week === targetScheduleDay
@@ -407,7 +411,7 @@ export default function TeacherDashboardPage() {
                   <Button asChild variant="outline" className="w-full h-11 bg-background hover:bg-accent border border-border text-foreground hover:text-accent-foreground rounded-lg font-semibold text-sm transition-all flex items-center justify-start px-4 gap-3">
                     <Link href="/dashboard/teacher/attendance">
                       <ClipboardCheck className="size-4 text-primary" />
-                      Mark Daily Attendance
+                      {todaySessionStatus === 'IN_SESSION_ACTIVE' ? 'Mark Daily Attendance' : 'Attendance History & Records'}
                     </Link>
                   </Button>
 
@@ -450,45 +454,56 @@ export default function TeacherDashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {formClasses.map((cls) => {
                     const status = attendanceStatus[cls.id] || { marked: false, present: 0, absent: 0 };
+                    const cardConfig = getAttendanceCardConfig(todaySessionStatus, status.marked);
+
                     return (
-                      <Card key={cls.id} className="border border-border/60 shadow-none bg-muted/30 rounded-xl p-5 hover:bg-muted/60 transition-all">
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge className="rounded-lg px-2.5 py-0.5 bg-primary/10 text-primary border-none font-semibold text-xs">
-                            {cls.name}
-                          </Badge>
-                          {status.marked ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 border-none font-medium">
-                              <CheckCircle2 className="size-3 mr-1" /> Marked
+                      <Card key={cls.id} className="border border-border/60 shadow-none bg-muted/30 rounded-xl p-5 hover:bg-muted/60 transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge className="rounded-lg px-2.5 py-0.5 bg-primary/10 text-primary border-none font-semibold text-xs">
+                              {cls.name}
                             </Badge>
+                            <Badge className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-semibold flex items-center gap-1", cardConfig.badgeClass)}>
+                              {cardConfig.status === "HOLIDAY_BREAK" && <Sun className="size-3 mr-0.5" />}
+                              {cardConfig.status === "WEEKEND" && <Coffee className="size-3 mr-0.5" />}
+                              {cardConfig.status === "IN_SESSION_ACTIVE" && status.marked && <CheckCircle2 className="size-3 mr-0.5" />}
+                              {cardConfig.status === "IN_SESSION_ACTIVE" && !status.marked && <AlertCircle className="size-3 mr-0.5" />}
+                              {cardConfig.badgeLabel}
+                            </Badge>
+                          </div>
+                          <h4 className="text-base font-semibold mb-1">Daily Attendance Tracker</h4>
+                          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                            {cardConfig.message}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          {cardConfig.status === "IN_SESSION_ACTIVE" && status.marked ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-2 text-center bg-background p-2.5 rounded-xl border border-border/60">
+                                <div>
+                                  <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Present</span>
+                                  <p className="text-base font-semibold text-emerald-600">{status.present}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Absent</span>
+                                  <p className="text-base font-semibold text-rose-600">{status.absent}</p>
+                                </div>
+                              </div>
+                              <Button asChild variant="outline" size="sm" className="w-full rounded-lg font-semibold text-xs h-9 shadow-sm">
+                                <Link href="/dashboard/teacher/attendance">
+                                  Review / Edit Roster
+                                </Link>
+                              </Button>
+                            </div>
                           ) : (
-                            <Badge className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 border-none font-medium">
-                              <AlertCircle className="size-3 mr-1" /> Pending
-                            </Badge>
+                            <Button asChild variant={cardConfig.buttonVariant} size="sm" className="w-full rounded-lg font-semibold text-xs h-9 shadow-sm">
+                              <Link href="/dashboard/teacher/attendance">
+                                {cardConfig.buttonLabel}
+                              </Link>
+                            </Button>
                           )}
                         </div>
-                        <h4 className="text-base font-semibold mb-1">Daily Attendance Tracker</h4>
-                        <p className="text-xs text-muted-foreground mb-4">
-                          See who was present today.
-                        </p>
-                        
-                        {status.marked ? (
-                          <div className="grid grid-cols-2 gap-2 text-center bg-background p-2.5 rounded-xl border border-border/60">
-                            <div>
-                              <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Present</span>
-                              <p className="text-base font-semibold text-emerald-600">{status.present}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Absent</span>
-                              <p className="text-base font-semibold text-rose-600">{status.absent}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <Button asChild size="sm" className="w-full rounded-lg font-semibold text-xs h-9 shadow-sm">
-                            <Link href="/dashboard/teacher/attendance">
-                              Mark Attendance
-                            </Link>
-                          </Button>
-                        )}
                       </Card>
                     );
                   })}
