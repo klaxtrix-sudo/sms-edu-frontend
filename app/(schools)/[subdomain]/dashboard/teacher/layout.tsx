@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { resolveTenantKeys } from "@/lib/supabase/tenant-resolver";
 import OnboardingGate from "@/components/dashboard/onboarding-gate";
 import { UserStatusGuard } from "@/components/dashboard/user-status-guard";
+import { TeacherRealtimeListener } from "@/components/teacher/teacher-realtime-listener";
 import { redirect } from "next/navigation";
 
 export default async function TeacherLayout({
@@ -58,6 +59,7 @@ export default async function TeacherLayout({
   return (
     <OnboardingGate user={user}>
       <UserStatusGuard userId={user.id} />
+      <TeacherRealtimeListener userId={user.id} />
       <DashboardShell items={teacherNavItems} role="Teacher">
         {children}
       </DashboardShell>

@@ -56,14 +56,30 @@ export async function dispatchInAppNotifications(
 
     for (const n of notifications) {
       try {
-        const channel = client.channel(`user-notifications-${n.userId}`);
-        await channel.subscribe();
-        await channel.send({
+        const notifChannel = client.channel(`user-notifications-${n.userId}`);
+        await notifChannel.subscribe();
+        await notifChannel.send({
           type: 'broadcast',
           event: 'notification',
           payload: n,
         });
-        client.removeChannel(channel);
+        if (n.type === 'academic') {
+          await notifChannel.send({
+            type: 'broadcast',
+            event: 'academic-sync',
+            payload: n,
+          });
+        }
+        client.removeChannel(notifChannel);
+
+        const teacherChannel = client.channel(`teacher-sync-${n.userId}`);
+        await teacherChannel.subscribe();
+        await teacherChannel.send({
+          type: 'broadcast',
+          event: 'academic-sync',
+          payload: n,
+        });
+        client.removeChannel(teacherChannel);
       } catch (realtimeErr: unknown) {
         const message = realtimeErr instanceof Error ? realtimeErr.message : String(realtimeErr);
         console.error("[Notification Dispatcher] Realtime broadcast error:", message);

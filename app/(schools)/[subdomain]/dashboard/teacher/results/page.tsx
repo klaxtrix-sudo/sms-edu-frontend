@@ -50,6 +50,7 @@ import { calculateGrade } from "@/lib/utils";
 import { getResultMetrics, saveResultMetrics, saveResults } from "@/app/actions/admin-actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 interface Metric {
   id?: string;
@@ -267,6 +268,11 @@ export default function TeacherResultsPage() {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  // Real-time synchronization: refresh class and subject assignments
+  useAcademicSync(() => {
+    fetchInitialData();
+  });
 
   useEffect(() => {
     if (selectedClass && selectedSubject) {

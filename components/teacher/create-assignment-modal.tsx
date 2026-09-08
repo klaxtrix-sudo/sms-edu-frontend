@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/utils";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -77,6 +78,11 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
   useEffect(() => {
     if (open) fetchData();
   }, [open]);
+
+  // Real-time synchronization: refresh class options if assignments change
+  useAcademicSync(() => {
+    if (open) fetchData();
+  });
 
   const fetchData = async () => {
     try {

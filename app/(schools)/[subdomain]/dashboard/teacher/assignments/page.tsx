@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CreateAssignmentModal } from "@/components/teacher/create-assignment-modal";
 import { getBackendUrl } from "@/lib/utils";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 export default function TeacherAssignmentsPage() {
   const { supabase, isLoading: isTenantLoading } = useTenant();
@@ -43,6 +44,12 @@ export default function TeacherAssignmentsPage() {
   useEffect(() => {
     if (supabase) fetchInitialData();
   }, [supabase]);
+
+  // Real-time synchronization: silently refresh classes and assignment roster
+  useAcademicSync(() => {
+    fetchInitialData();
+    fetchAssignments(false);
+  });
 
   useEffect(() => {
     if (supabase) fetchAssignments();
@@ -59,24 +66,27 @@ export default function TeacherAssignmentsPage() {
         .select("*")
         .eq("class_teacher_id", user.id);
       
-      setClasses(classData || []);
+      const newClasses = classData || [];
+      setClasses(newClasses);
+
+      setSelectedClass((prev) => {
+        if (prev === "all" || newClasses.some((c) => c.id === prev)) {
+          return prev;
+        }
+        return "all";
+      });
     } catch (error) {
       toast.error("Failed to load classes");
     }
   };
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = async (showLoading = true) => {
     if (!supabase) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // We'll fetch for all classes or a specific one
-      // The backend route is /api/assignments/class/:id, but for now we fetch all and filter in frontend or use a teacher-specific route
-      // For this implementation, we'll fetch for each class or implement a teacher route.
-      // Let's assume we fetch by class since our routes are class-based.
-      
       const targetClasses = selectedClass === "all" ? classes.map(c => c.id) : [selectedClass];
       
       const allAssignments: any[] = [];
@@ -93,7 +103,7 @@ export default function TeacherAssignmentsPage() {
     } catch (error) {
       toast.error("Error loading assignments");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

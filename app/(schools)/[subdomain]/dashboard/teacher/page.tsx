@@ -38,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 export default function TeacherDashboardPage() {
   const { supabase, tenant, academicCycle, isLoading: isTenantLoading } = useTenant();
@@ -58,13 +59,18 @@ export default function TeacherDashboardPage() {
 
   useEffect(() => {
     if (supabase) {
-      fetchDashboardData();
+      fetchDashboardData(true);
     }
   }, [supabase]);
 
-  const fetchDashboardData = async () => {
+  // Real-time synchronization: silently refresh form classes, headcount, and tasks on assignment changes
+  useAcademicSync(() => {
+    fetchDashboardData(false);
+  });
+
+  const fetchDashboardData = async (isInitial = true) => {
     if (!supabase) return;
-    setLoading(true);
+    if (isInitial) setLoading(true);
     try {
       // 1. Get current user session details
       const { data: { session } } = await supabase.auth.getSession();
@@ -229,7 +235,7 @@ export default function TeacherDashboardPage() {
     } catch (error: any) {
       toast.error(error.message || "Failed to load your dashboard.");
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 

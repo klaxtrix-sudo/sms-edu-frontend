@@ -41,6 +41,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 
@@ -57,16 +58,21 @@ export default function TeacherAttendancePage() {
   const { supabase, isLoading: isTenantLoading } = useTenant();
 
   useEffect(() => {
-    if (supabase) fetchInitialData();
+    if (supabase) fetchInitialData(true);
   }, [supabase]);
+
+  // Real-time synchronization: silently refresh class roster and handle selection transitions
+  useAcademicSync(() => {
+    fetchInitialData(false);
+  });
 
   useEffect(() => {
     if (supabase && selectedClass) fetchStudents();
   }, [selectedClass, date, supabase]);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = async (isInitial = true) => {
     if (!supabase) return;
-    setLoading(true);
+    if (isInitial) setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -77,14 +83,21 @@ export default function TeacherAttendancePage() {
         .eq("class_teacher_id", user.id);
 
       if (classError) throw classError;
-      setClasses(classData || []);
-      if (classData && classData.length > 0) {
-        setSelectedClass(classData[0].id);
-      }
+      const newClasses = classData || [];
+      setClasses(newClasses);
+
+      setSelectedClass((prevSelected) => {
+        // If current selection is still in the assigned classes, retain it
+        if (prevSelected && newClasses.some((c) => c.id === prevSelected)) {
+          return prevSelected;
+        }
+        // Otherwise default to first available class, or clear if none
+        return newClasses.length > 0 ? newClasses[0].id : "";
+      });
     } catch (error) {
       toast.error("Failed to load your assigned classes");
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 

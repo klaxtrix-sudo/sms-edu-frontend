@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 const DAYS = [
   { value: 1, label: "Monday" },
@@ -36,6 +37,11 @@ export function TimetableView({ classId, teacherId, title, description }: Timeta
   useEffect(() => {
     if (supabase) fetchTimetable();
   }, [classId, teacherId, supabase]);
+
+  // Real-time synchronization: silently refresh timetable on assignment changes
+  useAcademicSync(() => {
+    if (supabase) fetchTimetable();
+  });
 
   const fetchTimetable = async () => {
     if (!supabase) return;

@@ -45,6 +45,7 @@ import { getBackendUrl } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAcademicSync } from "@/hooks/use-academic-sync";
 
 interface Exam {
   _id: string;
@@ -178,6 +179,13 @@ export default function TeacherExamsPage() {
     fetchExams();
     fetchTimetable();
   }, []);
+
+  // Real-time synchronization: silently refresh lookups and exam list on assignment changes
+  useAcademicSync(() => {
+    fetchLookups();
+    fetchExams();
+    fetchTimetable();
+  });
 
   const handleToggleActive = async (examId: string, currentActive: boolean) => {
     try {

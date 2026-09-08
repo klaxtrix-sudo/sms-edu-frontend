@@ -79,12 +79,20 @@ export function NotificationDrawer() {
 
       channel = supabase.channel(`user-notifications-${session.user.id}`)
         .on('broadcast', { event: 'notification' }, (eventPayload) => {
-          const payload = (eventPayload as { payload?: { title?: string; message?: string; type?: string } })?.payload;
+          const payload = (eventPayload as { payload?: { title?: string; message?: string; type?: string; metadata?: Record<string, unknown> } })?.payload;
           if (payload?.title) {
             toast.info(payload.title, {
               description: payload.message,
             });
           }
+          if (payload?.type === 'academic' || payload?.metadata?.role === 'class_teacher') {
+            window.dispatchEvent(new CustomEvent('klaxtrix:academic-sync', { detail: payload }));
+          }
+          fetchNotifications(false);
+        })
+        .on('broadcast', { event: 'academic-sync' }, (eventPayload) => {
+          const payload = (eventPayload as { payload?: { title?: string; message?: string; type?: string; metadata?: Record<string, unknown> } })?.payload;
+          window.dispatchEvent(new CustomEvent('klaxtrix:academic-sync', { detail: payload }));
           fetchNotifications(false);
         })
         .subscribe();
