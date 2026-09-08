@@ -23,6 +23,7 @@ import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { toast } from 'sonner';
 import { getResultMetrics, saveResultMetrics } from '@/app/actions/admin-actions';
 import { HolidayManager } from '@/components/admin/holiday-manager';
+import { cn } from '@/lib/utils';
 
 export default function AcademicSettings() {
   const params = useParams();
@@ -247,16 +248,16 @@ export default function AcademicSettings() {
 
           {/* Session & Term — top row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="group relative bg-white border border-slate-100 rounded-2xl p-5 space-y-3 transition-all duration-200 hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/5">
+            <div className="group relative bg-card/60 dark:bg-card/40 border border-border/70 rounded-2xl p-5 space-y-3 transition-all duration-200 hover:border-purple-500/30 hover:shadow-md hover:shadow-purple-500/5">
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Current Session</Label>
-                <span className="text-[10px] font-bold text-purple-400 bg-purple-50 px-2 py-0.5 rounded-full">Academic Year</span>
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Current Session</Label>
+                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">Academic Year</span>
               </div>
               <Select value={academicYear} onValueChange={setAcademicYear}>
-                <SelectTrigger className="h-14 bg-slate-50/80 border-slate-200/80 rounded-xl font-bold text-base hover:bg-slate-100/60 transition-colors">
+                <SelectTrigger className="h-14 bg-background/60 border-border/80 rounded-xl font-bold text-base hover:bg-accent/40 transition-colors text-foreground">
                   <SelectValue placeholder="Select Session" />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl border-slate-100">
+                <SelectContent className="rounded-2xl border-border">
                   <SelectItem value="2023/2024">2023/2024</SelectItem>
                   <SelectItem value="2024/2025">2024/2025</SelectItem>
                   <SelectItem value="2025/2026">2025/2026</SelectItem>
@@ -265,16 +266,16 @@ export default function AcademicSettings() {
               </Select>
             </div>
 
-            <div className="group relative bg-white border border-slate-100 rounded-2xl p-5 space-y-3 transition-all duration-200 hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/5">
+            <div className="group relative bg-card/60 dark:bg-card/40 border border-border/70 rounded-2xl p-5 space-y-3 transition-all duration-200 hover:border-purple-500/30 hover:shadow-md hover:shadow-purple-500/5">
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Current Term</Label>
-                <span className="text-[10px] font-bold text-violet-400 bg-violet-50 px-2 py-0.5 rounded-full">Active Period</span>
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Current Term</Label>
+                <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full">Active Period</span>
               </div>
               <Select value={currentTerm} onValueChange={setCurrentTerm}>
-                <SelectTrigger className="h-14 bg-slate-50/80 border-slate-200/80 rounded-xl font-bold text-base hover:bg-slate-100/60 transition-colors">
+                <SelectTrigger className="h-14 bg-background/60 border-border/80 rounded-xl font-bold text-base hover:bg-accent/40 transition-colors text-foreground">
                   <SelectValue placeholder="Select Term" />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl border-slate-100">
+                <SelectContent className="rounded-2xl border-border">
                   <SelectItem value="1">1st Term</SelectItem>
                   <SelectItem value="2">2nd Term</SelectItem>
                   <SelectItem value="3">3rd Term</SelectItem>
@@ -284,14 +285,14 @@ export default function AcademicSettings() {
           </div>
 
           {/* Term Dates — styled card */}
-          <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-100 rounded-2xl p-6">
+          <div className="bg-card/40 dark:bg-card/20 border border-border/70 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-purple-400 to-violet-500" />
-              <span className="text-xs font-black uppercase tracking-[0.15em] text-slate-500">Term Duration</span>
+              <span className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground">Term Duration</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 px-1 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground px-1 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   Starts
                 </Label>
@@ -299,11 +300,11 @@ export default function AcademicSettings() {
                   type="date"
                   value={termBegins}
                   onChange={(e) => setTermBegins(e.target.value)}
-                  className="h-14 bg-white border-slate-200 rounded-xl font-bold text-base focus:ring-purple-500 focus:border-purple-300 transition-all hover:border-slate-300"
+                  className="h-14 bg-background/60 border-border/80 rounded-xl font-bold text-base text-foreground focus:ring-purple-500 focus:border-purple-500/50 transition-all hover:border-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 px-1 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground px-1 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-rose-400" />
                   Ends
                 </Label>
@@ -311,7 +312,7 @@ export default function AcademicSettings() {
                   type="date"
                   value={termEnds}
                   onChange={(e) => setTermEnds(e.target.value)}
-                  className="h-14 bg-white border-slate-200 rounded-xl font-bold text-base focus:ring-purple-500 focus:border-purple-300 transition-all hover:border-slate-300"
+                  className="h-14 bg-background/60 border-border/80 rounded-xl font-bold text-base text-foreground focus:ring-purple-500 focus:border-purple-500/50 transition-all hover:border-border"
                 />
               </div>
             </div>
@@ -319,29 +320,28 @@ export default function AcademicSettings() {
 
           {/* Live status strip */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 border border-purple-100">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300">
               <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-              <span className="text-xs font-bold text-purple-700">{academicYear}</span>
+              <span className="text-xs font-bold">{academicYear}</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-50 border border-violet-100">
-              <span className="text-xs font-bold text-violet-700">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-700 dark:text-violet-300">
+              <span className="text-xs font-bold">
                 {currentTerm === '1' ? '1st Term' : currentTerm === '2' ? '2nd Term' : '3rd Term'}
               </span>
             </div>
-            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border ${
+            <div className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl border",
               weekPreview.startsWith('Week') 
-                ? 'bg-emerald-50 border-emerald-100' 
-                : 'bg-slate-50 border-slate-100'
-            }`}>
-              <span className={`text-xs font-bold ${
-                weekPreview.startsWith('Week') ? 'text-emerald-700' : 'text-slate-500'
-              }`}>
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300' 
+                : 'bg-muted/60 border-border text-muted-foreground'
+            )}>
+              <span className="text-xs font-bold">
                 {weekPreview.startsWith('Week') ? `📍 ${weekPreview}` : `🏖️ ${weekPreview}`}
               </span>
             </div>
             {termBegins && termEnds && (
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-xs font-medium text-slate-500">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/60 border border-border text-muted-foreground">
+                <span className="text-xs font-medium">
                   {Math.ceil((new Date(termEnds).getTime() - new Date(termBegins).getTime()) / (1000 * 60 * 60 * 24 * 7))} weeks total
                 </span>
               </div>
@@ -349,13 +349,13 @@ export default function AcademicSettings() {
           </div>
 
           {/* Warning banner */}
-          <div className="relative bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-200/60 p-5 rounded-2xl flex gap-4 items-start overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-400 rounded-r" />
-            <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 ml-2 shrink-0" />
+          <div className="relative bg-amber-500/10 border border-amber-500/20 p-5 rounded-2xl flex gap-4 items-start overflow-hidden text-amber-900 dark:text-amber-200">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500 rounded-r" />
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 ml-2 shrink-0" />
             <div className="space-y-0.5">
-              <p className="text-xs font-black text-amber-800 uppercase tracking-wider">Important Notice</p>
-              <p className="text-sm text-amber-700/80 font-medium leading-relaxed">
-                Changing the session or term affects GPA and report cards for all classes. Make sure last term's results are done before you change this.
+              <p className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider">Important Notice</p>
+              <p className="text-sm text-amber-800/90 dark:text-amber-200/80 font-medium leading-relaxed">
+                Changing the session or term affects GPA and report cards for all classes. Make sure last term's results are finalized before you change this.
               </p>
             </div>
           </div>
@@ -413,18 +413,18 @@ export default function AcademicSettings() {
           <div className="space-y-6 animate-fade-in">
             <div className="space-y-4 max-w-3xl">
               {metrics.map((m, idx) => (
-                <div key={idx} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div key={idx} className="flex items-center gap-4 bg-card/60 dark:bg-card/40 p-4 rounded-2xl border border-border">
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-slate-400 font-bold uppercase px-1">Component Name</Label>
+                    <Label className="text-xs text-muted-foreground font-bold uppercase px-1">Component Name</Label>
                     <Input 
                       placeholder="e.g. First Test" 
                       value={m.name} 
                       onChange={(e) => handleMetricChange(idx, 'name', e.target.value)}
-                      className="h-12 bg-white rounded-xl font-bold"
+                      className="h-12 bg-background border-border rounded-xl font-bold text-foreground"
                     />
                   </div>
                   <div className="w-32 space-y-1">
-                    <Label className="text-xs text-slate-400 font-bold uppercase px-1">Weight (%)</Label>
+                    <Label className="text-xs text-muted-foreground font-bold uppercase px-1">Weight (%)</Label>
                     <div className="relative">
                       <Input 
                         type="number" 
@@ -432,9 +432,9 @@ export default function AcademicSettings() {
                         max="100" 
                         value={m.weight || ''} 
                         onChange={(e) => handleMetricChange(idx, 'weight', e.target.value === '' ? 0 : parseInt(e.target.value))}
-                        className="h-12 bg-white rounded-xl font-bold pr-8"
+                        className="h-12 bg-background border-border rounded-xl font-bold pr-8 text-foreground"
                       />
-                      <Percent className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Percent className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </div>
                   <Button 
@@ -451,16 +451,16 @@ export default function AcademicSettings() {
               <Button 
                 variant="outline" 
                 onClick={handleAddMetric} 
-                className="h-12 w-full rounded-xl border-dashed border-slate-300 font-bold text-slate-600 bg-white hover:bg-slate-50"
+                className="h-12 w-full rounded-xl border-dashed border-border font-bold text-muted-foreground hover:text-foreground bg-background/50 hover:bg-accent/40"
               >
                 <Plus className="w-4 h-4 mr-2" /> Add Assessment Component
               </Button>
             </div>
 
-            <div className="flex items-center justify-between border-t pt-6">
+            <div className="flex items-center justify-between border-t border-border pt-6">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-500">Total Weight:</span>
-                <Badge className={totalWeight === 100 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}>
+                <span className="text-sm font-semibold text-muted-foreground">Total Weight:</span>
+                <Badge className={totalWeight === 100 ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30" : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30"}>
                   {totalWeight} / 100
                 </Badge>
               </div>
@@ -475,38 +475,34 @@ export default function AcademicSettings() {
               <>
                 {/* Header row */}
                 <div className="grid grid-cols-12 items-center px-5 py-2">
-                  <span className="col-span-1 text-[10px] font-black uppercase tracking-widest text-slate-300">#</span>
-                  <span className="col-span-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Component</span>
-                  <span className="col-span-4 text-[10px] font-black uppercase tracking-widest text-slate-300">Distribution</span>
-                  <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-slate-300 text-right">Weight</span>
+                  <span className="col-span-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">#</span>
+                  <span className="col-span-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Component</span>
+                  <span className="col-span-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Distribution</span>
+                  <span className="col-span-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Weight</span>
                 </div>
 
                 {/* Metric rows */}
                 {metrics.map((m, idx) => (
                   <div 
                     key={idx} 
-                    className={`group grid grid-cols-12 items-center px-5 py-4 rounded-2xl border transition-all duration-200 hover:shadow-md hover:border-indigo-200 hover:bg-indigo-50/30 ${
-                      idx % 2 === 0 
-                        ? 'bg-white border-slate-100' 
-                        : 'bg-slate-50/60 border-slate-100'
-                    }`}
+                    className="group grid grid-cols-12 items-center px-5 py-4 rounded-2xl border border-border/70 bg-card/60 dark:bg-card/40 hover:bg-accent/40 hover:border-indigo-500/40 transition-all duration-200 shadow-xs"
                   >
                     {/* Number */}
                     <div className="col-span-1">
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-indigo-100 text-xs font-extrabold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-muted border border-border/60 text-xs font-extrabold text-muted-foreground group-hover:text-primary group-hover:border-primary/40 transition-colors">
                         {idx + 1}
                       </span>
                     </div>
 
                     {/* Name */}
                     <div className="col-span-5 flex items-center gap-3">
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" />
-                      <span className="font-bold text-slate-800 text-sm group-hover:text-indigo-900 transition-colors">{m.name}</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-indigo-400 transition-colors" />
+                      <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">{m.name}</span>
                     </div>
 
                     {/* Visual bar */}
                     <div className="col-span-4 pr-6">
-                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden group-hover:bg-indigo-100/60 transition-colors">
+                      <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden border border-border/40">
                         <div 
                           className="h-full rounded-full transition-all duration-500 ease-out"
                           style={{ 
@@ -523,22 +519,22 @@ export default function AcademicSettings() {
 
                     {/* Weight badge */}
                     <div className="col-span-2 flex justify-end">
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 border border-indigo-100 group-hover:border-indigo-200 transition-colors">
-                        <span className="text-sm font-extrabold text-indigo-700">{m.weight}</span>
-                        <span className="text-xs font-bold text-indigo-400">%</span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
+                        <span className="text-sm font-extrabold">{m.weight}</span>
+                        <span className="text-xs font-bold opacity-70">%</span>
                       </span>
                     </div>
                   </div>
                 ))}
 
                 {/* Total summary */}
-                <div className="grid grid-cols-12 items-center px-5 py-4 mt-2 rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100">
+                <div className="grid grid-cols-12 items-center px-5 py-4 mt-2 rounded-2xl bg-card/80 dark:bg-card/60 border border-border shadow-xs">
                   <div className="col-span-1" />
                   <div className="col-span-5">
-                    <span className="text-xs font-black uppercase tracking-widest text-indigo-500">Total Weight</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-primary">Total Weight</span>
                   </div>
                   <div className="col-span-4 pr-6">
-                    <div className="w-full h-2.5 bg-indigo-100 rounded-full overflow-hidden">
+                    <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden border border-border/40">
                       <div 
                         className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{ 
@@ -551,12 +547,13 @@ export default function AcademicSettings() {
                     </div>
                   </div>
                   <div className="col-span-2 flex justify-end">
-                    <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border font-extrabold text-sm ${
+                    <span className={cn(
+                      "inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border font-extrabold text-sm",
                       totalWeight === 100 
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                        : 'bg-rose-50 border-rose-200 text-rose-700'
-                    }`}>
-                      {totalWeight}<span className="text-xs font-bold opacity-60">%</span>
+                        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' 
+                        : 'bg-rose-500/15 border-rose-500/30 text-rose-700 dark:text-rose-300'
+                    )}>
+                      {totalWeight}<span className="text-xs font-bold opacity-70">%</span>
                     </span>
                   </div>
                 </div>
@@ -564,10 +561,10 @@ export default function AcademicSettings() {
             )}
 
             {metrics.length === 0 && (
-              <div className="text-center py-12 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
-                <Award className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 font-semibold text-sm">No custom weights set</p>
-                <p className="text-slate-400 text-xs mt-1">The defaults (Tests, Assignment, Exam) are in use.</p>
+              <div className="text-center py-12 rounded-2xl border border-dashed border-border/80 bg-muted/20">
+                <Award className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+                <p className="text-foreground font-semibold text-sm">No custom weights set</p>
+                <p className="text-muted-foreground text-xs mt-1">The defaults (Tests, Assignment, Exam) are in use.</p>
               </div>
             )}
           </div>
