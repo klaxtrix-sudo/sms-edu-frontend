@@ -167,8 +167,8 @@ export default function AcademicsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-        <p className="text-slate-400 font-medium text-sm animate-pulse">Loading academics dashboard...</p>
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 dark:text-indigo-400" />
+        <p className="text-muted-foreground font-medium text-sm animate-pulse">Loading academics dashboard...</p>
       </div>
     );
   }
@@ -230,48 +230,48 @@ export default function AcademicsPage() {
       {/* Dynamic Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Classes Card */}
-        <div className="relative overflow-hidden group bg-gradient-to-br from-indigo-50/40 via-white to-white border border-slate-100 hover:border-indigo-100 rounded-[2rem] p-6 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-100/20 rounded-bl-[4rem] transition-all duration-300 group-hover:scale-110" />
+        <div className="relative overflow-hidden group bg-card border border-border/80 hover:border-indigo-500/40 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-bl-[4rem] transition-all duration-300 group-hover:scale-110 pointer-events-none" />
           <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-indigo-50 border border-indigo-100/50 flex items-center justify-center text-indigo-600 shadow-sm shadow-indigo-100">
+            <div className="size-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Total Classes</p>
-              <h3 className="text-3xl font-black text-slate-800 mt-1 tracking-tight">{classes.length}</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Total Classes</p>
+              <h3 className="text-3xl font-black text-foreground mt-1 tracking-tight">{classes.length}</h3>
             </div>
           </div>
         </div>
 
         {/* Total Subjects Card */}
-        <div className="relative overflow-hidden group bg-gradient-to-br from-emerald-50/40 via-white to-white border border-slate-100 hover:border-emerald-100 rounded-[2rem] p-6 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-0.5">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/20 rounded-bl-[4rem] transition-all duration-300 group-hover:scale-110" />
+        <div className="relative overflow-hidden group bg-card border border-border/80 hover:border-emerald-500/40 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-0.5">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-[4rem] transition-all duration-300 group-hover:scale-110 pointer-events-none" />
           <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-emerald-50 border border-emerald-100/50 flex items-center justify-center text-emerald-600 shadow-sm shadow-emerald-100">
+            <div className="size-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Total Subjects</p>
-              <h3 className="text-3xl font-black text-slate-800 mt-1 tracking-tight">{subjects.length}</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Total Subjects</p>
+              <h3 className="text-3xl font-black text-foreground mt-1 tracking-tight">{subjects.length}</h3>
             </div>
           </div>
         </div>
 
         {/* Unassigned Classes Card */}
-        <div className="relative overflow-hidden group bg-gradient-to-br from-amber-50/40 via-white to-white border border-slate-100 hover:border-amber-100 rounded-[2rem] p-6 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 hover:-translate-y-0.5">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100/20 rounded-bl-[4rem] transition-all duration-300 group-hover:scale-110" />
+        <div className="relative overflow-hidden group bg-card border border-border/80 hover:border-amber-500/40 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-0.5">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[4rem] transition-all duration-300 group-hover:scale-110 pointer-events-none" />
           <div className="flex items-center gap-4">
-            <div className={`size-12 rounded-2xl flex items-center justify-center shadow-sm ${
+            <div className={`size-12 rounded-xl flex items-center justify-center shadow-sm ${
               unassignedClassesCount > 0 
-                ? "bg-amber-50 border border-amber-200 text-amber-600 shadow-amber-100" 
-                : "bg-slate-50 border border-slate-200 text-slate-400"
+                ? "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400" 
+                : "bg-muted border border-border text-muted-foreground"
             }`}>
               <AlertCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Unassigned Classes</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Unassigned Classes</p>
               <h3 className={`text-3xl font-black mt-1 tracking-tight ${
-                unassignedClassesCount > 0 ? "text-amber-600" : "text-slate-800"
+                unassignedClassesCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"
               }`}>{unassignedClassesCount}</h3>
             </div>
           </div>
@@ -334,18 +334,18 @@ export default function AcademicsPage() {
         {/* Global Instant Search & Quick Filter Toolbar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={activeTab === "classes" ? "Search classes or class teachers..." : "Search subjects or subject codes..."}
-              className="pl-10 pr-9 h-11 rounded-xl bg-white border-slate-200/80 shadow-sm focus-visible:ring-indigo-500 text-sm font-medium"
+              className="pl-10 pr-9 h-11 rounded-xl bg-card border-border/80 text-foreground placeholder:text-muted-foreground shadow-sm focus-visible:ring-indigo-500 text-sm font-medium"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-md"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-md"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -362,8 +362,8 @@ export default function AcademicsPage() {
                 className={cn(
                   "rounded-xl text-xs font-bold h-9 px-3.5",
                   classTeacherFilter === "all" 
-                    ? "bg-slate-900 text-white hover:bg-slate-800" 
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 All ({classes.length})
@@ -375,8 +375,8 @@ export default function AcademicsPage() {
                 className={cn(
                   "rounded-xl text-xs font-bold h-9 px-3.5",
                   classTeacherFilter === "assigned" 
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700" 
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 Assigned ({classes.length - unassignedClassesCount})
@@ -388,8 +388,8 @@ export default function AcademicsPage() {
                 className={cn(
                   "rounded-xl text-xs font-bold h-9 px-3.5",
                   classTeacherFilter === "unassigned" 
-                    ? "bg-amber-600 text-white hover:bg-amber-700" 
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 Unassigned ({unassignedClassesCount})
@@ -409,16 +409,16 @@ export default function AcademicsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center justify-center text-center py-24 px-4 rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/40"
+                className="flex flex-col items-center justify-center text-center py-24 px-4 rounded-2xl border-2 border-dashed border-border/80 bg-card/40"
               >
-                <div className="size-16 rounded-3xl bg-indigo-50 border border-indigo-100/50 flex items-center justify-center text-indigo-500 mb-4 shadow-sm">
+                <div className="size-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-sm">
                   <Users className="w-7 h-7" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800">No classes yet</h3>
-                <p className="text-slate-400 text-sm max-w-sm mt-1">Add your classes and grade levels so you can start enrolling students.</p>
+                <h3 className="text-lg font-black text-foreground">No classes yet</h3>
+                <p className="text-muted-foreground text-sm max-w-sm mt-1">Add your classes and grade levels so you can start enrolling students.</p>
                 <Button 
                   onClick={() => setIsClassModalOpen(true)}
-                  className="mt-6 bg-white hover:bg-slate-50 text-indigo-600 border border-slate-200 shadow-sm font-extrabold rounded-xl px-5 h-11"
+                  className="mt-6 bg-card hover:bg-muted text-indigo-600 dark:text-indigo-400 border border-border shadow-sm font-extrabold rounded-xl px-5 h-11"
                 >
                   <Plus className="mr-2 w-4 h-4" />
                   Add First Class
@@ -429,16 +429,16 @@ export default function AcademicsPage() {
                 key="no-matches-classes"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="py-16 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50"
+                className="py-16 text-center rounded-2xl border border-dashed border-border/80 bg-card/40"
               >
-                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <h4 className="text-sm font-bold text-slate-700">No matching classes found</h4>
-                <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or filter.</p>
+                <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-foreground">No matching classes found</h4>
+                <p className="text-xs text-muted-foreground mt-1">Try adjusting your search query or filter.</p>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => { setSearchQuery(""); setClassTeacherFilter("all"); }}
-                  className="mt-3 text-xs font-bold text-indigo-600"
+                  className="mt-3 text-xs font-bold text-indigo-600 dark:text-indigo-400"
                 >
                   Clear Filters
                 </Button>
@@ -450,21 +450,21 @@ export default function AcademicsPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="bg-white border border-slate-200/80 rounded-3xl shadow-sm overflow-hidden"
+                className="bg-card border border-border/80 rounded-2xl shadow-sm overflow-hidden"
               >
                 <Table>
-                  <TableHeader className="bg-slate-50/70 border-b border-slate-100">
+                  <TableHeader className="bg-muted/30 border-b border-border/80">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 pl-6">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4 pl-6">
                         Class Name
                       </TableHead>
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4">
                         Class Teacher
                       </TableHead>
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4">
                         Subjects Offered
                       </TableHead>
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 text-right pr-6">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4 text-right pr-6">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -475,7 +475,7 @@ export default function AcademicsPage() {
                       return (
                         <TableRow 
                           key={cls.id} 
-                          className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80 group"
+                          className="hover:bg-muted/30 transition-colors border-b border-border/60 group"
                         >
                           {/* Class Name */}
                           <TableCell className="py-4 pl-6 font-bold">
@@ -525,21 +525,21 @@ export default function AcademicsPage() {
                                   }
                                 }}
                               >
-                                <SelectTrigger className="h-8 px-2 bg-transparent hover:bg-slate-100/70 border border-transparent hover:border-slate-200 rounded-lg transition-all text-xs font-bold focus:ring-0 w-auto min-w-[140px]">
+                                <SelectTrigger className="h-8 px-2 bg-transparent hover:bg-muted/60 border border-transparent hover:border-border/80 rounded-lg transition-all text-xs font-bold focus:ring-0 w-auto min-w-[140px]">
                                   <SelectValue placeholder="Assign teacher...">
                                     {cls.profiles?.full_name ? (
                                       <div className="flex items-center gap-2">
                                         <div className="size-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-extrabold text-[10px] shadow-sm shadow-indigo-500/10 shrink-0">
                                           {cls.profiles.full_name.charAt(0)}
                                         </div>
-                                        <span className="text-xs font-bold text-slate-800 truncate">
+                                        <span className="text-xs font-bold text-foreground truncate">
                                           {cls.profiles.full_name}
                                         </span>
                                       </div>
                                     ) : (
                                       <Badge 
                                         variant="outline" 
-                                        className="bg-amber-50 text-amber-700 border-amber-200/80 font-bold text-[10px] px-2 py-0.5 rounded-lg inline-flex items-center gap-1 cursor-pointer hover:bg-amber-100/70 transition-colors"
+                                        className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold text-[10px] px-2 py-0.5 rounded-lg inline-flex items-center gap-1 cursor-pointer hover:bg-amber-500/20 transition-colors"
                                       >
                                         <AlertCircle className="w-3 h-3 text-amber-500" />
                                         Unassigned
@@ -547,8 +547,8 @@ export default function AcademicsPage() {
                                     )}
                                   </SelectValue>
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-[260px]">
-                                  <SelectItem value="none" className="text-xs font-bold text-slate-500">
+                                <SelectContent className="rounded-xl border-border bg-popover text-popover-foreground shadow-xl max-h-[260px]">
+                                  <SelectItem value="none" className="text-xs font-bold text-muted-foreground">
                                     Unassigned
                                   </SelectItem>
                                   {teachers.map((t) => (
@@ -566,7 +566,7 @@ export default function AcademicsPage() {
                             <div className="flex items-center gap-2">
                               <Badge 
                                 variant="secondary" 
-                                className="bg-indigo-50 text-indigo-700 border-none font-extrabold text-xs rounded-lg px-2.5 py-1"
+                                className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none font-extrabold text-xs rounded-lg px-2.5 py-1"
                               >
                                 {subjectCount} {subjectCount === 1 ? "Subject" : "Subjects"}
                               </Badge>
@@ -577,7 +577,7 @@ export default function AcademicsPage() {
                                 }}
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50/80 rounded-lg px-2.5"
+                                className="h-7 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg px-2.5"
                               >
                                 Manage
                               </Button>
@@ -598,7 +598,7 @@ export default function AcademicsPage() {
                                 }}
                                 variant="ghost" 
                                 size="icon" 
-                                className="size-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 transition-all"
+                                className="size-8 rounded-lg hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 text-muted-foreground transition-all"
                                 title="Edit Class"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
@@ -609,12 +609,12 @@ export default function AcademicsPage() {
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="size-8 rounded-lg hover:bg-slate-100 text-slate-500 transition-all"
+                                    className="size-8 rounded-lg hover:bg-muted text-muted-foreground transition-all"
                                   >
                                     <MoreHorizontal className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                                <DropdownMenuContent align="end" className="w-44 rounded-xl border-border bg-popover text-popover-foreground">
                                   <DropdownMenuItem 
                                     onClick={() => {
                                       setSelectedClassForSubjects({ id: cls.id, name: cls.name });
@@ -622,7 +622,7 @@ export default function AcademicsPage() {
                                     }}
                                     className="text-xs font-bold gap-2 cursor-pointer"
                                   >
-                                    <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+                                    <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                                     Manage Subjects
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
@@ -636,7 +636,7 @@ export default function AcademicsPage() {
                                     }}
                                     className="text-xs font-bold gap-2 cursor-pointer"
                                   >
-                                    <Edit2 className="w-3.5 h-3.5 text-slate-600" />
+                                    <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
                                     Edit Class
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
@@ -648,7 +648,7 @@ export default function AcademicsPage() {
                                       });
                                       setIsDeleteClassModalOpen(true);
                                     }}
-                                    className="text-xs font-bold text-rose-600 gap-2 cursor-pointer focus:bg-rose-50 focus:text-rose-700"
+                                    className="text-xs font-bold text-rose-600 dark:text-rose-400 gap-2 cursor-pointer focus:bg-rose-500/10 focus:text-rose-600"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     Delete Class
@@ -675,13 +675,13 @@ export default function AcademicsPage() {
                 {filteredClasses.map((cls) => (
                   <div 
                     key={cls.id} 
-                    className="relative overflow-hidden group bg-white border border-slate-100 hover:border-indigo-100/70 rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between min-h-[190px]"
+                    className="relative overflow-hidden group bg-card border border-border/80 hover:border-indigo-500/40 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between min-h-[190px]"
                   >
-                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-indigo-50/0 to-indigo-50/20 group-hover:to-indigo-50/70 rounded-full blur-xl transition-all duration-300 pointer-events-none" />
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-indigo-500/0 to-indigo-500/10 group-hover:to-indigo-500/20 rounded-full blur-xl transition-all duration-300 pointer-events-none" />
                     
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
+                        <h3 className="text-2xl font-black text-foreground tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                           {cls.name}
                         </h3>
                         <div className="flex gap-1 shrink-0">
@@ -696,7 +696,7 @@ export default function AcademicsPage() {
                             }}
                             variant="ghost" 
                             size="icon" 
-                            className="size-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all text-slate-400 hover:text-indigo-600"
+                            className="size-8 rounded-lg hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all text-muted-foreground"
                             title="Edit Class"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -711,7 +711,7 @@ export default function AcademicsPage() {
                             }}
                             variant="ghost" 
                             size="icon" 
-                            className="size-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                            className="size-8 rounded-lg text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
                             title="Delete Class"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -720,7 +720,7 @@ export default function AcademicsPage() {
                       </div>
                       
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px] rounded-lg">
+                        <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none font-bold text-[10px] rounded-lg">
                           {classAssignments.filter((a) => a.class_id === cls.id).length} Subjects
                         </Badge>
                         <Button 
@@ -729,28 +729,28 @@ export default function AcademicsPage() {
                             setIsSubjectTeacherModalOpen(true);
                           }}
                           variant="ghost" 
-                          className="h-7 text-[10px] font-black uppercase tracking-wider px-3 rounded-lg border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/50 hover:text-indigo-600 transition-all flex items-center gap-1.5"
+                          className="h-7 text-[10px] font-black uppercase tracking-wider px-3 rounded-lg border border-border hover:border-indigo-500/30 hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center gap-1.5 text-muted-foreground"
                         >
                           Manage Subjects
                         </Button>
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-slate-50 mt-6 flex items-center justify-between">
+                    <div className="pt-6 border-t border-border/60 mt-6 flex items-center justify-between">
                       {cls.profiles?.full_name ? (
                         <div className="flex items-center gap-2.5">
                           <div className="size-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-extrabold text-xs shadow-md shadow-indigo-500/10">
                             {cls.profiles.full_name.charAt(0)}
                           </div>
                           <div className="text-left">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Class Teacher</p>
-                            <p className="text-xs font-bold text-slate-700 leading-tight">{cls.profiles.full_name}</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Class Teacher</p>
+                            <p className="text-xs font-bold text-foreground leading-tight">{cls.profiles.full_name}</p>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50/60 border border-amber-100/40">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
                           <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Unassigned</span>
+                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Unassigned</span>
                         </div>
                       )}
                     </div>
@@ -772,16 +772,16 @@ export default function AcademicsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center justify-center text-center py-24 px-4 rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/40"
+                className="flex flex-col items-center justify-center text-center py-24 px-4 rounded-2xl border-2 border-dashed border-border/80 bg-card/40"
               >
-                <div className="size-16 rounded-3xl bg-emerald-50 border border-emerald-100/50 flex items-center justify-center text-emerald-500 mb-4 shadow-sm">
+                <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4 shadow-sm">
                   <BookOpen className="w-7 h-7" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800">No subjects yet</h3>
-                <p className="text-slate-400 text-sm max-w-sm mt-1">Add the subjects your school offers.</p>
+                <h3 className="text-lg font-black text-foreground">No subjects yet</h3>
+                <p className="text-muted-foreground text-sm max-w-sm mt-1">Add the subjects your school offers.</p>
                 <Button 
                   onClick={() => setIsSubjectModalOpen(true)}
-                  className="mt-6 bg-white hover:bg-slate-50 text-emerald-600 border border-slate-200 shadow-sm font-extrabold rounded-xl px-5 h-11"
+                  className="mt-6 bg-card hover:bg-muted text-emerald-600 dark:text-emerald-400 border border-border shadow-sm font-extrabold rounded-xl px-5 h-11"
                 >
                   <Plus className="mr-2 w-4 h-4" />
                   Add First Subject
@@ -792,16 +792,16 @@ export default function AcademicsPage() {
                 key="no-matches-subjects"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="py-16 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50"
+                className="py-16 text-center rounded-2xl border border-dashed border-border/80 bg-card/40"
               >
-                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <h4 className="text-sm font-bold text-slate-700">No matching subjects found</h4>
-                <p className="text-xs text-slate-400 mt-1">No subjects match your search query.</p>
+                <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-foreground">No matching subjects found</h4>
+                <p className="text-xs text-muted-foreground mt-1">No subjects match your search query.</p>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setSearchQuery("")}
-                  className="mt-3 text-xs font-bold text-emerald-600"
+                  className="mt-3 text-xs font-bold text-emerald-600 dark:text-emerald-400"
                 >
                   Clear Search
                 </Button>
@@ -813,21 +813,21 @@ export default function AcademicsPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="bg-white border border-slate-200/80 rounded-3xl shadow-sm overflow-hidden"
+                className="bg-card border border-border/80 rounded-2xl shadow-sm overflow-hidden"
               >
                 <Table>
-                  <TableHeader className="bg-slate-50/70 border-b border-slate-100">
+                  <TableHeader className="bg-muted/30 border-b border-border/80">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 pl-6">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4 pl-6">
                         Subject Name
                       </TableHead>
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4">
                         Subject Code
                       </TableHead>
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4">
                         Classes Offering
                       </TableHead>
-                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-slate-500 py-4 text-right pr-6">
+                      <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4 text-right pr-6">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -841,7 +841,7 @@ export default function AcademicsPage() {
                       return (
                         <TableRow 
                           key={sub.id} 
-                          className="hover:bg-slate-50/70 transition-colors border-b border-slate-100/80 group"
+                          className="hover:bg-muted/30 transition-colors border-b border-border/60 group"
                         >
                           {/* Subject Name */}
                           <TableCell className="py-4 pl-6 font-bold">
@@ -859,7 +859,7 @@ export default function AcademicsPage() {
                           <TableCell className="py-4">
                             <Badge 
                               variant="outline" 
-                              className="font-mono bg-emerald-50/80 text-emerald-700 border-emerald-200 font-extrabold tracking-widest px-3 py-1 text-xs rounded-lg"
+                              className="font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-extrabold tracking-widest px-3 py-1 text-xs rounded-lg"
                             >
                               {sub.code}
                             </Badge>
@@ -870,12 +870,12 @@ export default function AcademicsPage() {
                             {offeringClassesCount > 0 ? (
                               <Badge 
                                 variant="secondary" 
-                                className="bg-slate-100 text-slate-700 border-none font-bold text-xs rounded-lg px-2.5 py-1"
+                                className="bg-muted text-foreground border-none font-bold text-xs rounded-lg px-2.5 py-1"
                               >
                                 {offeringClassesCount} {offeringClassesCount === 1 ? "Class" : "Classes"}
                               </Badge>
                             ) : (
-                              <span className="text-xs text-slate-400 font-medium italic">
+                              <span className="text-xs text-muted-foreground font-medium italic">
                                 Not assigned yet
                               </span>
                             )}
@@ -890,7 +890,7 @@ export default function AcademicsPage() {
                               }}
                               variant="ghost" 
                               size="icon" 
-                              className="size-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                              className="size-8 rounded-lg text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
                               title="Delete Subject"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -914,13 +914,13 @@ export default function AcademicsPage() {
                 {filteredSubjects.map((sub) => (
                   <div 
                     key={sub.id} 
-                    className="relative overflow-hidden group bg-white border border-slate-100 hover:border-emerald-100/70 rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between min-h-[190px]"
+                    className="relative overflow-hidden group bg-card border border-border/80 hover:border-emerald-500/40 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between min-h-[190px]"
                   >
-                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-emerald-50/0 to-emerald-50/20 group-hover:to-emerald-50/70 rounded-full blur-xl transition-all duration-300 pointer-events-none" />
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-emerald-500/0 to-emerald-500/10 group-hover:to-emerald-500/20 rounded-full blur-xl transition-all duration-300 pointer-events-none" />
                     
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-emerald-600 transition-colors">
+                        <h3 className="text-2xl font-black text-foreground tracking-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                           {sub.name}
                         </h3>
                         <div className="flex gap-1 shrink-0">
@@ -931,7 +931,7 @@ export default function AcademicsPage() {
                             }}
                             variant="ghost" 
                             size="icon" 
-                            className="size-8 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
+                            className="size-8 rounded-lg text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
                             title="Delete Subject"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -940,14 +940,14 @@ export default function AcademicsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-slate-50 mt-6 flex items-center justify-between">
+                    <div className="pt-6 border-t border-border/60 mt-6 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="size-6 rounded-lg bg-emerald-100/50 flex items-center justify-center text-emerald-600">
+                        <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                           <BookOpen className="w-3.5 h-3.5" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Subject Code</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Subject Code</span>
                       </div>
-                      <Badge variant="outline" className="font-mono bg-emerald-50 text-emerald-600 border-emerald-200 font-extrabold tracking-widest px-3 py-1 text-xs">
+                      <Badge variant="outline" className="font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-extrabold tracking-widest px-3 py-1 text-xs">
                         {sub.code}
                       </Badge>
                     </div>
