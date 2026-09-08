@@ -41,10 +41,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAcademicSync } from "@/hooks/use-academic-sync";
-import { getSchoolSessionStatus, getAttendanceCardConfig } from "@/lib/utils/attendance-session";
+import { 
+  getSchoolSessionStatus, 
+  getAttendanceCardConfig,
+  getMatchingHoliday 
+} from "@/lib/utils/attendance-session";
 
 export default function TeacherDashboardPage() {
-  const { supabase, tenant, academicCycle, isLoading: isTenantLoading } = useTenant();
+  const { supabase, tenant, academicCycle, holidays, isLoading: isTenantLoading } = useTenant();
   
   const [loading, setLoading] = useState(true);
   const [teacherName, setTeacherName] = useState("");
@@ -246,7 +250,8 @@ export default function TeacherDashboardPage() {
   const currentDay = new Date().getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const isWeekend = currentDay === 0 || currentDay === 6;
   const targetScheduleDay = isWeekend ? 1 : currentDay; // Default to Monday on weekends
-  const todaySessionStatus = getSchoolSessionStatus(new Date(), academicCycle);
+  const matchingHolidayToday = getMatchingHoliday(new Date(), holidays);
+  const todaySessionStatus = getSchoolSessionStatus(new Date(), academicCycle, holidays);
 
   const todayPeriods = timetableSlots.filter(
     (slot) => slot.day_of_week === targetScheduleDay
@@ -454,7 +459,7 @@ export default function TeacherDashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {formClasses.map((cls) => {
                     const status = attendanceStatus[cls.id] || { marked: false, present: 0, absent: 0 };
-                    const cardConfig = getAttendanceCardConfig(todaySessionStatus, status.marked);
+                    const cardConfig = getAttendanceCardConfig(todaySessionStatus, status.marked, matchingHolidayToday?.name);
 
                     return (
                       <Card key={cls.id} className="border border-border/60 shadow-none bg-muted/30 rounded-xl p-5 hover:bg-muted/60 transition-all flex flex-col justify-between">
@@ -464,6 +469,8 @@ export default function TeacherDashboardPage() {
                               {cls.name}
                             </Badge>
                             <Badge className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-semibold flex items-center gap-1", cardConfig.badgeClass)}>
+                              {cardConfig.status === "PUBLIC_HOLIDAY" && <span className="text-xs mr-0.5">🎉</span>}
+                              {cardConfig.status === "MID_TERM_BREAK" && <span className="text-xs mr-0.5">🎒</span>}
                               {cardConfig.status === "HOLIDAY_BREAK" && <Sun className="size-3 mr-0.5" />}
                               {cardConfig.status === "WEEKEND" && <Coffee className="size-3 mr-0.5" />}
                               {cardConfig.status === "IN_SESSION_ACTIVE" && status.marked && <CheckCircle2 className="size-3 mr-0.5" />}

@@ -48,7 +48,10 @@ import { useTenant } from "@/components/providers/tenant-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAcademicSync } from "@/hooks/use-academic-sync";
-import { getSchoolSessionStatus } from "@/lib/utils/attendance-session";
+import { 
+  getSchoolSessionStatus, 
+  getMatchingHoliday 
+} from "@/lib/utils/attendance-session";
 import { 
   AttendanceStudentRow, 
   type AttendanceStatus 
@@ -66,13 +69,17 @@ export default function TeacherAttendancePage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  const { supabase, isLoading: isTenantLoading, academicCycle } = useTenant();
+  const { supabase, isLoading: isTenantLoading, academicCycle, holidays } = useTenant();
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const matchingHoliday = useMemo(() => {
+    return getMatchingHoliday(date, holidays);
+  }, [date, holidays]);
 
   // Determine instructional session status for the currently selected date
   const sessionStatus = useMemo(() => {
-    return getSchoolSessionStatus(date, academicCycle);
-  }, [date, academicCycle]);
+    return getSchoolSessionStatus(date, academicCycle, holidays);
+  }, [date, academicCycle, holidays]);
 
   const isInstructional = sessionStatus === "IN_SESSION_ACTIVE";
 
@@ -325,6 +332,16 @@ export default function TeacherAttendancePage() {
                 <Clock className="size-3.5" />
                 <span>New Session (Unsaved)</span>
               </Badge>
+            ) : sessionStatus === "PUBLIC_HOLIDAY" ? (
+              <Badge className="bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+                <span>🎉</span>
+                <span>{matchingHoliday?.name || "Public Holiday"}</span>
+              </Badge>
+            ) : sessionStatus === "MID_TERM_BREAK" ? (
+              <Badge className="bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+                <span>🎒</span>
+                <span>{matchingHoliday?.name || "Mid-Term Break"}</span>
+              </Badge>
             ) : (
               <Badge className="bg-muted text-muted-foreground border-border text-xs font-bold flex items-center gap-1.5 px-3 py-1">
                 <Info className="size-3.5" />
@@ -369,6 +386,40 @@ export default function TeacherAttendancePage() {
       </div>
 
       {/* 2. Strict Guard Banner for Non-Instructional Days */}
+      {sessionStatus === "PUBLIC_HOLIDAY" && (
+        <div className="flex items-start gap-4 p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-900 dark:text-purple-200 animate-in fade-in">
+          <span className="text-xl shrink-0 mt-0.5">🎉</span>
+          <div className="space-y-1 text-sm">
+            <div className="font-bold flex items-center gap-2">
+              <span>Public Holiday: {matchingHoliday?.name || "National Holiday"}</span>
+              <Badge variant="outline" className="bg-purple-500/20 text-purple-800 dark:text-purple-300 border-purple-500/30 text-[10px] uppercase font-black">
+                Viewing Mode
+              </Badge>
+            </div>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {matchingHoliday?.description || "School is officially closed in observance of this public holiday."} Regular roll call is paused. You can still inspect past attendance logs freely.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {sessionStatus === "MID_TERM_BREAK" && (
+        <div className="flex items-start gap-4 p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-900 dark:text-indigo-200 animate-in fade-in">
+          <span className="text-xl shrink-0 mt-0.5">🎒</span>
+          <div className="space-y-1 text-sm">
+            <div className="font-bold flex items-center gap-2">
+              <span>Mid-Term Recess: {matchingHoliday?.name || "School Break"}</span>
+              <Badge variant="outline" className="bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border-indigo-500/30 text-[10px] uppercase font-black">
+                Viewing Mode
+              </Badge>
+            </div>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {matchingHoliday?.description || "Classes are suspended for mid-term recess."} Regular attendance tracking resumes when the term reconvenes.
+            </p>
+          </div>
+        </div>
+      )}
+
       {sessionStatus === "HOLIDAY_BREAK" && (
         <div className="flex items-start gap-4 p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200">
           <Sun className="size-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
