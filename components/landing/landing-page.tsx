@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, Baby } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe, Shield, School, BookOpen, GraduationCap, Laptop, MessageSquare, PhoneCall, Baby, Loader2, Send } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export function LandingHero() {
   return (
@@ -30,8 +31,28 @@ export function LandingHero() {
                 Register your School <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base font-semibold hover:bg-muted/50 transition-colors">
-              Request a Demo
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full h-12 px-8 text-base font-semibold hover:bg-muted/50 transition-colors"
+              asChild
+            >
+              <a
+                href="#contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById('contact');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                    const input = document.getElementById('contact-institution-name') as HTMLInputElement | null;
+                    if (input) {
+                      setTimeout(() => input.focus(), 600);
+                    }
+                  }
+                }}
+              >
+                Request a Demo
+              </a>
             </Button>
           </div>
           
@@ -363,6 +384,35 @@ export function LandingSolutions() {
 }
 
 export function LandingContact() {
+  const [formData, setFormData] = useState({
+    institutionName: '',
+    contactEmail: '',
+    subject: 'Institutional Demo Request',
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.institutionName.trim() || !formData.contactEmail.trim()) {
+      toast.error('Please complete required fields', {
+        description: 'Provide both your institution name and contact email so our team can reach you.',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    // Simulate inquiry submission
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      toast.success('Demo request received!', {
+        description: `Thank you! Our institutional team will reach out to ${formData.contactEmail} shortly.`,
+      });
+    }, 800);
+  };
+
   return (
     <section id="contact" className="py-12 md:py-24 bg-muted/30">
        <div className="container px-4 mx-auto">
@@ -404,33 +454,104 @@ export function LandingContact() {
              <div className="relative">
                 <div className="absolute inset-0 bg-primary/10 blur-[100px] -z-10 rounded-full" />
                 <div className="p-6 md:p-12 rounded-3xl md:rounded-[2.5rem] bg-background border border-border/50 shadow-2xl shadow-primary/5">
-                   <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                      <div className="grid md:grid-cols-2 gap-6">
-                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase px-1">Institution Name</label>
-                            <input type="text" placeholder="Glory Days Academy" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all" />
-                         </div>
-                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase px-1">Contact Email</label>
-                            <input type="email" placeholder="e.g. admin@school.edu.ng" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all" />
-                         </div>
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-xs font-bold text-slate-500 uppercase px-1">Subject</label>
-                         <select className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer">
-                            <option>Institutional Demo Request</option>
-                            <option>Technical Partnership</option>
-                            <option>Migration Support</option>
-                         </select>
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-xs font-bold text-slate-500 uppercase px-1">Message</label>
-                         <textarea rows={4} placeholder="How can we help your institution?" className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none" />
-                      </div>
-                      <Button className="w-full py-7 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                         Send Message
-                      </Button>
-                   </form>
+                   {isSubmitted ? (
+                     <div className="py-10 flex flex-col items-center text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                       <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                         <CheckCircle2 className="w-8 h-8" />
+                       </div>
+                       <div className="space-y-2 max-w-sm">
+                         <h3 className="text-2xl font-bold font-heading">Request Received!</h3>
+                         <p className="text-muted-foreground text-sm leading-relaxed">
+                           Thank you, <strong className="text-foreground">{formData.institutionName}</strong>. Our institutional specialist will reach out to <strong className="text-foreground">{formData.contactEmail}</strong> within 24 hours to schedule your guided demo.
+                         </p>
+                       </div>
+                       <Button
+                         variant="outline"
+                         className="mt-4 rounded-xl font-semibold"
+                         onClick={() => {
+                           setFormData({
+                             institutionName: '',
+                             contactEmail: '',
+                             subject: 'Institutional Demo Request',
+                             message: '',
+                           });
+                           setIsSubmitted(false);
+                         }}
+                       >
+                         Send Another Inquiry
+                       </Button>
+                     </div>
+                   ) : (
+                     <form className="space-y-6" onSubmit={handleSubmit}>
+                        <div className="grid md:grid-cols-2 gap-6">
+                           <div className="space-y-2">
+                              <label htmlFor="contact-institution-name" className="text-xs font-bold text-slate-500 uppercase px-1">Institution Name</label>
+                              <input
+                                id="contact-institution-name"
+                                type="text"
+                                required
+                                value={formData.institutionName}
+                                onChange={(e) => setFormData(prev => ({ ...prev, institutionName: e.target.value }))}
+                                placeholder="Glory Days Academy"
+                                className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm"
+                              />
+                           </div>
+                           <div className="space-y-2">
+                              <label htmlFor="contact-email" className="text-xs font-bold text-slate-500 uppercase px-1">Contact Email</label>
+                              <input
+                                id="contact-email"
+                                type="email"
+                                required
+                                value={formData.contactEmail}
+                                onChange={(e) => setFormData(prev => ({ ...prev, contactEmail: e.target.value }))}
+                                placeholder="e.g. admin@school.edu.ng"
+                                className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-sm"
+                              />
+                           </div>
+                        </div>
+                        <div className="space-y-2">
+                           <label htmlFor="contact-subject" className="text-xs font-bold text-slate-500 uppercase px-1">Subject</label>
+                           <select
+                             id="contact-subject"
+                             value={formData.subject}
+                             onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                             className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer text-sm"
+                           >
+                              <option value="Institutional Demo Request">Institutional Demo Request</option>
+                              <option value="Technical Partnership">Technical Partnership</option>
+                              <option value="Migration Support">Migration Support</option>
+                           </select>
+                        </div>
+                        <div className="space-y-2">
+                           <label htmlFor="contact-message" className="text-xs font-bold text-slate-500 uppercase px-1">Message (Optional)</label>
+                           <textarea
+                             id="contact-message"
+                             rows={4}
+                             value={formData.message}
+                             onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                             placeholder="Tell us about your student population, current systems, or specific requirements..."
+                             className="w-full px-5 py-4 rounded-2xl bg-muted/30 border border-border/50 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none text-sm"
+                           />
+                        </div>
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full py-7 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Sending Request...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-5 h-5" />
+                              <span>Submit Demo Request</span>
+                            </>
+                          )}
+                        </Button>
+                     </form>
+                   )}
                 </div>
              </div>
              
