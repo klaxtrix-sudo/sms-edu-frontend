@@ -1,6 +1,21 @@
 import { type AcademicCycle } from "@/components/providers/tenant-provider";
 
-export type SchoolSessionStatus = "HOLIDAY_BREAK" | "WEEKEND" | "IN_SESSION_ACTIVE";
+export interface SchoolHoliday {
+  id: string;
+  school_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  holiday_type: "public_holiday" | "mid_term_break" | "school_recess" | "special_closure";
+  description?: string | null;
+}
+
+export type SchoolSessionStatus = 
+  | "HOLIDAY_BREAK" 
+  | "WEEKEND" 
+  | "PUBLIC_HOLIDAY" 
+  | "MID_TERM_BREAK" 
+  | "IN_SESSION_ACTIVE";
 
 export interface SessionStatusConfig {
   status: SchoolSessionStatus;
@@ -10,17 +25,48 @@ export interface SessionStatusConfig {
   message: string;
   buttonLabel: string;
   buttonVariant: "default" | "outline" | "secondary";
+  holidayName?: string;
+}
+
+/**
+ * Finds if a date falls into any configured school holiday or mid-term break.
+ */
+export function getMatchingHoliday(
+  dateInput: string | Date,
+  holidays?: SchoolHoliday[]
+): SchoolHoliday | undefined {
+  if (!holidays || holidays.length === 0) return undefined;
+
+  let dateStr: string;
+  if (typeof dateInput === "string") {
+    dateStr = dateInput.split("T")[0];
+  } else {
+    // Format YYYY-MM-DD local
+    const y = dateInput.getFullYear();
+    const m = String(dateInput.getMonth() + 1).padStart(2, "0");
+    const d = String(dateInput.getDate()).padStart(2, "0");
+    dateStr = `${y}-${m}-${d}`;
+  }
+
+  return holidays.find((h) => {
+    const start = h.start_date.split("T")[0];
+    const end = h.end_date.split("T")[0];
+    return dateStr >= start && dateStr <= end;
+  });
 }
 
 /**
  * Determines whether a given date is an active instructional day,
- * a weekend, or falls into a holiday / term break.
+ * a weekend, a public holiday, a mid-term break, or an end-of-term recess.
  */
 export function getSchoolSessionStatus(
   dateInput: string | Date,
-  academicCycle: AcademicCycle | null
+  academicCycle: AcademicCycle | null,
+  holidays?: SchoolHoliday[]
 ): SchoolSessionStatus {
-  const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  const d = typeof dateInput === "string" 
+    ? new Date(dateInput.includes("T") ? dateInput : `${dateInput}T00:00:00`) 
+    : dateInput;
   const dayOfWeek = d.getDay(); // 0 = Sunday, 6 = Saturday
 
   // 1. Weekend check
@@ -28,21 +74,25 @@ export function getSchoolSessionStatus(
     return "WEEKEND";
   }
 
-  // 2. Academic Cycle / Holiday check
+  // 2. Scheduled Holidays / Mid-Term Breaks check (takes precedence over general term bounds)
+  const matchingHoliday = getMatchingHoliday(dateInput, holidays);
+  if (matchingHoliday) {
+    return matchingHoliday.holiday_type === "mid_term_break"
+      ? "MID_TERM_BREAK"
+      : "PUBLIC_HOLIDAY";
+  }
+
+  // 3. Academic Cycle / Term bounds check
   if (academicCycle) {
-    // If currentWeek is explicitly null or term dates are specified and date is out of range
     if (academicCycle.currentWeek === null) {
-      // Check if selected date is within term bounds if termBegins/termEnds exist
       if (academicCycle.termBegins && academicCycle.termEnds) {
-        const start = new Date(academicCycle.termBegins);
-        const end = new Date(academicCycle.termEnds);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
+        const start = academicCycle.termBegins.split("T")[0];
+        const end = academicCycle.termEnds.split("T")[0];
+        const checkStr = typeof dateInput === "string"
+          ? dateInput.split("T")[0]
+          : dateInput.toISOString().split("T")[0];
 
-        const checkTime = new Date(d);
-        checkTime.setHours(12, 0, 0, 0);
-
-        if (checkTime < start || checkTime > end) {
+        if (checkStr < start || checkStr > end) {
           return "HOLIDAY_BREAK";
         }
       } else {
@@ -59,9 +109,10 @@ export function getSchoolSessionStatus(
  */
 export function isInstructionalDay(
   dateInput: string | Date,
-  academicCycle: AcademicCycle | null
+  academicCycle: AcademicCycle | null,
+  holidays?: SchoolHoliday[]
 ): boolean {
-  return getSchoolSessionStatus(dateInput, academicCycle) === "IN_SESSION_ACTIVE";
+  return getSchoolSessionStatus(dateInput, academicCycle, holidays) === "IN_SESSION_ACTIVE";
 }
 
 /**
@@ -70,8 +121,41 @@ export function isInstructionalDay(
  */
 export function getAttendanceCardConfig(
   sessionStatus: SchoolSessionStatus,
-  isMarked: boolean
+  isMarked: boolean,
+  holidayName?: string
 ): SessionStatusConfig {
+  if (sessionStatus === "PUBLIC_HOLIDAY") {
+    const label = holidayName ? `Holiday: ${holidayName}` : "Public Holiday";
+    return {
+      status: "PUBLIC_HOLIDAY",
+      badgeLabel: label,
+      badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bold",
+      isInstructional: false,
+      message: holidayName 
+        ? `School is closed in observance of ${holidayName}. Regular attendance resumes on the next school day.`
+        : "School is closed for public holiday. Regular attendance resumes tomorrow.",
+      buttonLabel: "Attendance History",
+      buttonVariant: "outline",
+      holidayName,
+    };
+  }
+
+  if (sessionStatus === "MID_TERM_BREAK") {
+    const label = holidayName ? `Break: ${holidayName}` : "Mid-Term Break";
+    return {
+      status: "MID_TERM_BREAK",
+      badgeLabel: label,
+      badgeClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-bold",
+      isInstructional: false,
+      message: holidayName
+        ? `School is currently on ${holidayName}. Daily attendance is paused until classes resume.`
+        : "School is currently on mid-term break. Daily roll call resumes on session resumption.",
+      buttonLabel: "Attendance History",
+      buttonVariant: "outline",
+      holidayName,
+    };
+  }
+
   if (sessionStatus === "HOLIDAY_BREAK") {
     return {
       status: "HOLIDAY_BREAK",

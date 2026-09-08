@@ -18,6 +18,8 @@ interface TenantConfig {
   isSetupCompleted: boolean;
 }
 
+import { type SchoolHoliday } from "@/lib/utils/attendance-session";
+
 export interface AcademicCycle {
   academicYear: string;
   currentTerm: number;
@@ -33,6 +35,8 @@ interface TenantContextType {
   error: string | null;
   academicCycle: AcademicCycle | null;
   refreshAcademicCycle: () => Promise<void>;
+  holidays: SchoolHoliday[];
+  refreshHolidays: () => Promise<void>;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
@@ -46,6 +50,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [academicCycle, setAcademicCycle] = useState<AcademicCycle | null>(null);
+  const [holidays, setHolidays] = useState<SchoolHoliday[]>([]);
 
   // Initialize tenant-specific supabase client
   // Memoize it only based on the URL and key values, not the tenant object itself
@@ -56,6 +61,27 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
     return null;
   }, [tenant?.supabaseUrl, tenant?.supabaseAnonKey, tenant?.name]);
+
+  const fetchHolidays = async () => {
+    if (!supabase || !tenant?.id) return;
+    try {
+      const { data, error: holidayError } = await supabase
+        .from('school_holidays' as any)
+        .select('*')
+        .eq('school_id', tenant.id)
+        .order('start_date', { ascending: true });
+
+      if (holidayError) {
+        // Table might not exist or be empty
+        console.warn('[Tenant Provider] school_holidays fetch notice:', holidayError.message);
+        return;
+      }
+
+      setHolidays((data as SchoolHoliday[]) || []);
+    } catch (err) {
+      console.error('[Tenant Provider] Error fetching school holidays:', err);
+    }
+  };
 
   const fetchAcademicCycle = async () => {
     if (!supabase || !tenant?.id) return;
@@ -110,6 +136,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (supabase && tenant?.id) {
       fetchAcademicCycle();
+      fetchHolidays();
     }
   }, [supabase, tenant?.id]);
 
@@ -192,7 +219,16 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <TenantContext.Provider value={{ tenant, supabase, isLoading, error, academicCycle, refreshAcademicCycle: fetchAcademicCycle }}>
+    <TenantContext.Provider value={{ 
+      tenant, 
+      supabase, 
+      isLoading, 
+      error, 
+      academicCycle, 
+      refreshAcademicCycle: fetchAcademicCycle,
+      holidays,
+      refreshHolidays: fetchHolidays
+    }}>
       {children}
     </TenantContext.Provider>
   );
@@ -208,7 +244,9 @@ export function useTenant() {
     isLoading: false, 
     error: null,
     academicCycle: null,
-    refreshAcademicCycle: async () => {}
+    refreshAcademicCycle: async () => {},
+    holidays: [],
+    refreshHolidays: async () => {}
   };
 }
 
