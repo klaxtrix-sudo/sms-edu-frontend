@@ -11,7 +11,8 @@ import {
   Trash2,
   Loader2,
   X,
-  Megaphone
+  Megaphone,
+  GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -69,6 +70,31 @@ export function NotificationDrawer() {
   useEffect(() => {
     fetchNotifications(true);
 
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    // Realtime broadcast listener for instant notification popups & list refreshes
+    const setupRealtime = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      channel = supabase.channel(`user-notifications-${session.user.id}`)
+        .on('broadcast', { event: 'notification' }, (eventPayload) => {
+          const payload = (eventPayload as { payload?: { title?: string; message?: string; type?: string } })?.payload;
+          if (payload?.title) {
+            toast.info(payload.title, {
+              description: payload.message,
+            });
+          }
+          fetchNotifications(false);
+        })
+        .subscribe();
+    };
+
+    setupRealtime();
+
+    const handleRefresh = () => fetchNotifications(false);
+    window.addEventListener('klaxtrix:notification-refresh', handleRefresh);
+
     // Poll for new notifications, but only when the tab is visible
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
@@ -76,7 +102,13 @@ export function NotificationDrawer() {
       }
     }, 20000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('klaxtrix:notification-refresh', handleRefresh);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -131,6 +163,12 @@ export function NotificationDrawer() {
       } else if (pathname.includes("/admin")) {
         router.push("/dashboard/admin/academics/results");
       }
+    } else if (n.type === "academic") {
+      if (pathname.includes("/teacher")) {
+        router.push("/dashboard/teacher");
+      } else if (pathname.includes("/admin")) {
+        router.push("/dashboard/admin/academics");
+      }
     }
   };
 
@@ -142,6 +180,7 @@ export function NotificationDrawer() {
       case 'payment': return <CreditCard className="size-5 text-primary" />;
       case 'exam': return <MessageSquare className="size-5 text-orange-500" />;
       case 'announcement': return <Megaphone className="size-5 text-blue-500" />;
+      case 'academic': return <GraduationCap className="size-5 text-indigo-500" />;
       default: return <Bell className="size-5 text-muted-foreground" />;
     }
   };

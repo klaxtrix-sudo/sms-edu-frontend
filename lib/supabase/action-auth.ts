@@ -10,6 +10,7 @@ export interface ActionAuthContext {
   schoolId: string;
   subdomain: string;
   tenantSupabase: Awaited<ReturnType<typeof createTenantAdminClient>>;
+  accessToken?: string;
 }
 
 /**
@@ -69,11 +70,13 @@ export async function requireActionAuth(
 
   // 5. Initialize tenant admin client (SRK) for privileged mutations
   const tenantSupabase = await createTenantAdminClient(subdomain);
+  const { data: { session } } = await serverSupabase.auth.getSession();
 
   return {
     user,
     schoolId: tenantKeys.id,
     subdomain,
     tenantSupabase,
+    accessToken: session?.access_token,
   };
 }

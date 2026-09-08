@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { scoreToGrade, gradeRemark } from "@/lib/grade-scale";
 import { getBackendUrl } from "@/lib/utils";
+import { dispatchInAppNotifications } from "@/lib/services/notification-dispatcher";
 
 const CreateClassSchema = z.object({
   name: z.string().trim().min(1, "Class name cannot be empty").max(60, "Class name cannot exceed 60 characters"),
@@ -89,10 +90,30 @@ export async function assignClassTeacher(classId: string, teacherId: string | nu
   if (!classId) return { error: 'Class ID is required.' };
 
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId, accessToken } = await requireActionAuth(subdomain, ['admin']);
 
     const cleanTeacherId = teacherId && teacherId !== 'none' && teacherId.trim() !== '' ? teacherId.trim() : null;
 
+    // 1. Fetch current class record to check previous teacher and get class name
+    const { data: currentClass, error: fetchErr } = await (tenantSupabase as any)
+      .from('classes')
+      .select('id, name, class_teacher_id')
+      .eq('id', classId)
+      .eq('school_id', schoolId)
+      .maybeSingle();
+
+    if (fetchErr || !currentClass) {
+      return { error: 'Class not found.' };
+    }
+
+    const previousTeacherId = currentClass.class_teacher_id;
+
+    // If no change, return early
+    if (previousTeacherId === cleanTeacherId) {
+      return { success: true };
+    }
+
+    // 2. Scoped DB update
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .update({ class_teacher_id: cleanTeacherId })
@@ -101,7 +122,47 @@ export async function assignClassTeacher(classId: string, teacherId: string | nu
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/admin/academics');
+    // 3. Dispatch in-app notifications (non-blocking)
+    const notifications = [];
+
+    // Case A: New teacher assigned
+    if (cleanTeacherId) {
+      notifications.push({
+        userId: cleanTeacherId,
+        type: 'academic' as const,
+        title: 'Assigned as Class Teacher',
+        message: `You have been assigned as the Class Teacher for ${currentClass.name}. You now have full access to class attendance, student profiles, and continuous assessments.`,
+        metadata: {
+          classId: currentClass.id,
+          className: currentClass.name,
+          role: 'class_teacher',
+          action: 'assigned',
+        },
+      });
+    }
+
+    // Case B: Previous teacher unassigned / relieved
+    if (previousTeacherId && previousTeacherId !== cleanTeacherId) {
+      notifications.push({
+        userId: previousTeacherId,
+        type: 'academic' as const,
+        title: 'Class Teacher Assignment Updated',
+        message: `You have been relieved of Class Teacher responsibilities for ${currentClass.name}.`,
+        metadata: {
+          classId: currentClass.id,
+          className: currentClass.name,
+          role: 'class_teacher',
+          action: 'unassigned',
+        },
+      });
+    }
+
+    if (notifications.length > 0) {
+      dispatchInAppNotifications(subdomain, notifications, accessToken, tenantSupabase).catch((notifErr) => {
+        console.error('[assignClassTeacher] Notification dispatch failure:', notifErr);
+      });
+    }
+
     return { success: true };
   } catch (error: any) {
     console.error('[Admin Actions] assignClassTeacher Error:', error.message);
@@ -156,7 +217,7 @@ export async function createClass(data: any) {
   if (!subdomain) return { error: 'Subdomain is required to create a class.' };
 
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId, accessToken } = await requireActionAuth(subdomain, ['admin']);
 
     // 1. Zod Validation
     const parsed = CreateClassSchema.parse({
@@ -180,17 +241,41 @@ export async function createClass(data: any) {
     }
 
     // 3. Scoped insert with verified schoolId
-    const { error } = await (tenantSupabase as any)
+    const { data: insertedClass, error } = await (tenantSupabase as any)
       .from('classes')
       .insert({
         name: cleanName,
         class_teacher_id: cleanTeacherId,
         school_id: schoolId,
-      });
+      })
+      .select('id, name')
+      .single();
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/admin/academics');
+    // 4. Dispatch notification if teacher assigned upon creation
+    if (cleanTeacherId) {
+      dispatchInAppNotifications(
+        subdomain,
+        [{
+          userId: cleanTeacherId,
+          type: 'academic',
+          title: 'Assigned as Class Teacher',
+          message: `You have been assigned as the Class Teacher for ${cleanName}. You now have full access to class attendance, student profiles, and continuous assessments.`,
+          metadata: {
+            classId: insertedClass?.id,
+            className: cleanName,
+            role: 'class_teacher',
+            action: 'assigned',
+          },
+        }],
+        accessToken,
+        tenantSupabase
+      ).catch((notifErr) => {
+        console.error('[createClass] Notification dispatch failure:', notifErr);
+      });
+    }
+
     return { success: true };
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -258,7 +343,7 @@ export async function updateClass(classId: string, data: any, subdomain: string)
   if (!classId) return { error: 'Class ID is required.' };
 
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId, accessToken } = await requireActionAuth(subdomain, ['admin']);
 
     // 1. Zod Validation
     const parsed = UpdateClassSchema.parse({
@@ -283,6 +368,15 @@ export async function updateClass(classId: string, data: any, subdomain: string)
     }
 
     // 3. Scoped update with verified schoolId
+    const { data: currentClass } = await (tenantSupabase as any)
+      .from('classes')
+      .select('id, name, class_teacher_id')
+      .eq('id', classId)
+      .eq('school_id', schoolId)
+      .maybeSingle();
+
+    const previousTeacherId = currentClass?.class_teacher_id;
+
     const { error } = await (tenantSupabase as any)
       .from('classes')
       .update({
@@ -294,7 +388,34 @@ export async function updateClass(classId: string, data: any, subdomain: string)
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/admin/academics');
+    // 4. Dispatch notifications if teacher changed
+    if (previousTeacherId !== cleanTeacherId) {
+      const notifications = [];
+      if (cleanTeacherId) {
+        notifications.push({
+          userId: cleanTeacherId,
+          type: 'academic' as const,
+          title: 'Assigned as Class Teacher',
+          message: `You have been assigned as the Class Teacher for ${cleanName}. You now have full access to class attendance, student profiles, and continuous assessments.`,
+          metadata: { classId, className: cleanName, role: 'class_teacher', action: 'assigned' },
+        });
+      }
+      if (previousTeacherId) {
+        notifications.push({
+          userId: previousTeacherId,
+          type: 'academic' as const,
+          title: 'Class Teacher Assignment Updated',
+          message: `You have been relieved of Class Teacher responsibilities for ${cleanName}.`,
+          metadata: { classId, className: cleanName, role: 'class_teacher', action: 'unassigned' },
+        });
+      }
+      if (notifications.length > 0) {
+        dispatchInAppNotifications(subdomain, notifications, accessToken, tenantSupabase).catch((notifErr) => {
+          console.error('[updateClass] Notification dispatch failure:', notifErr);
+        });
+      }
+    }
+
     return { success: true };
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -309,7 +430,7 @@ export async function deleteClass(classId: string, subdomain: string) {
   if (!classId) return { error: 'Class ID is required.' };
 
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, schoolId, accessToken } = await requireActionAuth(subdomain, ['admin']);
 
     // Pre-flight Dependency Guard 1: Enrolled Students
     const { count: studentCount } = await (tenantSupabase as any)
@@ -363,6 +484,14 @@ export async function deleteClass(classId: string, subdomain: string) {
       };
     }
 
+    // 5. Query class before deletion to notify teacher if assigned
+    const { data: classToDelete } = await (tenantSupabase as any)
+      .from('classes')
+      .select('name, class_teacher_id')
+      .eq('id', classId)
+      .eq('school_id', schoolId)
+      .maybeSingle();
+
     // Safe to delete: Scoped deletion
     const { error } = await (tenantSupabase as any)
       .from('classes')
@@ -372,7 +501,24 @@ export async function deleteClass(classId: string, subdomain: string) {
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/admin/academics');
+    // Dispatch notification to relieved teacher
+    if (classToDelete?.class_teacher_id) {
+      dispatchInAppNotifications(
+        subdomain,
+        [{
+          userId: classToDelete.class_teacher_id,
+          type: 'academic',
+          title: 'Class Discontinued',
+          message: `${classToDelete.name} has been discontinued, and you are no longer assigned as its Class Teacher.`,
+          metadata: { classId, className: classToDelete.name, action: 'unassigned' },
+        }],
+        accessToken,
+        tenantSupabase
+      ).catch((notifErr) => {
+        console.error('[deleteClass] Notification dispatch failure:', notifErr);
+      });
+    }
+
     return { success: true };
   } catch (error: any) {
     return { error: error.message || 'Failed to delete class' };
