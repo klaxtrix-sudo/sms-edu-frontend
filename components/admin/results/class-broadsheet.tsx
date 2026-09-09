@@ -42,6 +42,7 @@ import {
 import { 
   getClassBroadsheetData, 
   publishClassResults, 
+  updateClassTermStatus,
   ClassBroadsheetData 
 } from "@/app/actions/academic-actions";
 import { createTenantClient } from "@/lib/supabase/client";
@@ -77,6 +78,7 @@ export function ClassBroadsheet({
   const [notifySMS, setNotifySMS] = useState(true);
   const [notifyInApp, setNotifyInApp] = useState(true);
   const [publishing, setPublishing] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const supabase = createTenantClient();
 
@@ -98,6 +100,37 @@ export function ClassBroadsheet({
       toast.error(err.message || "Failed to load class broadsheet");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Lifecycle status transition handler
+  const handleUpdateStatus = async (status: 'draft' | 'submitted' | 'approved' | 'published' | 'archived') => {
+    if (!data) return;
+    setUpdatingStatus(true);
+    try {
+      const res = await updateClassTermStatus(
+        classId,
+        academicYear,
+        term,
+        status,
+        null,
+        subdomain
+      );
+      if (!res.success) throw new Error(res.error);
+      toast.success(
+        status === 'submitted'
+          ? 'Grading cycle submitted for administrative review!'
+          : status === 'approved'
+          ? 'Class results approved and locked!'
+          : status === 'published'
+          ? 'Class results published to parents!'
+          : 'Class results reopened to draft.'
+      );
+      loadBroadsheet();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update grading cycle status');
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -169,11 +202,15 @@ export function ClassBroadsheet({
         return scoreObj ? scoreObj.total : "";
       }).join(",");
 
-      return `"${s.positionStr}","${s.admissionNo}","${s.fullName}",${subjectCells},"${s.totalScore}","${s.averageScore}%","${s.status}"`;
+      const attStr = s.attendance && s.attendance.totalDays > 0
+        ? `${s.attendance.percentage}% (${s.attendance.presentDays}/${s.attendance.totalDays} days)`
+        : "—";
+
+      return `"${s.positionStr}","${s.admissionNo}","${s.fullName}",${subjectCells},"${s.totalScore}","${s.averageScore}%","${s.status}","${attStr}"`;
     });
 
     const csvContent = [
-      `"Rank","Admission No","Student Name",${subjectHeaders},"Total Score","Average %","Status"`,
+      `"Rank","Admission No","Student Name",${subjectHeaders},"Total Score","Average %","Status","Attendance"`,
       ...rows,
     ].join("\n");
 
@@ -230,23 +267,31 @@ export function ClassBroadsheet({
           </Button>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-bold text-foreground">{data.className} Master BroadSheet</h2>
               <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary border-primary/20">
                 {academicYear} • {termLabel}
               </Badge>
-              {data.isPublished ? (
+              {data.status === 'published' ? (
                 <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-bold flex items-center gap-1">
                   <CheckCircle2 className="size-3" /> Published to Parents
                 </Badge>
+              ) : data.status === 'approved' ? (
+                <Badge className="bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 text-xs font-bold flex items-center gap-1">
+                  <ShieldCheck className="size-3" /> Grades Approved (Locked)
+                </Badge>
+              ) : data.status === 'submitted' ? (
+                <Badge className="bg-blue-500/10 text-blue-500 border border-blue-500/20 text-xs font-bold flex items-center gap-1">
+                  <TrendingUp className="size-3" /> In Review (Submitted)
+                </Badge>
               ) : (
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-xs font-bold">
-                  In Review (Draft)
+                  Draft
                 </Badge>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Comprehensive student academic performance matrix with automated class positioning and grade averages.
+              Comprehensive student academic performance matrix with automated class positioning, attendance, and grade averages.
             </p>
           </div>
         </div>
@@ -276,26 +321,68 @@ export function ClassBroadsheet({
             Export CSV
           </Button>
 
+          {/* Submit for Review (if draft) */}
+          {data.status === 'draft' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleUpdateStatus('submitted')}
+              disabled={updatingStatus}
+              className="h-9 px-3 text-xs font-semibold rounded-xl border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
+            >
+              {updatingStatus ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <Send className="size-3.5 mr-1.5" />}
+              Submit for Review
+            </Button>
+          )}
+
+          {/* Approve Grades (if draft or submitted) */}
+          {(data.status === 'draft' || data.status === 'submitted') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleUpdateStatus('approved')}
+              disabled={updatingStatus}
+              className="h-9 px-3 text-xs font-semibold rounded-xl border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+            >
+              {updatingStatus ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="size-3.5 mr-1.5" />}
+              Approve Grades
+            </Button>
+          )}
+
           {/* Publish / Unpublish Toggle */}
-          {data.isPublished ? (
+          {data.status === 'published' ? (
             <Button
               variant="outline"
               size="sm"
               onClick={() => handlePublishToggle(false)}
-              disabled={publishing}
+              disabled={publishing || updatingStatus}
               className="h-9 px-3 text-xs font-bold rounded-xl border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
             >
-              {publishing && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
+              {(publishing || updatingStatus) && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}
               Revert to Draft
             </Button>
           ) : (
             <Button
               size="sm"
               onClick={() => setIsPublishModalOpen(true)}
+              disabled={publishing || updatingStatus}
               className="h-9 px-4 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20"
             >
               <Send className="size-3.5 mr-1.5" />
               Publish to Parents
+            </Button>
+          )}
+
+          {/* Reopen to Draft if approved or submitted */}
+          {(data.status === 'submitted' || data.status === 'approved') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleUpdateStatus('draft')}
+              disabled={updatingStatus}
+              className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground rounded-xl"
+            >
+              Reopen Draft
             </Button>
           )}
         </div>
@@ -372,6 +459,7 @@ export function ClassBroadsheet({
                 <TableHead className="w-[95px] text-center text-xs font-black">Total</TableHead>
                 <TableHead className="w-[90px] text-center text-xs font-black">Average</TableHead>
                 <TableHead className="w-[85px] text-center text-xs font-bold">Status</TableHead>
+                <TableHead className="w-[105px] text-center text-xs font-bold">Attendance</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -464,6 +552,22 @@ export function ClassBroadsheet({
                         <span className="text-[10px] text-muted-foreground italic">Pending</span>
                       )}
                     </TableCell>
+
+                    {/* Attendance */}
+                    <TableCell className="text-center">
+                      {student.attendance && student.attendance.totalDays > 0 ? (
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-bold text-foreground">
+                            {student.attendance.percentage}%
+                          </span>
+                          <span className="block text-[10px] text-muted-foreground">
+                            {student.attendance.presentDays}/{student.attendance.totalDays} days
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -491,6 +595,9 @@ export function ClassBroadsheet({
                 </TableCell>
                 <TableCell className="text-center text-[10px] font-bold text-emerald-500">
                   {data.classMetrics.overallPassRate}% Pass
+                </TableCell>
+                <TableCell className="text-center text-[10px] font-bold text-muted-foreground">
+                  —
                 </TableCell>
               </TableRow>
             </TableBody>

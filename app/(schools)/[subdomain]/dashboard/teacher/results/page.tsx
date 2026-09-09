@@ -56,7 +56,7 @@ interface Metric {
   id?: string;
   name: string;
   weight: number;
-  school_id: string;
+  school_id?: string;
   class_id?: string | null;
   subject_id?: string | null;
   is_custom?: boolean;
@@ -174,7 +174,7 @@ export default function TeacherResultsPage() {
     setLoading(true);
     try {
       // 1. Fetch active grading metrics (custom or fallback default)
-      const metricsRes = await getResultMetrics(selectedClass, selectedSubject, schoolId, subdomain);
+      const metricsRes = await getResultMetrics(selectedClass, selectedSubject, schoolId, subdomain, academicYear, currentTerm);
       let activeMetrics: Metric[] = [];
       if (metricsRes.success && metricsRes.data) {
         activeMetrics = metricsRes.data;
@@ -397,7 +397,7 @@ export default function TeacherResultsPage() {
         is_custom: true
       }));
 
-      const res = await saveResultMetrics(payload, subdomain);
+      const res = await saveResultMetrics(payload, subdomain, academicYear, currentTerm);
       if (res.error) throw new Error(res.error);
 
       toast.success("Class grading weights saved.");

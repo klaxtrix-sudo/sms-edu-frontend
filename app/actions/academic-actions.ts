@@ -578,7 +578,8 @@ export async function saveResults(resultsData: any[], subdomain: string) {
   if (!subdomain) return { error: 'Subdomain is required to save results.' };
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
+    const { tenantSupabase, user, schoolId } = await requireActionAuth(subdomain, ['admin', 'teacher']);
+    const userRole = (user.user_metadata?.role as string) || 'teacher';
 
     // Filter out unentered / blank rows: only save rows where at least one metric score has been entered
     const validRows = (resultsData || []).filter((r) => {
@@ -590,6 +591,25 @@ export async function saveResults(resultsData: any[], subdomain: string) {
 
     if (validRows.length === 0) {
       return { success: true, count: 0, message: "No score entries to save." };
+    }
+
+    // Verify Term Lifecycle Lock State
+    const sample = validRows[0];
+    if (sample.class_id && sample.academic_year && sample.term) {
+      const { data: cycleStatus } = await (tenantSupabase as any)
+        .from('class_term_status')
+        .select('status')
+        .eq('school_id', schoolId)
+        .eq('class_id', sample.class_id)
+        .eq('academic_year', sample.academic_year)
+        .eq('term', sample.term)
+        .maybeSingle();
+
+      if (cycleStatus && (cycleStatus.status === 'approved' || cycleStatus.status === 'published' || cycleStatus.status === 'archived')) {
+        if (userRole !== 'admin') {
+          return { error: `Grading for this term is ${cycleStatus.status} and locked against modifications.` };
+        }
+      }
     }
 
     const { error } = await (tenantSupabase as any)
@@ -612,38 +632,93 @@ export async function getResultMetrics(
   classId: string | null,
   subjectId: string | null,
   schoolId: string,
-  subdomain: string
+  subdomain: string,
+  academicYear?: string,
+  term?: number
 ) {
   if (!subdomain) return { error: 'Subdomain is required.' };
   try {
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
+
+    // Helper: Select the most specific metric set from candidates
+    const pickBestMetricSet = (candidates: any[]) => {
+      if (!candidates || candidates.length === 0) return null;
+
+      // 1. Exact match (both academicYear and term match)
+      if (academicYear && term) {
+        const exact = candidates.filter(
+          (m) => m.academic_year === academicYear && Number(m.term) === Number(term)
+        );
+        if (exact.length > 0) return exact;
+      }
+
+      // 2. Session match (academicYear matches, term is null/unspecified)
+      if (academicYear) {
+        const sessionOnly = candidates.filter(
+          (m) => m.academic_year === academicYear && (!m.term || m.term === null)
+        );
+        if (sessionOnly.length > 0) return sessionOnly;
+      }
+
+      // 3. Universal fallback (both academic_year and term are null)
+      const universal = candidates.filter(
+        (m) => !m.academic_year && (!m.term || m.term === null)
+      );
+      if (universal.length > 0) return universal;
+
+      // 4. Default to first coherent set found
+      return candidates;
+    };
     
-    // If classId and subjectId are provided, check for custom metrics first
+    // 1. If classId and subjectId are provided, query per-subject custom metrics
     if (classId && subjectId) {
-      const { data: customMetrics, error: customError } = await (tenantSupabase as any)
+      let customQuery = (tenantSupabase as any)
         .from('result_metrics')
         .select('*')
         .eq('school_id', schoolId)
         .eq('class_id', classId)
         .eq('subject_id', subjectId);
 
-      if (!customError && customMetrics && customMetrics.length > 0) {
-        return { success: true, data: customMetrics, isCustom: true };
+      if (academicYear) {
+        customQuery = customQuery.or(`academic_year.eq."${academicYear}",academic_year.is.null`);
+      }
+      if (term) {
+        customQuery = customQuery.or(`term.eq.${term},term.is.null`);
+      }
+
+      const { data: rawCustom, error: customError } = await customQuery.order('created_at', { ascending: true });
+
+      if (!customError && rawCustom && rawCustom.length > 0) {
+        const bestCustom = pickBestMetricSet(rawCustom);
+        if (bestCustom && bestCustom.length > 0) {
+          return { success: true, data: bestCustom, isCustom: true };
+        }
       }
     }
 
-    // Fallback to default school-wide metrics (where class_id and subject_id are null)
-    const { data: defaultMetrics, error: defaultError } = await (tenantSupabase as any)
+    // 2. Query school-wide metrics (where class_id and subject_id are null)
+    let defaultQuery = (tenantSupabase as any)
       .from('result_metrics')
       .select('*')
       .eq('school_id', schoolId)
       .is('class_id', null)
       .is('subject_id', null);
 
+    if (academicYear) {
+      defaultQuery = defaultQuery.or(`academic_year.eq."${academicYear}",academic_year.is.null`);
+    }
+    if (term) {
+      defaultQuery = defaultQuery.or(`term.eq.${term},term.is.null`);
+    }
+
+    const { data: rawDefaults, error: defaultError } = await defaultQuery.order('created_at', { ascending: true });
+
     if (defaultError) throw defaultError;
 
-    // If no default metrics exist, return system default templates
-    if (!defaultMetrics || defaultMetrics.length === 0) {
+    const bestDefaults = pickBestMetricSet(rawDefaults);
+
+    // 3. Fallback to system default templates if nothing is configured
+    if (!bestDefaults || bestDefaults.length === 0) {
       const systemDefaults = [
         { name: 'First Test', weight: 20, is_default_template: true },
         { name: 'Second Test', weight: 20, is_default_template: true },
@@ -652,7 +727,7 @@ export async function getResultMetrics(
       return { success: true, data: systemDefaults, isCustom: false, isTemplate: true };
     }
 
-    return { success: true, data: defaultMetrics, isCustom: false };
+    return { success: true, data: bestDefaults, isCustom: false };
   } catch (error: any) {
     return { error: error.message || 'Failed to fetch result metrics' };
   }
@@ -660,7 +735,9 @@ export async function getResultMetrics(
 
 export async function saveResultMetrics(
   metricsData: any[],
-  subdomain: string
+  subdomain: string,
+  academicYear?: string,
+  term?: number
 ) {
   if (!subdomain) return { error: 'Subdomain is required.' };
   
@@ -671,31 +748,57 @@ export async function saveResultMetrics(
   }
 
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const { tenantSupabase, user } = await requireActionAuth(subdomain, ['admin', 'teacher']);
+    const userRole = (user.user_metadata?.role as string) || 'teacher';
     
-    // Prepare for upsert
-    // First, let's delete any existing metrics for this class/subject or default if we are overwriting
     const sample = metricsData[0];
-    if (sample) {
-      let query = (tenantSupabase as any).from('result_metrics').delete().eq('school_id', sample.school_id);
-      if (sample.class_id && sample.subject_id) {
-        query = query.eq('class_id', sample.class_id).eq('subject_id', sample.subject_id);
-      } else {
-        query = query.is('class_id', null).is('subject_id', null);
-      }
-      const { error: deleteError } = await query;
-      if (deleteError) throw deleteError;
+    if (!sample) return { error: 'No metrics provided.' };
+
+    // If saving school-wide defaults, require admin role
+    if (!sample.class_id && !sample.subject_id && userRole !== 'admin') {
+      return { error: 'Only administrators can configure school-wide default metrics.' };
     }
 
-    // Now insert the new ones
-    const cleanData = metricsData.map(({ id, created_at, updated_at, is_default_template, ...m }) => m); // strip auto fields
+    // Delete existing metrics for this target scope (class/subject or school-wide)
+    let deleteQuery = (tenantSupabase as any)
+      .from('result_metrics')
+      .delete()
+      .eq('school_id', sample.school_id);
+
+    if (sample.class_id && sample.subject_id) {
+      deleteQuery = deleteQuery.eq('class_id', sample.class_id).eq('subject_id', sample.subject_id);
+    } else {
+      deleteQuery = deleteQuery.is('class_id', null).is('subject_id', null);
+    }
+
+    if (academicYear) {
+      deleteQuery = deleteQuery.eq('academic_year', academicYear);
+    } else {
+      deleteQuery = deleteQuery.is('academic_year', null);
+    }
+    if (term) {
+      deleteQuery = deleteQuery.eq('term', term);
+    } else {
+      deleteQuery = deleteQuery.is('term', null);
+    }
+
+    const { error: deleteError } = await deleteQuery;
+    if (deleteError) throw deleteError;
+
+    // Attach academic_year and term to all items
+    const cleanData = metricsData.map(({ id, created_at, updated_at, is_default_template, ...m }) => ({
+      ...m,
+      academic_year: academicYear || m.academic_year || null,
+      term: term || m.term || null,
+      is_custom: Boolean(m.class_id && m.subject_id),
+    }));
+
     const { data, error } = await (tenantSupabase as any)
       .from('result_metrics')
       .insert(cleanData)
       .select();
 
     if (error) throw error;
-    
     return { success: true, data };
   } catch (error: any) {
     return { error: error.message || 'Failed to save result metrics' };
@@ -1108,6 +1211,11 @@ export interface BroadsheetStudentRow {
   rank: number;
   positionStr: string;
   status: 'Pass' | 'Fail';
+  attendance?: {
+    presentDays: number;
+    totalDays: number;
+    percentage: number;
+  };
 }
 
 export interface BroadsheetSubjectSummary {
@@ -1121,6 +1229,22 @@ export interface BroadsheetSubjectSummary {
   passRate: number;
 }
 
+export interface ClassTermStatus {
+  id?: string;
+  school_id: string;
+  class_id: string;
+  academic_year: string;
+  term: number;
+  status: 'draft' | 'submitted' | 'approved' | 'published' | 'archived';
+  submitted_at?: string | null;
+  submitted_by?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
+  published_at?: string | null;
+  published_by?: string | null;
+  remarks?: string | null;
+}
+
 export interface ClassBroadsheetData {
   classId: string;
   className: string;
@@ -1128,6 +1252,8 @@ export interface ClassBroadsheetData {
   term: number;
   isPublished: boolean;
   publishedAt?: string;
+  status: 'draft' | 'submitted' | 'approved' | 'published' | 'archived';
+  lifecycleInfo?: ClassTermStatus;
   subjects: { id: string; name: string; code?: string }[];
   students: BroadsheetStudentRow[];
   subjectSummaries: Record<string, BroadsheetSubjectSummary>;
@@ -1142,7 +1268,7 @@ export interface ClassBroadsheetData {
 }
 
 /**
- * Aggregates full class broadsheet data (students x subjects matrix, totals, ranks, subject stats).
+ * Aggregates full class broadsheet data (students x subjects matrix, totals, ranks, subject stats, and attendance).
  */
 export async function getClassBroadsheetData(
   classId: string,
@@ -1157,8 +1283,8 @@ export async function getClassBroadsheetData(
   try {
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
 
-    // 1. Fetch class info, curriculum subjects, students, results, and publish state
-    const [classRes, subjectsRes, studentsRes, resultsRes, configRes] = await Promise.all([
+    // 1. Fetch class info, curriculum subjects, students, results, attendance, and lifecycle status in parallel
+    const [classRes, subjectsRes, studentsRes, resultsRes, statusRes, configRes, attendanceRes] = await Promise.all([
       (tenantSupabase as any)
         .from('classes')
         .select('id, name')
@@ -1185,11 +1311,24 @@ export async function getClassBroadsheetData(
         .eq('academic_year', academicYear)
         .eq('term', term),
       (tenantSupabase as any)
+        .from('class_term_status')
+        .select('*')
+        .eq('class_id', classId)
+        .eq('school_id', schoolId)
+        .eq('academic_year', academicYear)
+        .eq('term', term)
+        .maybeSingle(),
+      (tenantSupabase as any)
         .from('institutional_configs')
         .select('config_value')
         .eq('school_id', schoolId)
         .eq('config_key', 'published_results')
         .maybeSingle(),
+      (tenantSupabase as any)
+        .from('attendance')
+        .select('student_id, status, date')
+        .eq('class_id', classId)
+        .eq('school_id', schoolId),
     ]);
 
     if (!classRes.data) throw new Error('Class not found');
@@ -1197,15 +1336,32 @@ export async function getClassBroadsheetData(
     const subjects = subjectsRes.data || [];
     const students = studentsRes.data || [];
     const results = resultsRes.data || [];
+    
+    // Resolve publication and lifecycle status
+    const cycleStatusRow = statusRes.data as ClassTermStatus | null;
     const publishedMap = configRes.data?.config_value || {};
     const publishInfo = publishedMap[`${classId}_${academicYear}_${term}`];
-    const isPublished = !!publishInfo?.isPublished;
+    const isPublished = cycleStatusRow?.status === 'published' || !!publishInfo?.isPublished;
+    const currentStatus = cycleStatusRow?.status || (isPublished ? 'published' : 'draft');
 
     // Index results by student_id and subject_id
     const resultMap = new Map<string, any>();
     results.forEach((r: any) => {
       resultMap.set(`${r.student_id}_${r.subject_id}`, r);
     });
+
+    // Compute attendance statistics per student
+    const classDates = new Set<string>();
+    const studentAttendanceMap = new Map<string, { present: number; late: number; absent: number }>();
+    (attendanceRes.data || []).forEach((att: any) => {
+      if (att.date) classDates.add(att.date);
+      const prev = studentAttendanceMap.get(att.student_id) || { present: 0, late: 0, absent: 0 };
+      if (att.status === 'present') prev.present++;
+      else if (att.status === 'late') prev.late++;
+      else if (att.status === 'absent') prev.absent++;
+      studentAttendanceMap.set(att.student_id, prev);
+    });
+    const totalClassAttendanceDays = classDates.size;
 
     // 2. Build student score rows
     const studentRows: BroadsheetStudentRow[] = students.map((s: any) => {
@@ -1235,6 +1391,11 @@ export async function getClassBroadsheetData(
       const averageScore = subjectsCount > 0 ? Math.round((totalScoreSum / subjectsCount) * 10) / 10 : 0;
       const status = averageScore >= 40 ? 'Pass' : 'Fail';
 
+      // Attendance metrics
+      const attStats = studentAttendanceMap.get(s.id);
+      const presentCount = (attStats?.present || 0) + (attStats?.late || 0);
+      const attPercentage = totalClassAttendanceDays > 0 ? Math.round((presentCount / totalClassAttendanceDays) * 100) : 100;
+
       return {
         studentId: s.id,
         admissionNo: s.admission_no,
@@ -1247,6 +1408,11 @@ export async function getClassBroadsheetData(
         rank: 0,
         positionStr: '',
         status,
+        attendance: {
+          presentDays: presentCount,
+          totalDays: totalClassAttendanceDays,
+          percentage: attPercentage,
+        },
       };
     });
 
@@ -1321,7 +1487,16 @@ export async function getClassBroadsheetData(
         academicYear,
         term,
         isPublished,
-        publishedAt: publishInfo?.publishedAt,
+        publishedAt: cycleStatusRow?.published_at || publishInfo?.publishedAt,
+        status: currentStatus,
+        lifecycleInfo: cycleStatusRow || {
+          school_id: schoolId,
+          class_id: classId,
+          academic_year: academicYear,
+          term,
+          status: currentStatus,
+          published_at: publishInfo?.publishedAt,
+        },
         subjects,
         students: studentRows,
         subjectSummaries,
@@ -1342,7 +1517,165 @@ export async function getClassBroadsheetData(
 }
 
 /**
- * Publishes or unpublishes class results, updating institutional_configs.
+ * Fetches the formal lifecycle status for a class's grading cycle.
+ */
+export async function getClassTermStatus(
+  classId: string,
+  academicYear: string,
+  term: number,
+  schoolId: string,
+  subdomain: string
+): Promise<{ success: boolean; data?: ClassTermStatus; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!classId) return { success: false, error: 'Class ID is required.' };
+
+  try {
+    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
+
+    const { data, error } = await (tenantSupabase as any)
+      .from('class_term_status')
+      .select('*')
+      .eq('school_id', schoolId)
+      .eq('class_id', classId)
+      .eq('academic_year', academicYear)
+      .eq('term', term)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      // Fallback check on institutional_configs
+      const { data: configData } = await (tenantSupabase as any)
+        .from('institutional_configs')
+        .select('config_value')
+        .eq('school_id', schoolId)
+        .eq('config_key', 'published_results')
+        .maybeSingle();
+
+      const publishedMap = configData?.config_value || {};
+      const publishInfo = publishedMap[`${classId}_${academicYear}_${term}`];
+      if (publishInfo?.isPublished) {
+        return {
+          success: true,
+          data: {
+            school_id: schoolId,
+            class_id: classId,
+            academic_year: academicYear,
+            term,
+            status: 'published',
+            published_at: publishInfo.publishedAt || null,
+          },
+        };
+      }
+    }
+
+    return {
+      success: true,
+      data: data || {
+        school_id: schoolId,
+        class_id: classId,
+        academic_year: academicYear,
+        term,
+        status: 'draft',
+      },
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to fetch class term status' };
+  }
+}
+
+/**
+ * Updates the formal lifecycle status for a class's grading cycle (draft -> submitted -> approved -> published).
+ */
+export async function updateClassTermStatus(
+  classId: string,
+  academicYear: string,
+  term: number,
+  status: 'draft' | 'submitted' | 'approved' | 'published' | 'archived',
+  remarks: string | null = null,
+  subdomain: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!classId) return { success: false, error: 'Class ID is required.' };
+
+  try {
+    const allowedRoles: ('admin' | 'teacher')[] = status === 'submitted' ? ['admin', 'teacher'] : ['admin'];
+    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, allowedRoles);
+
+    const now = new Date().toISOString();
+    const payload: any = {
+      school_id: schoolId,
+      class_id: classId,
+      academic_year: academicYear,
+      term,
+      status,
+      remarks: remarks || null,
+      updated_at: now,
+    };
+
+    if (status === 'submitted') {
+      payload.submitted_at = now;
+      payload.submitted_by = user.id;
+    } else if (status === 'approved') {
+      payload.approved_at = now;
+      payload.approved_by = user.id;
+    } else if (status === 'published') {
+      payload.published_at = now;
+      payload.published_by = user.id;
+    }
+
+    const { data, error } = await (tenantSupabase as any)
+      .from('class_term_status')
+      .upsert(payload, { onConflict: 'school_id,class_id,academic_year,term' })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Mirror to institutional_configs for backward compatibility
+    try {
+      const configKey = 'published_results';
+      const { data: existingConfig } = await (tenantSupabase as any)
+        .from('institutional_configs')
+        .select('config_value')
+        .eq('school_id', schoolId)
+        .eq('config_key', configKey)
+        .maybeSingle();
+
+      const currentMap = existingConfig?.config_value || {};
+      const cycleKey = `${classId}_${academicYear}_${term}`;
+      currentMap[cycleKey] = {
+        isPublished: status === 'published',
+        publishedAt: status === 'published' ? now : null,
+        publishedBy: user.id,
+      };
+
+      await (tenantSupabase as any)
+        .from('institutional_configs')
+        .upsert(
+          {
+            school_id: schoolId,
+            config_key: configKey,
+            config_value: currentMap,
+            updated_at: now,
+          },
+          { onConflict: 'school_id,config_key' }
+        );
+    } catch (configErr) {
+      console.warn('[updateClassTermStatus] Notice mirroring to config:', configErr);
+    }
+
+    revalidatePath('/dashboard/admin/academics/results');
+    revalidatePath('/dashboard/parent/results');
+    revalidatePath('/dashboard/teacher/results');
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to update class term status' };
+  }
+}
+
+/**
+ * Publishes or unpublishes class results, updating both class_term_status and institutional_configs.
  * When published, parents and students can access report cards.
  */
 export async function publishClassResults(
@@ -1353,52 +1686,14 @@ export async function publishClassResults(
   subdomain: string,
   isPublished: boolean = true
 ): Promise<{ success: boolean; error?: string }> {
-  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
-  if (!classId) return { success: false, error: 'Class ID is required.' };
-
-  try {
-    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, ['admin']);
-
-    // 1. Update institutional_configs for published_results
-    const configKey = 'published_results';
-    const { data: existingConfig } = await (tenantSupabase as any)
-      .from('institutional_configs')
-      .select('config_value')
-      .eq('school_id', schoolId)
-      .eq('config_key', configKey)
-      .maybeSingle();
-
-    const currentMap = existingConfig?.config_value || {};
-    const cycleKey = `${classId}_${academicYear}_${term}`;
-    currentMap[cycleKey] = {
-      isPublished,
-      publishedAt: isPublished ? new Date().toISOString() : null,
-      publishedBy: user.id,
-      className,
-    };
-
-    const { error: configErr } = await (tenantSupabase as any)
-      .from('institutional_configs')
-      .upsert(
-        {
-          school_id: schoolId,
-          config_key: configKey,
-          config_value: currentMap,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'school_id,config_key' }
-      );
-
-    if (configErr) throw configErr;
-
-    revalidatePath('/dashboard/admin/academics/results');
-    revalidatePath('/dashboard/parent/results');
-    revalidatePath('/dashboard/student');
-    return { success: true };
-  } catch (error: any) {
-    console.error('[publishClassResults Error]:', error);
-    return { success: false, error: error.message || 'Failed to update result publication status' };
-  }
+  return updateClassTermStatus(
+    classId,
+    academicYear,
+    term,
+    isPublished ? 'published' : 'draft',
+    null,
+    subdomain
+  );
 }
 
 /**

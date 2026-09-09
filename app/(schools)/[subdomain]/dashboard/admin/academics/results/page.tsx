@@ -36,6 +36,7 @@ import { SubjectScoresheet } from "@/components/admin/results/subject-scoresheet
 import { ClassBroadsheet } from "@/components/admin/results/class-broadsheet";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getAcademicSessionOptions } from "@/lib/utils/academic-session";
 
 export default function AdminResultsPage() {
   const params = useParams();
@@ -200,9 +201,11 @@ export default function AdminResultsPage() {
               <SelectValue placeholder="Session" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2026/2027" className="text-xs font-medium">2026/2027</SelectItem>
-              <SelectItem value="2025/2026" className="text-xs font-medium">2025/2026</SelectItem>
-              <SelectItem value="2024/2025" className="text-xs font-medium">2024/2025</SelectItem>
+              {getAcademicSessionOptions(academicCycle?.academicYear || academicYear).map((s) => (
+                <SelectItem key={s} value={s} className="text-xs font-medium">
+                  {s}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

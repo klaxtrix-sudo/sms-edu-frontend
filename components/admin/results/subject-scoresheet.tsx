@@ -43,14 +43,16 @@ import {
   Trash2,
   Sparkles,
   Search,
-  Filter
+  Filter,
+  Lock
 } from "lucide-react";
 import { 
   getResultMetrics, 
   saveResultMetrics, 
   saveResults,
   getOnlineExamsForSubject,
-  syncOnlineExamScores
+  syncOnlineExamScores,
+  getClassTermStatus
 } from "@/app/actions/academic-actions";
 import { createTenantClient } from "@/lib/supabase/client";
 import { scoreToGrade, gradeRemark } from "@/lib/grade-scale";
@@ -61,7 +63,7 @@ interface Metric {
   id?: string;
   name: string;
   weight: number;
-  school_id: string;
+  school_id?: string;
   class_id?: string | null;
   subject_id?: string | null;
   is_custom?: boolean;
@@ -98,11 +100,15 @@ export function SubjectScoresheet({
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Lifecycle status state
+  const [cycleStatus, setCycleStatus] = useState<string>("draft");
+  const [isLocked, setIsLocked] = useState<boolean>(false);
+
   // Roster & Metrics state
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [isCustomMetrics, setIsCustomMetrics] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
-  const [results, setResults] = useState<Record<string, { id?: string; scores: Record<string, number | null>; isEntered: boolean }>>({});
+  const [results, setResults] = useState<Record<string, { id?: string; scores: Record<string, any>; isEntered: boolean }>>({});
 
   // Weights config modal
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -128,8 +134,16 @@ export function SubjectScoresheet({
   const loadClassAndSubjectData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch metrics
-      const metricsRes = await getResultMetrics(classId, subjectId, schoolId, subdomain);
+      // 1. Fetch lifecycle status and metrics in parallel
+      const [statusRes, metricsRes] = await Promise.all([
+        getClassTermStatus(classId, academicYear, term, schoolId, subdomain),
+        getResultMetrics(classId, subjectId, schoolId, subdomain, academicYear, term),
+      ]);
+
+      const curStatus = statusRes.success && statusRes.data?.status ? statusRes.data.status : "draft";
+      setCycleStatus(curStatus);
+      setIsLocked(["approved", "published", "archived"].includes(curStatus));
+
       let activeMetrics: Metric[] = [];
       if (metricsRes.success && metricsRes.data) {
         activeMetrics = metricsRes.data;
@@ -239,7 +253,29 @@ export function SubjectScoresheet({
   };
 
   const handleScoreChange = (studentId: string, metricKey: string, value: string, maxWeight: number) => {
-    const rawVal = value.trim();
+    if (isLocked) {
+      toast.error("This grading cycle is locked and cannot be edited.");
+      return;
+    }
+
+    const rawVal = value.trim().toUpperCase();
+
+    // Support special assessment codes (ABS for Absent, EX for Exempt)
+    if (rawVal === "ABS" || rawVal === "EX") {
+      setResults(prev => {
+        const current = prev[studentId] || { scores: {}, isEntered: false };
+        return {
+          ...prev,
+          [studentId]: {
+            ...current,
+            scores: { ...current.scores, [metricKey]: rawVal },
+            isEntered: true,
+          }
+        };
+      });
+      return;
+    }
+
     const numVal = rawVal === "" ? null : parseFloat(rawVal);
 
     if (numVal !== null && (isNaN(numVal) || numVal < 0)) {
@@ -253,7 +289,9 @@ export function SubjectScoresheet({
     setResults(prev => {
       const current = prev[studentId] || { scores: {}, isEntered: false };
       const updatedScores = { ...current.scores, [metricKey]: numVal };
-      const hasAnyScore = Object.values(updatedScores).some(v => v !== null && v !== undefined && !isNaN(Number(v)));
+      const hasAnyScore = Object.values(updatedScores).some(
+        v => v !== null && v !== undefined && v !== ""
+      );
 
       return {
         ...prev,
@@ -268,6 +306,11 @@ export function SubjectScoresheet({
 
   // Save Results (filters out unentered rows!)
   const onSave = async () => {
+    if (isLocked) {
+      toast.error("Grading cycle is locked. Reopen the cycle to Draft status before making edits.");
+      return;
+    }
+
     setSaving(true);
     try {
       const dataToSave: any[] = [];
@@ -277,16 +320,31 @@ export function SubjectScoresheet({
         if (entry && entry.isEntered) {
           // Calculate total
           let total = 0;
+          let hasEnteredScore = false;
+          let allAbsent = true;
+          let allExempt = true;
+
           metrics.forEach(m => {
             const key = m.id || m.name;
             const val = entry.scores[key];
-            if (val !== null && val !== undefined && !isNaN(Number(val))) {
-              total += Number(val);
+            if (val !== null && val !== undefined && val !== "") {
+              hasEnteredScore = true;
+              if (val === "ABS") {
+                allExempt = false;
+              } else if (val === "EX") {
+                allAbsent = false;
+              } else if (!isNaN(Number(val))) {
+                total += Number(val);
+                allAbsent = false;
+                allExempt = false;
+              }
             }
           });
 
-          const grade = scoreToGrade(total);
-          const remark = gradeRemark(grade);
+          if (!hasEnteredScore) return;
+
+          const grade = allAbsent ? "ABS" : allExempt ? "EX" : scoreToGrade(total);
+          const remark = allAbsent ? "Absent" : allExempt ? "Exempt" : gradeRemark(grade);
 
           dataToSave.push({
             ...(entry.id ? { id: entry.id } : {}),
@@ -493,7 +551,7 @@ export function SubjectScoresheet({
         is_custom: true,
       }));
 
-      const res = await saveResultMetrics(payload, subdomain);
+      const res = await saveResultMetrics(payload, subdomain, academicYear, term);
       if (res.error) throw new Error(res.error);
 
       toast.success("Grading components updated!");
@@ -556,7 +614,7 @@ export function SubjectScoresheet({
           </Button>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-bold text-foreground">{subjectName}</h2>
               <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border-border">
                 {className}
@@ -564,6 +622,23 @@ export function SubjectScoresheet({
               <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border-primary/20">
                 {academicYear} • {termLabel}
               </Badge>
+              {cycleStatus === 'published' ? (
+                <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-bold flex items-center gap-1">
+                  <CheckCircle2 className="size-3" /> Published
+                </Badge>
+              ) : cycleStatus === 'approved' ? (
+                <Badge className="bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 text-xs font-bold flex items-center gap-1">
+                  <Lock className="size-3" /> Approved (Locked)
+                </Badge>
+              ) : cycleStatus === 'submitted' ? (
+                <Badge className="bg-blue-500/10 text-blue-500 border border-blue-500/20 text-xs font-bold">
+                  In Review
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs font-semibold">
+                  Draft
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Input student scores directly, import from online CBT, or upload an offline CSV.
@@ -590,7 +665,8 @@ export function SubjectScoresheet({
             variant="outline"
             size="sm"
             onClick={openCbtModal}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-primary/30 text-primary hover:bg-primary/10"
+            disabled={isLocked}
+            className="h-9 px-3 text-xs font-semibold rounded-xl border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             <Laptop className="size-3.5 mr-1.5" />
             Sync from CBT
@@ -612,7 +688,8 @@ export function SubjectScoresheet({
             variant="outline"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
+            disabled={isLocked}
+            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted disabled:opacity-50"
           >
             <Upload className="size-3.5 mr-1.5" />
             Upload CSV
@@ -630,7 +707,8 @@ export function SubjectScoresheet({
             variant="outline"
             size="sm"
             onClick={openConfigModal}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
+            disabled={isLocked}
+            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted disabled:opacity-50"
           >
             <Settings className="size-3.5 mr-1.5" />
             Weights
@@ -639,14 +717,36 @@ export function SubjectScoresheet({
           {/* Save Button */}
           <Button
             onClick={onSave}
-            disabled={saving || loading || students.length === 0}
-            className="h-9 px-4 text-xs font-bold rounded-xl bg-primary hover:bg-primary/90 shadow-md shadow-primary/20"
+            disabled={isLocked || saving || loading || students.length === 0}
+            className={cn(
+              "h-9 px-4 text-xs font-bold rounded-xl shadow-md",
+              isLocked 
+                ? "bg-muted text-muted-foreground border border-border cursor-not-allowed" 
+                : "bg-primary hover:bg-primary/90 shadow-primary/20"
+            )}
           >
-            {saving ? <Loader2 className="size-3.5 mr-1.5 animate-spin" /> : <Save className="size-3.5 mr-1.5" />}
-            Save Results
+            {saving ? (
+              <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+            ) : isLocked ? (
+              <Lock className="size-3.5 mr-1.5 text-amber-500" />
+            ) : (
+              <Save className="size-3.5 mr-1.5" />
+            )}
+            {isLocked ? "Cycle Locked" : "Save Results"}
           </Button>
         </div>
       </div>
+
+      {/* Lifecycle Locked Warning Banner */}
+      {isLocked && (
+        <div className="flex items-center gap-3 p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
+          <Lock className="size-4 shrink-0" />
+          <div className="flex-1">
+            <span className="font-bold">Grading Cycle Locked ({cycleStatus.toUpperCase()}): </span>
+            Scores for {className} ({academicYear} • {termLabel}) have been finalized. An administrator must revert the cycle to Draft status before scores can be modified.
+          </div>
+        </div>
+      )}
 
       {/* 2. Live Subject Performance Stat Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-muted/30 border border-border/70 p-3 rounded-xl">
@@ -734,19 +834,30 @@ export function SubjectScoresheet({
                   // Calculate student total from valid numbers
                   let studentTotal = 0;
                   let hasAnyPoints = false;
+                  let allAbsent = true;
+                  let allExempt = true;
+
                   metrics.forEach(m => {
                     const key = m.id || m.name;
                     const val = entry.scores[key];
-                    if (val !== null && val !== undefined && !isNaN(Number(val))) {
-                      studentTotal += Number(val);
+                    if (val !== null && val !== undefined && val !== "") {
                       hasAnyPoints = true;
+                      if (val === "ABS") {
+                        allExempt = false;
+                      } else if (val === "EX") {
+                        allAbsent = false;
+                      } else if (!isNaN(Number(val))) {
+                        studentTotal += Number(val);
+                        allAbsent = false;
+                        allExempt = false;
+                      }
                     }
                   });
 
                   const isEntered = entry.isEntered && hasAnyPoints;
-                  const grade = isEntered ? scoreToGrade(studentTotal) : "—";
-                  const remark = isEntered ? gradeRemark(grade) : "Unrecorded";
-                  const isPassing = isEntered && studentTotal >= 40;
+                  const grade = isEntered ? (allAbsent ? "ABS" : allExempt ? "EX" : scoreToGrade(studentTotal)) : "—";
+                  const remark = isEntered ? (allAbsent ? "Absent" : allExempt ? "Exempt" : gradeRemark(grade)) : "Unrecorded";
+                  const isPassing = isEntered && !allAbsent && !allExempt && studentTotal >= 40;
 
                   return (
                     <TableRow key={student.id} className="hover:bg-muted/30 transition-colors">
@@ -761,25 +872,28 @@ export function SubjectScoresheet({
                       {metrics.map((m, mIdx) => {
                         const key = m.id || m.name;
                         const scoreVal = entry.scores[key] !== null && entry.scores[key] !== undefined ? entry.scores[key] : "";
-                        const isOverweight = scoreVal !== "" && Number(scoreVal) > m.weight;
+                        const isOverweight = scoreVal !== "" && typeof scoreVal === "number" && scoreVal > m.weight;
+                        const isSpecialCode = scoreVal === "ABS" || scoreVal === "EX";
 
                         return (
                           <TableCell key={m.id || mIdx} className="text-center p-2">
                             <Input
                               id={`cell-${sIdx}-${mIdx}`}
-                              type="number"
+                              type="text"
+                              inputMode="decimal"
                               value={scoreVal}
                               placeholder="—"
+                              disabled={isLocked || saving}
                               onChange={(e) => handleScoreChange(student.id, key, e.target.value, m.weight)}
                               onKeyDown={(e) => handleKeyDown(e, sIdx, mIdx)}
-                              min={0}
-                              max={m.weight}
-                              step="any"
                               className={cn(
                                 "w-20 mx-auto text-center h-8 text-xs font-bold rounded-lg transition-all",
                                 isOverweight 
                                   ? "border-rose-500 bg-rose-500/10 text-rose-500 focus-visible:ring-rose-500" 
-                                  : "bg-background border-border/80"
+                                  : isSpecialCode
+                                  ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono"
+                                  : "bg-background border-border/80",
+                                isLocked && "opacity-70 cursor-not-allowed bg-muted/40"
                               )}
                             />
                           </TableCell>
@@ -914,9 +1028,16 @@ export function SubjectScoresheet({
           <DialogHeader>
             <DialogTitle>Customize Grading Components</DialogTitle>
             <DialogDescription>
-              Configure the assessment breakdown for {subjectName} in {className}. Total weight must equal 100.
+              Configure the assessment breakdown for {subjectName} in {className} ({academicYear} • {termLabel}). Total weight must equal 100.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex items-start gap-2.5">
+            <Sparkles className="size-4 text-primary shrink-0 mt-0.5" />
+            <span>
+              <strong>Teacher Subject Flexibility:</strong> Custom weights configured here apply specifically to <strong>{subjectName}</strong> for this session & term without altering other subjects.
+            </span>
+          </div>
 
           <div className="space-y-4 py-3">
             <div className="space-y-2.5 max-h-[40vh] overflow-y-auto pr-1">
