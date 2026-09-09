@@ -12,6 +12,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { 
   FileSpreadsheet, 
@@ -23,7 +24,8 @@ import {
   BookOpen,
   ArrowLeft,
   Calendar,
-  Layers
+  Layers,
+  Award
 } from "lucide-react";
 import { 
   getClasses, 
@@ -293,6 +295,18 @@ export default function AdminResultsPage() {
               </button>
             </div>
           )}
+
+          {/* Promotions Action */}
+          <Link href={`/dashboard/admin/academics/promotions`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-xs font-semibold rounded-xl bg-card border-border hover:bg-primary/5 hover:text-primary"
+            >
+              <Award className="size-3.5 text-primary" />
+              Promotions
+            </Button>
+          </Link>
 
           {/* Refresh Action */}
           <Button

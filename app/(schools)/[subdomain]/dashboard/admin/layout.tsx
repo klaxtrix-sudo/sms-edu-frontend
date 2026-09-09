@@ -60,6 +60,7 @@ export default function AdminLayout({
     { label: "Announcements", href: "/dashboard/admin/communications", icon: "Megaphone" },
     { label: "Exams", href: "/dashboard/admin/exams", icon: "ClipboardList" },
     { label: "Results", href: "/dashboard/admin/academics/results", icon: "CheckSquare" },
+    { label: "Promotions", href: "/dashboard/admin/academics/promotions", icon: "Award" },
     { label: "Fee Management", href: "/dashboard/admin/finance", icon: "CreditCard" },
     { label: "Settings", href: "/dashboard/admin/settings", icon: "Settings" },
   ] as const;

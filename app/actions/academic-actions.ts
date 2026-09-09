@@ -1915,3 +1915,137 @@ export async function syncOnlineExamScores(
   }
 }
 
+/**
+ * Previews annual progression recommendations for a class based on multi-term cumulative performance.
+ */
+export async function previewClassPromotions(
+  classId: string,
+  academicYear: string,
+  passingThreshold: number = 50,
+  subdomain: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!classId) return { success: false, error: 'Class ID is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        classId,
+        academicYear,
+        passingThreshold,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to preview promotions' };
+    }
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to preview promotions' };
+  }
+}
+
+/**
+ * Executes batch promotions for a class roster.
+ */
+export async function executeClassPromotions(
+  classId: string,
+  academicYear: string,
+  promotions: any[],
+  subdomain: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!classId) return { success: false, error: 'Class ID is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        classId,
+        academicYear,
+        promotions,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to execute promotions' };
+    }
+    revalidatePath('/dashboard/admin/academics/promotions');
+    revalidatePath('/dashboard/admin/users/students');
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to execute promotions' };
+  }
+}
+
+/**
+ * Configures vertical class progression order and progression targets.
+ */
+export async function configureClassProgression(
+  classes: { id: string; orderIndex: number; nextClassId?: string | null; isGraduatingClass?: boolean }[],
+  subdomain: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/configure-classes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ classes }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to configure classes' };
+    }
+    revalidatePath('/dashboard/admin/academics/promotions');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to configure classes' };
+  }
+}
+
+/**
+ * Retrieves student progression history across sessions.
+ */
+export async function getStudentProgressionHistory(
+  studentId: string,
+  subdomain: string
+): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!studentId) return { success: false, error: 'Student ID is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin', 'teacher', 'parent', 'student']);
+    const res = await fetch(
+      `${getBackendUrl()}/academic/promotions/history?studentId=${encodeURIComponent(studentId)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to fetch progression history' };
+    }
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to fetch progression history' };
+  }
+}
+

@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Megaphone,
   X,
+  Award,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
@@ -44,6 +45,7 @@ const iconMap = {
   CalendarDays,
   BarChart3,
   Megaphone,
+  Award,
 };
 
 import { signOutAction } from "@/app/actions/auth-actions";

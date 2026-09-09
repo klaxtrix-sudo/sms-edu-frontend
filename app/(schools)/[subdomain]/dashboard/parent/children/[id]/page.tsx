@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, ArrowLeft, GraduationCap, Clock, CalendarDays, Heart, MapPin, BookOpen, FileText, Download } from "lucide-react";
+import { Loader2, ArrowLeft, GraduationCap, Clock, CalendarDays, Heart, MapPin, BookOpen, FileText, Download, Award, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,9 @@ import { useParentChildren } from "@/hooks/use-parent-children";
 import { useChildAcademics } from "@/hooks/use-child-academics";
 import { useTenant } from "@/components/providers/tenant-provider";
 import { ErrorState } from "@/components/dashboard/query-states";
-import { getBackendUrl } from "@/lib/utils";
+import { getBackendUrl, cn } from "@/lib/utils";
 import { gradeRemark } from "@/lib/grade-scale";
+import { getStudentProgressionHistory } from "@/app/actions/academic-actions";
 
 interface Assignment {
   _id: string;
@@ -34,9 +35,10 @@ interface ExamTimetableEntry {
 }
 
 export default function ChildDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
-  const childId = typeof id === "string" ? id : Array.isArray(id) ? id[0] : undefined;
+  const subdomain = params.subdomain as string;
+  const childId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
   const { child, loading, error, refetch } = useParentChildren(childId);
   const { academicCycle } = useTenant();
   const { attendancePct, avgGrade, avgScore, results } = useChildAcademics(
@@ -48,7 +50,18 @@ export default function ChildDetailPage() {
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [examTimetable, setExamTimetable] = useState<ExamTimetableEntry[]>([]);
+  const [progressionHistory, setProgressionHistory] = useState<any[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
+
+  // Fetch progression history
+  useEffect(() => {
+    if (!childId || !subdomain) return;
+    getStudentProgressionHistory(childId, subdomain).then((res) => {
+      if (res.success && res.data) {
+        setProgressionHistory(res.data);
+      }
+    });
+  }, [childId, subdomain]);
 
   // Fetch assignments + exam timetable for the child's class.
   useEffect(() => {
@@ -263,6 +276,60 @@ export default function ChildDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Academic Progression & Promotion Journey */}
+      {progressionHistory.length > 0 && (
+        <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b border-primary/20 pb-6">
+            <CardTitle className="text-primary flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+              <Award className="size-5" /> Academic Progression Journey
+            </CardTitle>
+            <CardDescription className="font-medium text-primary/70">
+              Verified promotion ledger across academic sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {progressionHistory.map((h) => (
+                <div key={h.id} className="flex flex-wrap items-center justify-between p-3.5 bg-muted/30 rounded-xl border border-border/80 gap-2">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="font-mono text-xs font-bold bg-background">
+                      {h.academic_year}
+                    </Badge>
+                    <span className="font-bold text-sm text-foreground">
+                      {h.from_class?.name || "—"}
+                    </span>
+                    <ArrowRight className="size-3.5 text-muted-foreground" />
+                    <span className="font-black text-sm text-primary">
+                      {h.action === "graduated" ? "🎓 Graduated (Alumni)" : (h.to_class?.name || h.from_class?.name || "—")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {h.annual_average !== null && (
+                      <Badge variant="secondary" className="font-bold text-xs">
+                        {h.annual_average}% CGPA
+                      </Badge>
+                    )}
+                    {h.annual_rank && (
+                      <Badge variant="outline" className="font-bold text-xs bg-primary/10 text-primary border-primary/20">
+                        Rank #{h.annual_rank}
+                      </Badge>
+                    )}
+                    <Badge className={cn(
+                      "capitalize font-bold text-xs",
+                      h.action === "promoted" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+                      h.action === "retained" && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+                      h.action === "graduated" && "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                    )}>
+                      {h.action}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Health & Background */}
       <Card className="border border-border/80 shadow-md bg-card text-card-foreground rounded-[2rem] overflow-hidden">
