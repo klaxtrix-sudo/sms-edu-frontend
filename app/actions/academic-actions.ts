@@ -1600,7 +1600,7 @@ export async function updateClassTermStatus(
 
   try {
     const allowedRoles: ('admin' | 'teacher')[] = status === 'submitted' ? ['admin', 'teacher'] : ['admin'];
-    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, allowedRoles);
+    const { tenantSupabase, schoolId, user, accessToken } = await requireActionAuth(subdomain, allowedRoles);
 
     const now = new Date().toISOString();
     const payload: any = {
@@ -1631,6 +1631,26 @@ export async function updateClassTermStatus(
       .single();
 
     if (error) throw error;
+
+    // When a grading cycle is published, trigger MongoDB terminal report card snapshot compilation
+    if (status === 'published') {
+      try {
+        await fetch(`${getBackendUrl()}/academic/snapshots/compile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            classId,
+            academicYear,
+            term,
+          }),
+        });
+      } catch (snapErr) {
+        console.warn('[updateClassTermStatus] MongoDB snapshot trigger warning:', snapErr);
+      }
+    }
 
     // Mirror to institutional_configs for backward compatibility
     try {
@@ -1694,6 +1714,39 @@ export async function publishClassResults(
     null,
     subdomain
   );
+}
+
+/**
+ * Retrieves a student's frozen terminal report card snapshot from MongoDB.
+ */
+export async function getStudentAcademicSnapshot(
+  studentId: string,
+  academicYear: string,
+  term: number,
+  subdomain: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!studentId) return { success: false, error: 'Student ID is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin', 'teacher', 'parent', 'student']);
+    const res = await fetch(
+      `${getBackendUrl()}/academic/snapshots/student?studentId=${encodeURIComponent(studentId)}&academicYear=${encodeURIComponent(academicYear)}&term=${encodeURIComponent(term)}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      return { success: false, error: 'Snapshot not found' };
+    }
+
+    const json = await res.json();
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to retrieve academic snapshot' };
+  }
 }
 
 /**

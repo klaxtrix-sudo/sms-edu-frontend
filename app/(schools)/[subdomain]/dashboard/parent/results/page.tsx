@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, GraduationCap, FileText, Download } from "lucide-react";
+import { Loader2, GraduationCap, FileText, Download, Award } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ResultSlipPDF } from "@/components/shared/result-slip-template";
-import { useParentChildren, type ParentChild } from "@/hooks/use-parent-children";
+import { useParentChildren } from "@/hooks/use-parent-children";
 import { useChildAcademics, type ChildResult } from "@/hooks/use-child-academics";
 import { useTenant } from "@/components/providers/tenant-provider";
 import { EmptyState, ErrorState } from "@/components/dashboard/query-states";
@@ -55,7 +55,7 @@ export default function ParentResultsPage() {
   }, [children, selectedChildId]);
 
   const selectedChild = children.find((c) => c.id === selectedChildId);
-  const { results, loading: resultsLoading } = useChildAcademics(
+  const { results, loading: resultsLoading, positionStr, attendancePct, avgScore } = useChildAcademics(
     selectedChildId || undefined,
     academicCycle?.academicYear,
     academicCycle?.currentTerm
@@ -148,6 +148,9 @@ export default function ParentResultsPage() {
               full_name: selectedChild?.profiles?.full_name || "—",
               admission_no: selectedChild?.admission_no || "—",
               class_name: selectedChild?.classes?.name || "—",
+              position: isLatest && positionStr ? positionStr : undefined,
+              attendance: isLatest && attendancePct !== null ? `${attendancePct}%` : undefined,
+              average: isLatest && avgScore !== null ? `${avgScore}%` : undefined,
             };
             const slipRows = toSlipRows(group.results);
             return (
@@ -169,7 +172,7 @@ export default function ParentResultsPage() {
                   </Badge>
                 </CardHeader>
                 <CardContent className="p-8">
-                  <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-4 mb-4">
                     <div className={`size-12 rounded-2xl ${isLatest ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"} flex items-center justify-center`}>
                       <FileText className="size-6" />
                     </div>
@@ -180,6 +183,34 @@ export default function ParentResultsPage() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Class Position & Attendance Pill (Latest Published Term) */}
+                  {isLatest && (positionStr || attendancePct !== null || avgScore !== null) && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 mb-6 rounded-2xl bg-primary/5 border border-primary/20 text-xs">
+                      {positionStr && (
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <Award className="size-4 text-primary shrink-0" />
+                          <span className="text-muted-foreground">Class Position:</span>
+                          <Badge variant="secondary" className="font-black text-xs bg-primary text-primary-foreground px-2 py-0.5">
+                            {positionStr}
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4 ml-auto font-medium">
+                        {attendancePct !== null && (
+                          <span className="text-muted-foreground">
+                            Attendance: <strong className="text-foreground font-bold">{attendancePct}%</strong>
+                          </span>
+                        )}
+                        {avgScore !== null && (
+                          <span className="text-muted-foreground">
+                            Average: <strong className="text-primary font-black">{avgScore}%</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Subject summary */}
                   <div className="space-y-2 mb-6">
                     {group.results.slice(0, 4).map((r) => (

@@ -5,9 +5,7 @@ import {
   Page, 
   Text, 
   View, 
-  StyleSheet, 
-  Font,
-  Image 
+  StyleSheet 
 } from "@react-pdf/renderer";
 
 // Register fonts if needed (simulating standard Helvetica for now)
@@ -138,7 +136,14 @@ const styles = StyleSheet.create({
 });
 
 interface ResultSlipPDFProps {
-  student: { full_name: string; admission_no: string; class_name: string };
+  student: { 
+    full_name: string; 
+    admission_no: string; 
+    class_name: string;
+    position?: string;
+    attendance?: string;
+    average?: string;
+  };
   results: { subject: string; ca: string | number; exam: string | number; total: number; grade: string }[];
   term: string;
   year: string;
@@ -152,7 +157,7 @@ export const ResultSlipPDF = ({ student, results, term, year, schoolName = "KLAX
       <View style={styles.header}>
         <View style={styles.schoolInfo}>
           <Text style={styles.schoolName}>{schoolName.toUpperCase()}</Text>
-          <Text style={styles.schoolAddress}>Nigeria's Premier Digital Institution · Innovation Hub</Text>
+          <Text style={styles.schoolAddress}>Nigeria&apos;s Premier Digital Institution · Innovation Hub</Text>
         </View>
         <Text style={{ fontSize: 10, fontWeight: "bold", color: "#3b82f6" }}>OFFICIAL ACADEMIC RECORD</Text>
       </View>
@@ -183,6 +188,24 @@ export const ResultSlipPDF = ({ student, results, term, year, schoolName = "KLAX
           <Text style={styles.infoLabel}>Status</Text>
           <Text style={[styles.infoValue, { color: "#10b981" }]}>Enrolled / Active</Text>
         </View>
+        {student.position && (
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Class Position</Text>
+            <Text style={[styles.infoValue, { color: "#3b82f6" }]}>{student.position}</Text>
+          </View>
+        )}
+        {student.attendance && (
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Attendance Rate</Text>
+            <Text style={styles.infoValue}>{student.attendance}</Text>
+          </View>
+        )}
+        {student.average && (
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Term Average</Text>
+            <Text style={[styles.infoValue, { color: "#3b82f6" }]}>{student.average}</Text>
+          </View>
+        )}
       </View>
 
       {/* Results Table */}
