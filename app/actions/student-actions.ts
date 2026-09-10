@@ -68,7 +68,7 @@ export async function createStudent(data: any) {
 
     if (user) {
       // 5. Create Student record in TENANT project (with all fields)
-      const { error: studentError } = await (tenantSupabase as any)
+      const { data: insertedStudent, error: studentError } = await (tenantSupabase as any)
         .from('students')
         .insert({
           user_id: user.id,
@@ -86,9 +86,36 @@ export async function createStudent(data: any) {
           genotype: genotype || null,
           medical_conditions: medicalConditions || null,
           previous_school: previousSchool || null,
-        });
+        })
+        .select('id')
+        .single();
 
       if (studentError) return { error: `Tenant Data Error: ${studentError.message}` };
+
+      // 5b. Create initial enrollment record in student_enrollments
+      if (classId && insertedStudent?.id) {
+        try {
+          const { data: schoolData } = await (tenantSupabase as any)
+            .from('schools')
+            .select('academic_year')
+            .eq('id', schoolId)
+            .single();
+
+          const activeYear = schoolData?.academic_year || '2025/2026';
+
+          await (tenantSupabase as any)
+            .from('student_enrollments')
+            .insert({
+              school_id: schoolId,
+              student_id: insertedStudent.id,
+              class_id: classId,
+              academic_year: activeYear,
+              status: 'active',
+            });
+        } catch (enrollErr) {
+          console.error('[Admin Actions] Tenant Student Initial Enrollment Warning:', enrollErr);
+        }
+      }
 
       // 6. Upsert profile in TENANT project
       const { error: profileError } = await (tenantSupabase as any)

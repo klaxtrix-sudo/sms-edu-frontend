@@ -165,22 +165,50 @@ export function SubjectScoresheet({
         setTargetMetricKey(examMetric.id || examMetric.name);
       }
 
-      // 2. Fetch students in this class
-      const { data: studentsData, error: studentError } = await (supabase as any)
-        .from("students")
+      // 2. Fetch students enrolled in this class for the selected academicYear
+      const { data: enrollmentsData, error: enrollError } = await (supabase as any)
+        .from("student_enrollments")
         .select(`
-          id,
-          admission_no,
-          gender,
-          profiles:user_id (
-            full_name
+          student_id,
+          status,
+          students:student_id (
+            id,
+            admission_no,
+            gender,
+            profiles:user_id (
+              full_name
+            )
           )
         `)
         .eq("class_id", classId)
         .eq("school_id", schoolId)
-        .order("admission_no");
+        .eq("academic_year", academicYear);
 
-      if (studentError) throw studentError;
+      let resolvedStudents: any[] = [];
+      if (enrollmentsData && enrollmentsData.length > 0) {
+        resolvedStudents = enrollmentsData
+          .map((e: any) => e.students)
+          .filter(Boolean)
+          .sort((a: any, b: any) => (a.admission_no || "").localeCompare(b.admission_no || ""));
+      } else {
+        // Fallback for unseeded classes
+        const { data: fallbackStudents, error: studentError } = await (supabase as any)
+          .from("students")
+          .select(`
+            id,
+            admission_no,
+            gender,
+            profiles:user_id (
+              full_name
+            )
+          `)
+          .eq("class_id", classId)
+          .eq("school_id", schoolId)
+          .order("admission_no");
+
+        if (studentError) throw studentError;
+        resolvedStudents = fallbackStudents || [];
+      }
 
       // 3. Fetch existing results
       const { data: resultsData, error: resultsError } = await (supabase as any)
@@ -193,7 +221,7 @@ export function SubjectScoresheet({
 
       if (resultsError) throw resultsError;
 
-      setStudents(studentsData || []);
+      setStudents(resolvedStudents);
 
       // 4. Map results WITHOUT destructive "F9 Fail" defaults for unentered students!
       const resultsMap: Record<string, any> = {};
@@ -208,7 +236,7 @@ export function SubjectScoresheet({
       });
 
       // Initialize empty/null scores for students that do not have recorded grades yet
-      studentsData?.forEach((s: any) => {
+      resolvedStudents.forEach((s: any) => {
         if (!resultsMap[s.id]) {
           const emptyScores: Record<string, any> = {};
           activeMetrics.forEach(m => {

@@ -1043,8 +1043,8 @@ export async function getTermGradingReadiness(
   try {
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
 
-    // 1. Fetch all classes, students, curriculum assignments, and existing results in parallel
-    const [classesRes, studentsRes, assignmentsRes, allSubjectsRes, resultsRes, configRes] =
+    // 1. Fetch all classes, students/enrollments, curriculum assignments, and existing results in parallel
+    const [classesRes, studentsRes, enrollmentsRes, assignmentsRes, allSubjectsRes, resultsRes, configRes] =
       await Promise.all([
         (tenantSupabase as any)
           .from('classes')
@@ -1055,6 +1055,11 @@ export async function getTermGradingReadiness(
           .from('students')
           .select('id, class_id')
           .eq('school_id', schoolId),
+        (tenantSupabase as any)
+          .from('student_enrollments')
+          .select('class_id')
+          .eq('school_id', schoolId)
+          .eq('academic_year', academicYear),
         (tenantSupabase as any)
           .from('class_subject_teachers')
           .select(`
@@ -1085,18 +1090,27 @@ export async function getTermGradingReadiness(
 
     const classes = classesRes.data || [];
     const students = studentsRes.data || [];
+    const enrollments = enrollmentsRes.data || [];
     const assignments = assignmentsRes.data || [];
     const allSubjects = allSubjectsRes.data || [];
     const results = resultsRes.data || [];
     const publishedMap = configRes.data?.config_value || {};
 
-    // Map student count per class
+    // Map student count per class for the requested academic year
     const classStudentCount: Record<string, number> = {};
-    students.forEach((s: any) => {
-      if (s.class_id) {
-        classStudentCount[s.class_id] = (classStudentCount[s.class_id] || 0) + 1;
-      }
-    });
+    if (enrollments && enrollments.length > 0) {
+      enrollments.forEach((e: any) => {
+        if (e.class_id) {
+          classStudentCount[e.class_id] = (classStudentCount[e.class_id] || 0) + 1;
+        }
+      });
+    } else {
+      students.forEach((s: any) => {
+        if (s.class_id) {
+          classStudentCount[s.class_id] = (classStudentCount[s.class_id] || 0) + 1;
+        }
+      });
+    }
 
     // Map results recorded count per (class_id + subject_id)
     const classSubjectResultsCount: Record<string, number> = {};
@@ -1283,8 +1297,8 @@ export async function getClassBroadsheetData(
   try {
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin', 'teacher']);
 
-    // 1. Fetch class info, curriculum subjects, students, results, attendance, and lifecycle status in parallel
-    const [classRes, subjectsRes, studentsRes, resultsRes, statusRes, configRes, attendanceRes] = await Promise.all([
+    // 1. Fetch class info, curriculum subjects, enrollments, results, attendance, and lifecycle status in parallel
+    const [classRes, subjectsRes, enrollmentsRes, resultsRes, statusRes, configRes, attendanceRes] = await Promise.all([
       (tenantSupabase as any)
         .from('classes')
         .select('id, name')
@@ -1293,16 +1307,20 @@ export async function getClassBroadsheetData(
         .single(),
       getClassCurriculumSubjects(classId, schoolId, subdomain),
       (tenantSupabase as any)
-        .from('students')
+        .from('student_enrollments')
         .select(`
-          id,
-          admission_no,
-          gender,
-          profiles:user_id ( full_name )
+          student_id,
+          status,
+          students:student_id (
+            id,
+            admission_no,
+            gender,
+            profiles:user_id ( full_name )
+          )
         `)
         .eq('class_id', classId)
         .eq('school_id', schoolId)
-        .order('admission_no'),
+        .eq('academic_year', academicYear),
       (tenantSupabase as any)
         .from('results')
         .select('*')
@@ -1334,7 +1352,30 @@ export async function getClassBroadsheetData(
     if (!classRes.data) throw new Error('Class not found');
     const className = classRes.data.name;
     const subjects = subjectsRes.data || [];
-    const students = studentsRes.data || [];
+
+    // Resolve students enrolled in this class for the selected academic year
+    let students: any[] = [];
+    if (enrollmentsRes.data && enrollmentsRes.data.length > 0) {
+      students = enrollmentsRes.data
+        .map((e: any) => e.students)
+        .filter(Boolean)
+        .sort((a: any, b: any) => (a.admission_no || '').localeCompare(b.admission_no || ''));
+    } else {
+      // Fallback for unseeded classes
+      const { data: fallbackStudents } = await (tenantSupabase as any)
+        .from('students')
+        .select(`
+          id,
+          admission_no,
+          gender,
+          profiles:user_id ( full_name )
+        `)
+        .eq('class_id', classId)
+        .eq('school_id', schoolId)
+        .order('admission_no');
+      students = fallbackStudents || [];
+    }
+
     const results = resultsRes.data || [];
     
     // Resolve publication and lifecycle status
@@ -1922,7 +1963,8 @@ export async function previewClassPromotions(
   classId: string,
   academicYear: string,
   passingThreshold: number = 50,
-  subdomain: string
+  subdomain: string,
+  termWeights?: { term1?: number; term2?: number; term3?: number }
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   if (!subdomain) return { success: false, error: 'Subdomain is required.' };
   if (!classId) return { success: false, error: 'Class ID is required.' };
@@ -1938,6 +1980,7 @@ export async function previewClassPromotions(
         classId,
         academicYear,
         passingThreshold,
+        termWeights,
       }),
     });
 
@@ -1958,7 +2001,10 @@ export async function executeClassPromotions(
   classId: string,
   academicYear: string,
   promotions: any[],
-  subdomain: string
+  subdomain: string,
+  applyLiveMutation: boolean = true,
+  forceOverride: boolean = false,
+  overrideReason?: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   if (!subdomain) return { success: false, error: 'Subdomain is required.' };
   if (!classId) return { success: false, error: 'Class ID is required.' };
@@ -1974,6 +2020,9 @@ export async function executeClassPromotions(
         classId,
         academicYear,
         promotions,
+        applyLiveMutation,
+        forceOverride,
+        overrideReason,
       }),
     });
 
@@ -1986,6 +2035,129 @@ export async function executeClassPromotions(
     return { success: true, data: json.data };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to execute promotions' };
+  }
+}
+
+/**
+ * Reverts an executed promotion batch for a class and session, restoring original class enrollments.
+ */
+export async function revertClassPromotions(
+  classId: string,
+  academicYear: string,
+  subdomain: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  if (!classId) return { success: false, error: 'Class ID is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/revert`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        classId,
+        academicYear,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to revert promotions' };
+    }
+    revalidatePath('/dashboard/admin/academics/promotions');
+    revalidatePath('/dashboard/admin/users/students');
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to revert promotions' };
+  }
+}
+
+/**
+ * Configures core subjects for a specific class or school-wide.
+ */
+export async function configureCoreSubjects(
+  coreSubjectIds: string[],
+  classId: string | undefined,
+  subdomain: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/configure-core-subjects`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ classId, coreSubjectIds }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to configure core subjects' };
+    }
+    revalidatePath('/dashboard/admin/academics/promotions');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to configure core subjects' };
+  }
+}
+
+/**
+ * Checks for pending staged promotions ready to activate upon session rollover.
+ */
+export async function checkPendingPromotionRollover(
+  subdomain: string
+): Promise<{ success: boolean; data?: { pendingCount: number; hasPending: boolean }; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/pending-rollover`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to check pending rollover' };
+    }
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to check pending rollover' };
+  }
+}
+
+/**
+ * Applies pending staged promotions for the new academic year.
+ */
+export async function applyStagedPromotionRollover(
+  academicYear: string,
+  subdomain: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!subdomain) return { success: false, error: 'Subdomain is required.' };
+  try {
+    const { accessToken } = await requireActionAuth(subdomain, ['admin']);
+    const res = await fetch(`${getBackendUrl()}/academic/promotions/apply-rollover`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ academicYear }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.message || 'Failed to apply staged rollover' };
+    }
+    revalidatePath('/dashboard/admin/academics/promotions');
+    revalidatePath('/dashboard/admin/users/students');
+    return { success: true, data: json.data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to apply staged rollover' };
   }
 }
 

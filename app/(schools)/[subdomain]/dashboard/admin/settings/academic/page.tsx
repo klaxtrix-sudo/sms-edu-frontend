@@ -22,6 +22,15 @@ import { useParams, useRouter } from 'next/navigation';
 import { getSchoolData, updateSchoolData } from '@/app/actions/tenant-actions';
 import { toast } from 'sonner';
 import { getResultMetrics, saveResultMetrics } from '@/app/actions/admin-actions';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { checkPendingPromotionRollover, applyStagedPromotionRollover } from '@/app/actions/academic-actions';
 import { HolidayManager } from '@/components/admin/holiday-manager';
 import { cn } from '@/lib/utils';
 
@@ -35,11 +44,16 @@ export default function AcademicSettings() {
   const [saving, setSaving] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
 
-  // Form states
   const [academicYear, setAcademicYear] = useState<string>('2025/2026');
+  const [initialAcademicYear, setInitialAcademicYear] = useState<string>('');
   const [currentTerm, setCurrentTerm] = useState<string>('1');
   const [termBegins, setTermBegins] = useState<string>('');
   const [termEnds, setTermEnds] = useState<string>('');
+
+  // Staged Rollover State
+  const [isRolloverModalOpen, setIsRolloverModalOpen] = useState(false);
+  const [pendingRolloverCount, setPendingRolloverCount] = useState(0);
+  const [applyingRollover, setApplyingRollover] = useState(false);
 
   // Metrics states
   const [metrics, setMetrics] = useState<any[]>([]);
@@ -73,6 +87,7 @@ export default function AcademicSettings() {
         if (school) {
           setSchoolId(school.id);
           setAcademicYear(school.academic_year || '2025/2026');
+          setInitialAcademicYear(school.academic_year || '2025/2026');
           setCurrentTerm(String(school.current_term || 1));
           setTermBegins(formatDate(school.term_begins));
           setTermEnds(formatDate(school.term_ends));
@@ -125,6 +140,20 @@ export default function AcademicSettings() {
 
       toast.success('Academic year saved.');
       
+      // Check for pending staged promotions if year changed
+      if (academicYear !== initialAcademicYear) {
+        try {
+          const check = await checkPendingPromotionRollover(subdomain);
+          if (check.success && check.data?.hasPending) {
+            setPendingRolloverCount(check.data.pendingCount);
+            setIsRolloverModalOpen(true);
+          }
+        } catch (err) {
+          console.warn('Rollover check error:', err);
+        }
+        setInitialAcademicYear(academicYear);
+      }
+
       // Refresh global context so header updates instantly
       await refreshAcademicCycle();
       router.refresh();
@@ -132,6 +161,24 @@ export default function AcademicSettings() {
       toast.error(error.message || 'Failed to update academic cycle');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleApplyStagedRollover = async () => {
+    setApplyingRollover(true);
+    try {
+      const res = await applyStagedPromotionRollover(academicYear, subdomain);
+      if (!res.success) {
+        toast.error(res.error || 'Failed to apply staged promotions');
+        return;
+      }
+      toast.success(`Activated progression for ${res.data.activatedCount} student(s) into ${academicYear}!`);
+      setIsRolloverModalOpen(false);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to activate staged promotions');
+    } finally {
+      setApplyingRollover(false);
     }
   };
 
@@ -570,6 +617,57 @@ export default function AcademicSettings() {
           </div>
         )}
       </div>
+
+      {/* Staged Promotion Rollover Prompt Dialog */}
+      <Dialog open={isRolloverModalOpen} onOpenChange={setIsRolloverModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Award className="size-5 text-primary" />
+              Apply Staged Promotions for {academicYear}?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              You have {pendingRolloverCount} staged promotion decision(s) waiting to be activated for the new academic session.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-2 text-xs text-muted-foreground">
+            <p className="leading-relaxed">
+              Would you like to advance these students to their new class rosters now for the <strong className="text-foreground">{academicYear}</strong> session?
+            </p>
+            <p className="text-[11px] text-muted-foreground/80">
+              Students will have their active class enrollments updated and their progression ledger marked as committed.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsRolloverModalOpen(false)}
+              disabled={applyingRollover}
+              className="rounded-xl font-bold text-xs"
+            >
+              Later (Keep Staged)
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleApplyStagedRollover}
+              disabled={applyingRollover}
+              className="rounded-xl font-bold text-xs gap-1.5"
+            >
+              {applyingRollover ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  Applying...
+                </>
+              ) : (
+                "Activate Promotions Now"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
