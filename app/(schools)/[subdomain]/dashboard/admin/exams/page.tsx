@@ -14,7 +14,8 @@ import {
   ClipboardList, 
   MapPin, 
   Loader2,
-  CalendarRange
+  CalendarRange,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,7 @@ import {
 import { AddExamModal } from "@/components/admin/add-exam-modal";
 import { ScheduleExamModal } from "@/components/admin/schedule-exam-modal";
 import { createTenantClient } from "@/lib/supabase/client";
-import { getBackendUrl } from "@/lib/utils";
+import { cn, getBackendUrl } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -79,6 +80,7 @@ export default function ExamsPage() {
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("papers");
   
   // Mapping lookups for classes/subjects
   const [classesMap, setClassesMap] = useState<Record<string, string>>({});
@@ -188,9 +190,9 @@ export default function ExamsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "published": return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>;
-      case "draft": return <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">Draft</Badge>;
-      case "ended": return <Badge variant="destructive">Ended</Badge>;
+      case "published": return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20">Active</Badge>;
+      case "draft": return <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border/80">Draft</Badge>;
+      case "ended": return <Badge variant="destructive" className="bg-destructive/15 text-destructive border border-destructive/30">Ended</Badge>;
       default: return null;
     }
   };
@@ -204,11 +206,74 @@ export default function ExamsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="papers" className="space-y-6">
-        <TabsList className="bg-background/50 border rounded-xl p-1">
-          <TabsTrigger value="papers" className="rounded-lg font-bold">Exam Papers</TabsTrigger>
-          <TabsTrigger value="timetable" className="rounded-lg font-bold">Exam Timetable</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Modern Navigational Tab Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
+          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+            <TabsTrigger
+              value="papers"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "papers" 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "bg-primary/10 text-primary"
+              )}>
+                <FileText className="size-3.5 sm:size-4" />
+              </div>
+              <span>Exam Papers</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "papers"
+                    ? "bg-primary/15 text-primary border-primary/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loading ? <Loader2 className="size-3 animate-spin" /> : exams.length}
+              </Badge>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="timetable"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "timetable" 
+                  ? "bg-indigo-600 text-white shadow-sm" 
+                  : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
+              )}>
+                <CalendarRange className="size-3.5 sm:size-4" />
+              </div>
+              <span>Exam Timetable</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "timetable"
+                    ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loadingTimetable ? <Loader2 className="size-3 animate-spin" /> : timetableSlots.length}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Quick Context / Status Indicator */}
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-medium bg-muted/30 px-3 py-1.5 rounded-xl border border-border/50">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>
+              {activeTab === "papers" 
+                ? `${exams.length} Exam Paper${exams.length === 1 ? '' : 's'} Configured`
+                : `${timetableSlots.length} Timetable Slot${timetableSlots.length === 1 ? '' : 's'} Scheduled`
+              }
+            </span>
+          </div>
+        </div>
 
         <TabsContent value="papers" className="space-y-6">
           <div className="flex items-center gap-4 bg-card/40 backdrop-blur-sm p-4 rounded-xl border shadow-sm">
@@ -266,7 +331,7 @@ export default function ExamsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-zinc-700">
+                    <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-foreground/80">
                       <Clock className="h-4 w-4 text-primary" />
                       <span>{exam.durationMins} Mins • {exam.questionCount} Questions</span>
                     </div>
@@ -322,7 +387,7 @@ export default function ExamsPage() {
                 <TableBody>
                   {timetableSlots.map((slot) => (
                     <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
-                      <TableCell className="font-semibold text-zinc-900">{slot.exam_title}</TableCell>
+                      <TableCell className="font-semibold text-foreground">{slot.exam_title}</TableCell>
                       <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
                       <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
                       <TableCell className="font-mono text-xs">
@@ -339,7 +404,7 @@ export default function ExamsPage() {
                             <MapPin className="size-3" /> {slot.room}
                           </span>
                         ) : (
-                          <span className="text-xs text-zinc-400 italic">Unassigned</span>
+                          <span className="text-xs text-muted-foreground italic">Unassigned</span>
                         )}
                       </TableCell>
                       <TableCell className="text-center">

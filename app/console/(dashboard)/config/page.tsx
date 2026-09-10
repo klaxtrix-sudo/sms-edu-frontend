@@ -253,15 +253,38 @@ export default function ConfigPage() {
       </div>
 
       <Tabs defaultValue="admins" className="space-y-6">
-        <TabsList className="bg-[#0b0b0b] border border-slate-800 p-1 h-14 rounded-2xl gap-2">
-          <TabsTrigger value="admins" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
-            <Users className="w-4 h-4" /> Admins
-           </TabsTrigger>
-           <TabsTrigger value="profile" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
-             <UserCircle className="w-4 h-4" /> My Profile
-           </TabsTrigger>
-           <TabsTrigger value="governance" className="data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400 rounded-xl px-6 font-bold uppercase tracking-tighter text-xs gap-2">
-             <Shield className="w-4 h-4" /> Platform
+        <TabsList className="inline-flex h-auto p-1.5 bg-[#0c0c0c]/80 border border-slate-800/80 rounded-2xl gap-1.5 shadow-lg backdrop-blur-xl">
+          <TabsTrigger 
+            value="admins" 
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all data-[state=active]:bg-slate-900/90 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-700/60 text-slate-400 hover:text-slate-200"
+          >
+            <span className="flex items-center justify-center size-6 rounded-lg bg-indigo-500/15 text-indigo-400">
+              <Users className="w-3.5 h-3.5" />
+            </span>
+            <span>Admins</span>
+            {admins.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] font-bold rounded-full bg-slate-800 text-slate-300 border border-slate-700/50">
+                {admins.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger 
+            value="profile" 
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all data-[state=active]:bg-slate-900/90 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-700/60 text-slate-400 hover:text-slate-200"
+          >
+            <span className="flex items-center justify-center size-6 rounded-lg bg-emerald-500/15 text-emerald-400">
+              <UserCircle className="w-3.5 h-3.5" />
+            </span>
+            <span>My Profile</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="governance" 
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all data-[state=active]:bg-slate-900/90 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-700/60 text-slate-400 hover:text-slate-200"
+          >
+            <span className="flex items-center justify-center size-6 rounded-lg bg-amber-500/15 text-amber-400">
+              <Shield className="w-3.5 h-3.5" />
+            </span>
+            <span>Platform</span>
           </TabsTrigger>
         </TabsList>
 

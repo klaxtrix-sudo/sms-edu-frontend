@@ -515,34 +515,104 @@ export default function FinanceDashboard() {
 
       {/* Main Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-12">
-            <TabsTrigger value="payments" className="rounded-xl px-5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Receipt className="size-4 mr-2" /> Payments Ledger ({filteredPayments.length})
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
+          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+            <TabsTrigger
+              value="payments"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "payments" 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "bg-primary/10 text-primary"
+              )}>
+                <Receipt className="size-3.5 sm:size-4" />
+              </div>
+              <span>Payments Ledger</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "payments"
+                    ? "bg-primary/15 text-primary border-primary/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loading ? <Loader2 className="size-3 animate-spin" /> : filteredPayments.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="structures" className="rounded-xl px-5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Layers className="size-4 mr-2" /> Fee Structures ({feeStructures.length})
+
+            <TabsTrigger
+              value="structures"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "structures" 
+                  ? "bg-emerald-600 text-white shadow-sm" 
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              )}>
+                <Layers className="size-3.5 sm:size-4" />
+              </div>
+              <span>Fee Structures</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "structures"
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loading ? <Loader2 className="size-3 animate-spin" /> : feeStructures.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="debtors" className="rounded-xl px-5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <GraduationCap className="size-4 mr-2" /> Student Balances & Debtors
+
+            <TabsTrigger
+              value="debtors"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "debtors" 
+                  ? "bg-amber-600 text-white shadow-sm" 
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              )}>
+                <GraduationCap className="size-3.5 sm:size-4" />
+              </div>
+              <span>Student Balances & Debtors</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "debtors"
+                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loadingStudents ? <Loader2 className="size-3 animate-spin" /> : debtorsData.length}
+              </Badge>
             </TabsTrigger>
           </TabsList>
 
-          {activeTab === "payments" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportPaymentsCSV}
-              className="rounded-xl h-10 border-white/10 hover:bg-white/10 gap-2 font-bold text-xs"
-            >
-              <Download className="size-4 text-primary" />
-              Export CSV Ledger
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            {activeTab === "payments" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportPaymentsCSV}
+                className="rounded-xl h-10 border-border/80 hover:bg-accent gap-2 font-bold text-xs shadow-sm"
+              >
+                <Download className="size-4 text-primary" />
+                Export CSV Ledger
+              </Button>
+            )}
 
-          {activeTab === "structures" && (
-            <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
-          )}
+            {activeTab === "structures" && (
+              <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
+            )}
+          </div>
         </div>
 
         {/* TAB 1: PAYMENTS LEDGER */}

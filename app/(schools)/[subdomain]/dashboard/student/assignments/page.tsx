@@ -13,7 +13,8 @@ import {
   Search,
   Filter,
   Trophy,
-  Target
+  Target,
+  Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,29 +94,65 @@ export default function StudentAssignmentsPage() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/40 p-4 rounded-3xl border border-border/50 backdrop-blur-xl">
-         <div className="flex items-center gap-2">
-            {['all', 'pending', 'submitted', 'graded'].map((f) => (
-               <Button 
-                key={f}
-                variant={filter === f ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setFilter(f as any)}
-                className={cn("rounded-xl font-black uppercase tracking-widest text-[10px]", filter === f && "shadow-lg scale-105")}
-               >
-                 {f}
-               </Button>
-            ))}
-         </div>
-         <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search assignments..." 
-              className="pl-10 w-72 bg-background/50 border-none ring-1 ring-border rounded-2xl shadow-inner font-medium"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-         </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md overflow-x-auto max-w-full">
+          {[
+            { key: "all", label: "All Missions", icon: Layers, count: assignments.length },
+            { key: "pending", label: "Pending", icon: Clock },
+            { key: "submitted", label: "Submitted", icon: CheckCircle2 },
+            { key: "graded", label: "Graded", icon: Target },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = filter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setFilter(tab.key as any)}
+                className={cn(
+                  "flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
+                  isActive
+                    ? "bg-background text-foreground shadow-sm border border-border/60"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex items-center justify-center size-6 rounded-lg transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Icon className="size-3.5" />
+                </span>
+                <span>{tab.label}</span>
+                {typeof tab.count === "number" && (
+                  <Badge
+                    variant={isActive ? "default" : "secondary"}
+                    className={cn(
+                      "ml-1 h-5 px-1.5 text-[10px] font-bold rounded-full",
+                      isActive
+                        ? "bg-primary/20 text-primary border border-primary/30"
+                        : "bg-muted-foreground/10 text-muted-foreground"
+                    )}
+                  >
+                    {tab.count}
+                  </Badge>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search assignments..." 
+            className="pl-10 w-full sm:w-72 bg-background/50 border-none ring-1 ring-border rounded-2xl shadow-inner font-medium h-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
 
       {isTenantLoading || loading ? (

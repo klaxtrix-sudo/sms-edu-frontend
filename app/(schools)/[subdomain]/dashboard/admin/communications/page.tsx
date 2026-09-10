@@ -60,7 +60,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { getBackendUrl } from "@/lib/utils";
+import { getBackendUrl, cn } from "@/lib/utils";
 import { useTenant } from "@/components/providers/tenant-provider";
 
 type BroadcastCategory = 'general' | 'urgent' | 'academic' | 'event' | 'fees';
@@ -960,37 +960,73 @@ export default function AdminCommunicationsPage() {
             <CardHeader className="p-4 border-b border-border/60 bg-muted/20">
               <div className="flex items-center justify-between">
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-                  <div className="flex items-center justify-between w-full">
-                    <TabsList className="h-9 bg-background border border-border/70 p-1 rounded-lg">
-                      <TabsTrigger value="preview" className="text-xs font-semibold px-3 flex items-center gap-1.5">
-                        <Eye className="size-3.5" /> Live Preview
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+                    <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+                      <TabsTrigger
+                        value="preview"
+                        className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+                      >
+                        <div className={cn(
+                          "p-1 rounded-lg transition-colors",
+                          activeTab === "preview"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-primary/10 text-primary"
+                        )}>
+                          <Eye className="size-3.5" />
+                        </div>
+                        <span>Live Preview</span>
                       </TabsTrigger>
-                      <TabsTrigger value="history" className="text-xs font-semibold px-3 flex items-center gap-1.5">
-                        <History className="size-3.5" /> Post History ({history.length})
+
+                      <TabsTrigger
+                        value="history"
+                        className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+                      >
+                        <div className={cn(
+                          "p-1 rounded-lg transition-colors",
+                          activeTab === "history"
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
+                        )}>
+                          <History className="size-3.5" />
+                        </div>
+                        <span>Post History</span>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "ml-0.5 px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-colors border",
+                            activeTab === "history"
+                              ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
+                              : "bg-muted text-muted-foreground border-border/40"
+                          )}
+                        >
+                          {history.length}
+                        </Badge>
                       </TabsTrigger>
                     </TabsList>
 
                     {activeTab === "preview" && (
-                      <div className="flex items-center bg-background border border-border/70 rounded-lg p-0.5">
+                      <div className="flex items-center bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl p-1 shadow-sm backdrop-blur-md">
                         <button
                           type="button"
                           onClick={() => setPreviewMode("noticeboard")}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                          className={cn(
+                            "px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all",
                             previewMode === "noticeboard"
-                              ? "bg-primary text-primary-foreground shadow-xs"
+                              ? "bg-background text-foreground shadow-sm border border-border/60"
                               : "text-muted-foreground hover:text-foreground"
-                          }`}
+                          )}
                         >
                           Noticeboard
                         </button>
                         <button
                           type="button"
                           onClick={() => setPreviewMode("sms")}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                          className={cn(
+                            "px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all",
                             previewMode === "sms"
-                              ? "bg-primary text-primary-foreground shadow-xs"
+                              ? "bg-background text-foreground shadow-sm border border-border/60"
                               : "text-muted-foreground hover:text-foreground"
-                          }`}
+                          )}
                         >
                           Smartphone
                         </button>

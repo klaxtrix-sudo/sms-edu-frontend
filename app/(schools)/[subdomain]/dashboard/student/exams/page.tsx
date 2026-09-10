@@ -10,7 +10,8 @@ import {
   AlertCircle,
   Loader2,
   MapPin,
-  CalendarRange
+  CalendarRange,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,7 +33,7 @@ import {
 import { useTenant } from "@/components/providers/tenant-provider";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
-import { getBackendUrl } from "@/lib/utils";
+import { cn, getBackendUrl } from "@/lib/utils";
 
 interface Exam {
   _id: string;
@@ -66,6 +67,7 @@ export default function StudentExamsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingTimetable, setLoadingTimetable] = useState(false);
   const [studentClassId, setStudentClassId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("available");
   
   // Mapping lookups
   const [subjectsMap, setSubjectsMap] = useState<Record<string, string>>({});
@@ -157,11 +159,74 @@ export default function StudentExamsPage() {
         <p className="text-muted-foreground mt-1">Take assessments and view scheduled exam times.</p>
       </div>
 
-      <Tabs defaultValue="available" className="space-y-6">
-        <TabsList className="bg-background/50 border rounded-xl p-1">
-          <TabsTrigger value="available" className="rounded-lg font-bold">Available Exams</TabsTrigger>
-          <TabsTrigger value="timetable" className="rounded-lg font-bold">Exam Timetable</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Modern Navigational Tab Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
+          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+            <TabsTrigger
+              value="available"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "available" 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "bg-primary/10 text-primary"
+              )}>
+                <FileText className="size-3.5 sm:size-4" />
+              </div>
+              <span>Available Exams</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "available"
+                    ? "bg-primary/15 text-primary border-primary/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loading ? <Loader2 className="size-3 animate-spin" /> : exams.length}
+              </Badge>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="timetable"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "timetable" 
+                  ? "bg-indigo-600 text-white shadow-sm" 
+                  : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
+              )}>
+                <CalendarRange className="size-3.5 sm:size-4" />
+              </div>
+              <span>Exam Timetable</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "timetable"
+                    ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loadingTimetable ? <Loader2 className="size-3 animate-spin" /> : timetableSlots.length}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Quick Context / Status Indicator */}
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-medium bg-muted/30 px-3 py-1.5 rounded-xl border border-border/50">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>
+              {activeTab === "available" 
+                ? `${exams.length} Available Assessment${exams.length === 1 ? '' : 's'}`
+                : `${timetableSlots.length} Scheduled Exam${timetableSlots.length === 1 ? '' : 's'}`
+              }
+            </span>
+          </div>
+        </div>
 
         <TabsContent value="available" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

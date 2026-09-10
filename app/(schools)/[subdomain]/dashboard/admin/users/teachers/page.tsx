@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { 
@@ -240,6 +240,9 @@ export default function TeachersPage() {
     }
   };
 
+  const activeCount = useMemo(() => teachers.filter(t => !t.is_archived).length, [teachers]);
+  const archivedCount = useMemo(() => teachers.filter(t => t.is_archived).length, [teachers]);
+
   const filteredTeachers = teachers.filter(t => {
     const matchesSearch = t.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          t.email?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -445,24 +448,67 @@ export default function TeachersPage() {
           </span>
         </div>
         
-        <div className="flex bg-muted/50 p-1 rounded-xl border border-primary/5">
+        <div className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
           <button 
             onClick={() => setActiveTab('active')}
             className={cn(
-              "px-4 py-2 text-xs font-bold rounded-lg transition-all",
-              activeTab === 'active' ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "relative flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200",
+              activeTab === 'active' 
+                ? "bg-background text-foreground shadow-md border border-border/60" 
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Active Teachers
+            <div className={cn(
+              "p-1.5 rounded-lg transition-colors",
+              activeTab === 'active'
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-primary/10 text-primary"
+            )}>
+              <Users className="size-3.5 sm:size-4" />
+            </div>
+            <span>Active Teachers</span>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                activeTab === 'active'
+                  ? "bg-primary/15 text-primary border-primary/25"
+                  : "bg-muted text-muted-foreground border-border/40"
+              )}
+            >
+              {isLoading ? "..." : activeCount}
+            </Badge>
           </button>
+
           <button 
             onClick={() => setActiveTab('archived')}
             className={cn(
-              "px-4 py-2 text-xs font-bold rounded-lg transition-all",
-              activeTab === 'archived' ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              "relative flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200",
+              activeTab === 'archived' 
+                ? "bg-background text-foreground shadow-md border border-border/60" 
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Archived
+            <div className={cn(
+              "p-1.5 rounded-lg transition-colors",
+              activeTab === 'archived'
+                ? "bg-amber-600 text-white shadow-sm"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            )}>
+              <Archive className="size-3.5 sm:size-4" />
+            </div>
+            <span>Archived</span>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                activeTab === 'archived'
+                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25"
+                  : "bg-muted text-muted-foreground border-border/40"
+              )}
+            >
+              {isLoading ? "..." : archivedCount}
+            </Badge>
           </button>
         </div>
       </div>

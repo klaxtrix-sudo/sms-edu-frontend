@@ -281,32 +281,69 @@ export default function AcademicsPage() {
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="w-full">
         {/* Navigation & Controls Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-          <TabsList className="grid grid-cols-2 w-full md:w-[340px] h-12 bg-muted/50 border border-border/80 p-1 rounded-2xl">
+          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
             <TabsTrigger 
               value="classes" 
-              className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 transition-all flex items-center justify-center gap-2"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
             >
-              <Users className="w-4 h-4" />
-              Class List ({classes.length})
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "classes" 
+                  ? "bg-indigo-600 text-white shadow-sm" 
+                  : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
+              )}>
+                <Users className="size-3.5 sm:size-4" />
+              </div>
+              <span>Class List</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "classes"
+                    ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loading ? <Loader2 className="size-3 animate-spin" /> : classes.length}
+              </Badge>
             </TabsTrigger>
+
             <TabsTrigger 
               value="subjects" 
-              className="rounded-xl font-bold tracking-tight text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 transition-all flex items-center justify-center gap-2"
+              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
             >
-              <BookOpen className="w-4 h-4" />
-              Subject List ({subjects.length})
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                activeTab === "subjects" 
+                  ? "bg-emerald-600 text-white shadow-sm" 
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              )}>
+                <BookOpen className="size-3.5 sm:size-4" />
+              </div>
+              <span>Subject List</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  activeTab === "subjects"
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
+                    : "bg-muted text-muted-foreground border-border/40"
+                )}
+              >
+                {loading ? <Loader2 className="size-3 animate-spin" /> : subjects.length}
+              </Badge>
             </TabsTrigger>
           </TabsList>
           
           {/* View Switcher Controls */}
           <div className="flex items-center gap-3 self-end md:self-auto">
-            <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/80 shadow-inner">
+            <div className="flex items-center bg-muted/60 dark:bg-card/80 p-1 rounded-2xl border border-border/80 shadow-sm backdrop-blur-md">
               <button
                 onClick={() => handleViewModeChange("table")}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all",
                   viewMode === "table"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-sm border border-border/60"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Table View"
@@ -317,9 +354,9 @@ export default function AcademicsPage() {
               <button
                 onClick={() => handleViewModeChange("cards")}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all",
                   viewMode === "cards"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-sm border border-border/60"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Cards View"
