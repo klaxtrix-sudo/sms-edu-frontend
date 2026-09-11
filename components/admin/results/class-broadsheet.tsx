@@ -464,13 +464,23 @@ export function ClassBroadsheet({
             </TableHeader>
 
             <TableBody>
-              {data.students.map((student) => {
-                const isFirst = student.rank === 1 && student.averageScore > 0;
-                const isSecond = student.rank === 2 && student.averageScore > 0;
-                const isThird = student.rank === 3 && student.averageScore > 0;
+              {data.students.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={3 + data.subjects.length + 4}
+                    className="h-36 text-center text-muted-foreground text-xs font-medium"
+                  >
+                    No students enrolled in {data.className} for the {academicYear} academic session.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data.students.map((student) => {
+                  const isFirst = student.rank === 1 && student.averageScore > 0;
+                  const isSecond = student.rank === 2 && student.averageScore > 0;
+                  const isThird = student.rank === 3 && student.averageScore > 0;
 
-                return (
-                  <TableRow key={student.studentId} className="hover:bg-muted/30 transition-colors">
+                  return (
+                    <TableRow key={student.studentId} className="hover:bg-muted/30 transition-colors">
                     {/* Rank Badge */}
                     <TableCell className="text-center font-black text-xs">
                       {isFirst ? (
@@ -570,7 +580,8 @@ export function ClassBroadsheet({
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              })
+            )}
 
               {/* Bottom Class Subject Summary Row */}
               <TableRow className="bg-muted/70 font-bold border-t-2 border-border/80">

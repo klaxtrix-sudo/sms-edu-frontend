@@ -133,6 +133,8 @@ export function SubjectScoresheet({
 
   const loadClassAndSubjectData = async () => {
     setLoading(true);
+    setStudents([]);
+    setResults({});
     try {
       // 1. Fetch lifecycle status and metrics in parallel
       const [statusRes, metricsRes] = await Promise.all([
@@ -185,13 +187,15 @@ export function SubjectScoresheet({
         .eq("academic_year", academicYear);
 
       let resolvedStudents: any[] = [];
-      if (enrollmentsData && enrollmentsData.length > 0) {
-        resolvedStudents = enrollmentsData
+      if (!enrollError) {
+        // student_enrollments is the authoritative source of truth for session enrollment
+        resolvedStudents = (enrollmentsData || [])
           .map((e: any) => e.students)
           .filter(Boolean)
           .sort((a: any, b: any) => (a.admission_no || "").localeCompare(b.admission_no || ""));
       } else {
-        // Fallback for unseeded classes
+        // Fallback only if student_enrollments query errored (legacy unmigrated tenant)
+        console.warn("student_enrollments query errored, falling back to students table:", enrollError);
         const { data: fallbackStudents, error: studentError } = await (supabase as any)
           .from("students")
           .select(`

@@ -1098,13 +1098,15 @@ export async function getTermGradingReadiness(
 
     // Map student count per class for the requested academic year
     const classStudentCount: Record<string, number> = {};
-    if (enrollments && enrollments.length > 0) {
+    if (!enrollmentsRes.error) {
+      // Use enrollments for the requested session
       enrollments.forEach((e: any) => {
         if (e.class_id) {
           classStudentCount[e.class_id] = (classStudentCount[e.class_id] || 0) + 1;
         }
       });
     } else {
+      // Legacy unmigrated fallback only if student_enrollments query failed
       students.forEach((s: any) => {
         if (s.class_id) {
           classStudentCount[s.class_id] = (classStudentCount[s.class_id] || 0) + 1;
@@ -1355,13 +1357,14 @@ export async function getClassBroadsheetData(
 
     // Resolve students enrolled in this class for the selected academic year
     let students: any[] = [];
-    if (enrollmentsRes.data && enrollmentsRes.data.length > 0) {
-      students = enrollmentsRes.data
+    if (!enrollmentsRes.error) {
+      // student_enrollments is the authoritative source of truth for session enrollment
+      students = (enrollmentsRes.data || [])
         .map((e: any) => e.students)
         .filter(Boolean)
         .sort((a: any, b: any) => (a.admission_no || '').localeCompare(b.admission_no || ''));
     } else {
-      // Fallback for unseeded classes
+      // Fallback only if student_enrollments table does not exist or query errored (legacy unmigrated tenant)
       const { data: fallbackStudents } = await (tenantSupabase as any)
         .from('students')
         .select(`
