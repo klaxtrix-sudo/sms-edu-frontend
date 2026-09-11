@@ -461,7 +461,9 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                 name="classId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-semibold">Target Class *</FormLabel>
+                    <div className="flex items-center justify-between min-h-[20px]">
+                      <FormLabel className="font-semibold">Target Class *</FormLabel>
+                    </div>
                     <Select 
                       onValueChange={(val) => {
                         field.onChange(val);
@@ -490,7 +492,7 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                 name="subjectId"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between min-h-[20px]">
                       <FormLabel className="font-semibold">Subject *</FormLabel>
                       {loadingClassData && (
                         <span className="text-[11px] text-muted-foreground flex items-center gap-1">
@@ -514,11 +516,6 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                         ))}
                       </SelectContent>
                     </Select>
-                    {selectedClassId && classAssignments.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground">
-                        Showing subjects configured for {classes.find(c => c.id === selectedClassId)?.name || "this class"}.
-                      </p>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
