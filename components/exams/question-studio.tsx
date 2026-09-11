@@ -611,7 +611,7 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
               <span>•</span>
               <span>{exam.academicYear || "Current Session"} (Term {exam.term || 1})</span>
               <span>•</span>
-              <span>Assigned: {assignedTeacherName || "Teacher"}</span>
+              <span>Assigned: {assignedTeacherName || (exam.assignedTeacherId ? "Teacher" : "None (Admin Managed)")}</span>
             </div>
           </div>
         </div>
@@ -690,6 +690,7 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
                   </Button>
                 </>
               )}
+              {/* If exam is approved, Admin can publish */}
               {exam.workflowStatus === 'approved' && (
                 <Button 
                   onClick={handlePublishExam}
@@ -698,6 +699,17 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
                 >
                   <Sparkles className="h-4 w-4" />
                   Publish Exam
+                </Button>
+              )}
+              {/* If exam is not yet submitted for review or approved, Admin can directly Approve & Publish questions they authored */}
+              {exam.workflowStatus !== 'ready_for_review' && exam.workflowStatus !== 'approved' && exam.workflowStatus !== 'published' && (
+                <Button 
+                  onClick={() => handleApproveExam(true)}
+                  disabled={actionLoading || questions.length === 0}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Approve & Publish
                 </Button>
               )}
             </>
