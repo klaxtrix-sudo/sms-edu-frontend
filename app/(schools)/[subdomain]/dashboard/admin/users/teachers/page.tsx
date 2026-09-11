@@ -52,7 +52,9 @@ import {
   Archive,
   ArchiveRestore,
   UserX,
-  Trash2
+  Trash2,
+  Copy,
+  Sparkles
 } from 'lucide-react';
 import { TeacherProfileModal } from "@/components/admin/teacher-profile-modal";
 import { toast } from 'sonner';
@@ -92,7 +94,6 @@ export default function TeachersPage() {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     phone: '',
   });
 
@@ -120,16 +121,21 @@ export default function TeachersPage() {
     const result = await createTeacher({
       fullName: `${formData.firstName} ${formData.lastName}`.trim(),
       email: formData.email,
-      password: formData.password,
       phone: formData.phone,
       schoolId: tenant.id,
       subdomain: subdomain as string
     });
 
     if (result.success) {
-      toast.success("Teacher account created.");
+      toast.success("Teacher account created. Invitation sent.");
+      if (result.activationLink) {
+        try {
+          await navigator.clipboard.writeText(result.activationLink);
+          toast.info("Activation link copied to clipboard!");
+        } catch {}
+      }
       setIsAddModalOpen(false);
-      setFormData({ firstName: '', lastName: '', email: '', password: '', phone: '' });
+      setFormData({ firstName: '', lastName: '', email: '', phone: '' });
       fetchTeachers();
     } else {
       toast.error(result.error);
@@ -220,9 +226,34 @@ export default function TeachersPage() {
     
     const result = await resendTeacherCredentials(teacher.id, tenant.id, subdomain as string);
     if (result.success) {
-      toast.success(`Welcome email resent to ${teacher.full_name}.`);
+      toast.success(`Activation email resent to ${teacher.full_name}.`);
+      if (result.activationLink) {
+        try {
+          await navigator.clipboard.writeText(result.activationLink);
+          toast.info("Activation link copied to clipboard!");
+        } catch {}
+      }
     } else {
       toast.error(result.error || "Failed to resend credentials");
+    }
+    
+    setIsResending(prev => ({ ...prev, [teacher.id]: false }));
+  };
+
+  const handleCopyActivationLink = async (teacher: any) => {
+    if (!tenant?.id) return;
+    setIsResending(prev => ({ ...prev, [teacher.id]: true }));
+    
+    const result = await resendTeacherCredentials(teacher.id, tenant.id, subdomain as string);
+    if (result.success && result.activationLink) {
+      try {
+        await navigator.clipboard.writeText(result.activationLink);
+        toast.success("Activation link copied to clipboard!");
+      } catch {
+        toast.error("Could not write to clipboard");
+      }
+    } else {
+      toast.error(result.error || "Failed to generate activation link");
     }
     
     setIsResending(prev => ({ ...prev, [teacher.id]: false }));
@@ -313,16 +344,9 @@ export default function TeachersPage() {
                     onChange={e => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Initial Password</Label>
-                  <PasswordInput 
-                    id="password" 
-                    placeholder="••••••••" 
-                    required 
-                    className="bg-muted/40 border-border/80 h-12 rounded-xl text-foreground focus:bg-background transition-colors"
-                    value={formData.password}
-                    onChange={e => setFormData({...formData, password: e.target.value})}
-                  />
+                <div className="rounded-xl bg-primary/5 border border-primary/10 p-3.5 text-xs text-muted-foreground flex items-center gap-2.5">
+                  <Sparkles className="size-4 text-primary shrink-0" />
+                  <span>The teacher will receive an invitation email to activate their account and set their own password.</span>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Phone Number</Label>
@@ -619,7 +643,14 @@ export default function TeachersPage() {
                                 disabled={isResending[teacher.id]}
                                 onClick={() => handleResendCredentials(teacher)}
                               >
-                                <Mail className="size-3.5" /> {isResending[teacher.id] ? "Resending..." : "Resend Welcome Email"}
+                                <Mail className="size-3.5" /> {isResending[teacher.id] ? "Resending..." : "Resend Invite Email"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="gap-2 text-xs font-medium cursor-pointer"
+                                disabled={isResending[teacher.id]}
+                                onClick={() => handleCopyActivationLink(teacher)}
+                              >
+                                <Copy className="size-3.5" /> Copy Activation Link
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-primary/10" />
                               <DropdownMenuItem 

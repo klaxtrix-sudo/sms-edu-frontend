@@ -46,6 +46,7 @@ import {
   Archive,
   ArchiveRestore,
   Trash2,
+  Copy,
   Link as LinkIcon
 } from 'lucide-react';
 import { AddParentModal } from "@/components/admin/add-parent-modal";
@@ -173,9 +174,34 @@ export default function ParentsPage() {
     
     const result = await resendParentCredentials(parent.id, tenant.id, subdomain as string);
     if (result.success) {
-      toast.success(`Welcome email resent to ${parent.full_name}.`);
+      toast.success(`Activation email resent to ${parent.full_name}.`);
+      if (result.activationLink) {
+        try {
+          await navigator.clipboard.writeText(result.activationLink);
+          toast.info("Activation link copied to clipboard!");
+        } catch {}
+      }
     } else {
       toast.error(result.error || "Failed to resend credentials");
+    }
+    
+    setIsResending(prev => ({ ...prev, [parent.id]: false }));
+  };
+
+  const handleCopyActivationLink = async (parent: any) => {
+    if (!tenant?.id) return;
+    setIsResending(prev => ({ ...prev, [parent.id]: true }));
+    
+    const result = await resendParentCredentials(parent.id, tenant.id, subdomain as string);
+    if (result.success && result.activationLink) {
+      try {
+        await navigator.clipboard.writeText(result.activationLink);
+        toast.success("Activation link copied to clipboard!");
+      } catch {
+        toast.error("Could not write to clipboard");
+      }
+    } else {
+      toast.error(result.error || "Failed to generate activation link");
     }
     
     setIsResending(prev => ({ ...prev, [parent.id]: false }));
@@ -414,7 +440,14 @@ export default function ParentsPage() {
                                 disabled={isResending[parent.id]}
                                 onClick={() => handleResendCredentials(parent)}
                               >
-                                <Mail className="size-3.5" /> {isResending[parent.id] ? "Resending..." : "Resend Welcome Email"}
+                                <Mail className="size-3.5" /> {isResending[parent.id] ? "Resending..." : "Resend Invite Email"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="gap-2 text-xs font-bold cursor-pointer"
+                                disabled={isResending[parent.id]}
+                                onClick={() => handleCopyActivationLink(parent)}
+                              >
+                                <Copy className="size-3.5" /> Copy Activation Link
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-slate-100" />
                               <DropdownMenuItem 

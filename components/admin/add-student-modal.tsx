@@ -34,7 +34,10 @@ import {
   ChevronUp, 
   Upload, 
   X, 
-  Camera 
+  Camera,
+  RefreshCw,
+  Copy,
+  Check
 } from "lucide-react";
 import { createStudent, uploadStudentPassport } from "@/app/actions/admin-actions";
 import { createClient } from "@/lib/supabase/client";
@@ -92,6 +95,8 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
   const [passportPreview, setPassportPreview] = useState<string>("");
   const supabase = createClient();
 
+  const [pinCopied, setPinCopied] = useState(false);
+
   // Manage collapsible sections
   const [openSections, setOpenSections] = useState({
     basic: true,
@@ -108,6 +113,8 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
     }));
   };
 
+  const generatePin = () => Math.floor(100000 + Math.random() * 900000).toString();
+
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
@@ -116,7 +123,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
       admissionNo: "",
       classId: "",
       gender: "male",
-      password: "",
+      password: generatePin(),
       dateOfBirth: "",
       passportUrl: "",
       stateOfOrigin: "",
@@ -228,8 +235,19 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Student enrolled successfully.");
-        form.reset();
+        const pin = (result as any).studentPin || values.password;
+        toast.success(`Student enrolled successfully! Access PIN: ${pin}`, {
+          description: `Admission No: ${values.admissionNo}. Students log in using their admission number and this 6-digit PIN.`,
+          duration: 8000,
+        });
+        form.reset({
+          ...form.getValues(),
+          fullName: "",
+          email: "",
+          admissionNo: "",
+          password: generatePin(),
+          passportUrl: "",
+        });
         setPassportPreview("");
         onSuccess();
         onClose();
@@ -582,8 +600,47 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, schoolId, subdomai
                   </div>
 
                   <div className="col-span-2 space-y-1.5">
-                    <Label htmlFor="password" className="text-xs font-semibold">Login Password <span className="text-destructive">*</span></Label>
-                    <PasswordInput id="password" {...form.register("password")} placeholder="••••••••" className="h-10 text-sm" />
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-xs font-semibold">Student Access PIN (6 Digits) <span className="text-destructive">*</span></Label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPin = generatePin();
+                            form.setValue("password", newPin);
+                            toast.info("Generated new PIN: " + newPin);
+                          }}
+                          className="text-[11px] text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <RefreshCw className="size-3" />
+                          Regenerate PIN
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const currentPin = form.getValues("password");
+                            if (currentPin) {
+                              await navigator.clipboard.writeText(currentPin);
+                              setPinCopied(true);
+                              toast.success("Access PIN copied to clipboard");
+                              setTimeout(() => setPinCopied(false), 2000);
+                            }
+                          }}
+                          className="text-[11px] text-muted-foreground hover:text-foreground font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          {pinCopied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                          {pinCopied ? "Copied" : "Copy PIN"}
+                        </button>
+                      </div>
+                    </div>
+                    <Input
+                      id="password"
+                      {...form.register("password")}
+                      className="h-10 text-sm font-mono tracking-widest bg-muted/40 font-bold"
+                      placeholder="6-digit PIN"
+                      maxLength={6}
+                    />
+                    <p className="text-[10px] text-muted-foreground italic">Students log in using their admission number and this 6-digit access PIN.</p>
                     {form.formState.errors.password && (
                       <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
                     )}

@@ -3,10 +3,11 @@
 import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
+import crypto from "crypto";
 
 interface CreateUserData {
   email: string;
-  password: string;
+  password?: string;
   fullName: string;
   phone: string;
   schoolId: string;
@@ -177,9 +178,18 @@ export async function createParent(data: CreateUserData) {
   try {
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
 
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+    const activateUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/activate`
+      : `http://${subdomain}.${rootDomain}/activate`;
+    const loginUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/login`
+      : `http://${subdomain}.${rootDomain}/login`;
+
+    const initialSecret = password || crypto.randomBytes(24).toString('hex');
     const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
       email,
-      password,
+      password: initialSecret,
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
@@ -192,6 +202,8 @@ export async function createParent(data: CreateUserData) {
 
     if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
+    let activationLink = activateUrl;
+
     if (user) {
       const { error: tenantProfileError } = await (tenantSupabase as any)
         .from('profiles')
@@ -203,10 +215,25 @@ export async function createParent(data: CreateUserData) {
           phone,
           role: 'parent',
           is_active: true,
+          invited_at: new Date().toISOString(),
         });
 
       if (tenantProfileError) {
         console.error('[Parent Actions] Tenant Profile Error:', tenantProfileError.message);
+      }
+
+      // Generate a single-use cryptographically signed activation link
+      try {
+        const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+          options: { redirectTo: activateUrl },
+        });
+        if (!linkError && linkData?.properties?.action_link) {
+          activationLink = linkData.properties.action_link;
+        }
+      } catch (linkErr) {
+        console.warn('[createParent] generateLink warning:', linkErr);
       }
 
       // Fetch Resend config
@@ -238,11 +265,6 @@ export async function createParent(data: CreateUserData) {
         resendFromName = 'Klaxtrix Portal';
       }
 
-      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-      const loginUrl = process.env.NODE_ENV === 'production'
-        ? `https://${subdomain}.${rootDomain}/login`
-        : `http://${subdomain}.${rootDomain}/login`;
-
       let schoolLogoUrl = '';
       let schoolName = 'the school';
       try {
@@ -259,26 +281,21 @@ export async function createParent(data: CreateUserData) {
         const resend = new Resend(resendApiKey);
         const logoImgHtml = schoolLogoUrl && !schoolLogoUrl.startsWith('data:') ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${schoolLogoUrl}" alt="${schoolName} Logo" style="max-height: 80px; max-width: 200px;" /></div>` : '';
         const emailHtml = `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
             ${logoImgHtml}
-            <h2 style="color: #4f46e5; margin-bottom: 24px; text-align: center;">Welcome to Klaxtrix!</h2>
-            <p>Hello <strong>${fullName}</strong>,</p>
-            <p>An administrator has registered your parent account at ${schoolName} portal.</p>
-            <p>Please use the following credentials to log in to your dashboard:</p>
-            <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
-              <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${email}</p>
-              <p style="margin: 0;"><strong>Password:</strong> ${password}</p>
+            <h2 style="color: #4f46e5; margin-bottom: 16px; text-align: center; font-weight: 800;">Welcome to ${schoolName}</h2>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">Hello <strong>${fullName}</strong>,</p>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">An administrator has registered your parent portal account for <strong>${schoolName}</strong> on Klaxtrix.</p>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">To get started, click the button below to securely activate your account and choose your personal password:</p>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${activationLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 14px 36px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Activate Parent Account</a>
             </div>
-            <p>We recommend that you change this temporary password after your first login.</p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${loginUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Log In to Portal</a>
-            </div>
-            <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+            <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
               If the button doesn't work, copy and paste this link into your browser: <br />
-              <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a>
+              <a href="${activationLink}" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; word-break: break-all;">${activationLink}</a>
             </p>
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated notification. Please do not reply directly to this email.</p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated institutional invitation. Please do not reply directly to this email.</p>
           </div>
         `;
 
@@ -286,17 +303,24 @@ export async function createParent(data: CreateUserData) {
           await resend.emails.send({
             from: `${resendFromName} <${resendFromEmail}>`,
             to: email,
-            subject: 'Set Up Your Parent Account \u2014 Klaxtrix Portal',
+            subject: `Activate Your Parent Account — ${schoolName}`,
             html: emailHtml
           });
         } catch (err: any) {
           console.error('[createParent] Failed to dispatch welcome email:', err.message);
         }
+      } else {
+        console.log('==================================================');
+        console.log('[createParent] MOCK INVITATION DISPATCH LOG');
+        console.log('To:', email);
+        console.log('Subject: Activate Your Parent Account —', schoolName);
+        console.log('Activation Link:', activationLink);
+        console.log('==================================================');
       }
     }
 
     revalidatePath("/dashboard/admin/users/parents");
-    return { success: true };
+    return { success: true, activationLink };
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred during parent provisioning" };
   }
@@ -319,7 +343,13 @@ export async function resendParentCredentials(userId: string, schoolId: string, 
       return { error: 'Parent profile not found.' };
     }
 
-    // 2. Reset onboarding flags so they are forced through the gate again
+    // 2. Compute activation URL
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+    const activateUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/activate`
+      : `http://${subdomain}.${rootDomain}/activate`;
+
+    // 3. Reset onboarding flags so they are forced through the gate again
     const { error: updateError } = await tenantSupabase.auth.admin.updateUserById(userId, {
       user_metadata: {
         must_change_password: true,
@@ -331,17 +361,20 @@ export async function resendParentCredentials(userId: string, schoolId: string, 
       return { error: `Failed to reset parent status: ${updateError.message}` };
     }
 
-    // 3. Generate a magic link which logs them in and lets them hit the gate
+    // 4. Generate a magic link which logs them in and directs to activate
     const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
       type: 'magiclink',
       email: profile.email,
+      options: { redirectTo: activateUrl },
     });
 
     if (linkError) {
       return { error: `Failed to generate setup link: ${linkError.message}` };
     }
 
-    // 4. Look up active Resend config from tenant DB
+    const setupLink = linkData?.properties?.action_link || activateUrl;
+
+    // 5. Look up active Resend config from tenant DB
     let resendApiKey: string | null = null;
     let resendFromEmail: string | null = null;
     let resendFromName = 'Klaxtrix Portal';
@@ -384,20 +417,20 @@ export async function resendParentCredentials(userId: string, schoolId: string, 
       const resend = new Resend(resendApiKey);
       const logoImgHtml = schoolLogoUrl && !schoolLogoUrl.startsWith('data:') ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${schoolLogoUrl}" alt="${schoolName} Logo" style="max-height: 80px; max-width: 200px;" /></div>` : '';
       const emailHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
           ${logoImgHtml}
-          <h2 style="color: #4f46e5; margin-bottom: 24px; text-align: center;">Finish Setting Up Your Parent Account</h2>
-          <p>Hello <strong>${profile.full_name}</strong>,</p>
-          <p>An administrator at ${schoolName} has requested we resend your setup link.</p>
-          <p>Please click the button below to log in securely and finish setting your password:</p>
+          <h2 style="color: #4f46e5; margin-bottom: 16px; text-align: center; font-weight: 800;">Finish Setting Up Your Parent Account</h2>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">Hello <strong>${profile.full_name}</strong>,</p>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">An administrator at <strong>${schoolName}</strong> has requested we resend your account setup link.</p>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">Please click the button below to log in securely and finish setting your password:</p>
           <div style="text-align: center; margin: 32px 0;">
-            <a href="${linkData.properties.action_link}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Secure Login & Setup</a>
+            <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 14px 36px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Secure Login & Setup</a>
           </div>
-          <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+          <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
             If the button doesn't work, copy and paste this link into your browser: <br />
-            <a href="${linkData.properties.action_link}" target="_blank" rel="noopener noreferrer" style="word-break: break-all;">${linkData.properties.action_link}</a>
+            <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; word-break: break-all;">${setupLink}</a>
           </p>
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">This link will expire soon for your security. Please do not reply directly to this email.</p>
         </div>
       `;
@@ -405,7 +438,7 @@ export async function resendParentCredentials(userId: string, schoolId: string, 
       const { error: sendError } = await resend.emails.send({
         from: `${resendFromName} <${resendFromEmail}>`,
         to: profile.email,
-        subject: 'Action Required: Parent Account Setup \u2014 Klaxtrix Portal',
+        subject: `Action Required: Parent Account Setup — ${schoolName}`,
         html: emailHtml
       });
 
@@ -413,12 +446,15 @@ export async function resendParentCredentials(userId: string, schoolId: string, 
         return { error: `Failed to send email via Resend: ${sendError.message}` };
       }
     } else {
-      console.log('[resendParentCredentials] MOCK EMAIL DISPATCH LOG (No Resend Key Found)');
-      console.log('Action Link:', linkData.properties.action_link);
+      console.log('==================================================');
+      console.log('[resendParentCredentials] MOCK EMAIL DISPATCH LOG');
+      console.log('To:', profile.email);
+      console.log('Setup Link:', setupLink);
+      console.log('==================================================');
     }
 
     revalidatePath('/dashboard/admin/users/parents');
-    return { success: true };
+    return { success: true, activationLink: setupLink };
   } catch (error: any) {
     return { error: error.message || 'An unexpected error occurred while resending credentials.' };
   }

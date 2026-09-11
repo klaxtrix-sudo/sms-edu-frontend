@@ -3,10 +3,11 @@
 import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
+import crypto from "crypto";
 
 interface CreateUserData {
   email: string;
-  password: string;
+  password?: string;
   fullName: string;
   phone: string;
   schoolId: string;
@@ -191,11 +192,20 @@ export async function createTeacher(data: CreateUserData) {
     // 1. Initialize Tenant Admin Client with auth check
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
 
-    // 2. Create Auth User in TENANT project
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+    const activateUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/activate`
+      : `http://${subdomain}.${rootDomain}/activate`;
+    const loginUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/login`
+      : `http://${subdomain}.${rootDomain}/login`;
+
+    // 2. Create Auth User in TENANT project with cryptographically random secret
+    const initialSecret = password || crypto.randomBytes(24).toString('hex');
     const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
       email,
-      password,
-      email_confirm: true, // Auto-confirm for immediate login
+      password: initialSecret,
+      email_confirm: true,
       user_metadata: {
         full_name: fullName,
         role: 'teacher',
@@ -207,8 +217,10 @@ export async function createTeacher(data: CreateUserData) {
 
     if (authError) return { error: `Tenant Auth Error: ${authError.message}` };
 
+    let activationLink = activateUrl;
+
     if (user) {
-      // 3. Upsert profile in TENANT project
+      // 3. Upsert profile in TENANT project with invited_at timestamp
       const { error: tenantProfileError } = await (tenantSupabase as any)
         .from('profiles')
         .upsert({
@@ -219,13 +231,28 @@ export async function createTeacher(data: CreateUserData) {
           phone,
           role: 'teacher',
           is_active: true,
+          invited_at: new Date().toISOString(),
         });
 
       if (tenantProfileError) {
         console.error('[Admin Actions] Tenant Profile Error:', tenantProfileError.message);
       }
 
-      // 4. Look up active Resend config from tenant DB
+      // 4. Generate a single-use cryptographically signed activation link
+      try {
+        const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+          options: { redirectTo: activateUrl },
+        });
+        if (!linkError && linkData?.properties?.action_link) {
+          activationLink = linkData.properties.action_link;
+        }
+      } catch (linkErr) {
+        console.warn('[createTeacher] generateLink warning:', linkErr);
+      }
+
+      // 5. Look up active Resend config from tenant DB
       let resendApiKey: string | null = null;
       let resendFromEmail: string | null = null;
       let resendFromName = 'Klaxtrix Portal';
@@ -255,12 +282,7 @@ export async function createTeacher(data: CreateUserData) {
         resendFromName = 'Klaxtrix Portal';
       }
 
-      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-      const loginUrl = process.env.NODE_ENV === 'production'
-        ? `https://${subdomain}.${rootDomain}/login`
-        : `http://${subdomain}.${rootDomain}/login`;
-
-      // 5. Fetch school logo and name for the email template
+      // 6. Fetch school logo and name for the email template
       let schoolLogoUrl = '';
       let schoolName = 'the school';
       try {
@@ -283,26 +305,21 @@ export async function createTeacher(data: CreateUserData) {
         const resend = new Resend(resendApiKey);
         const logoImgHtml = schoolLogoUrl && !schoolLogoUrl.startsWith('data:') ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${schoolLogoUrl}" alt="${schoolName} Logo" style="max-height: 80px; max-width: 200px;" /></div>` : '';
         const emailHtml = `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
             ${logoImgHtml}
-            <h2 style="color: #4f46e5; margin-bottom: 24px; text-align: center;">Welcome to Klaxtrix!</h2>
-            <p>Hello <strong>${fullName}</strong>,</p>
-            <p>An administrator has registered your teacher account at ${schoolName} portal.</p>
-            <p>Please use the following credentials to log in to your dashboard:</p>
-            <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
-              <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${email}</p>
-              <p style="margin: 0;"><strong>Password:</strong> ${password}</p>
+            <h2 style="color: #4f46e5; margin-bottom: 16px; text-align: center; font-weight: 800;">Welcome to ${schoolName}!</h2>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">Hello <strong>${fullName}</strong>,</p>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">An administrator has invited you to join the <strong>${schoolName}</strong> portal as a Teacher.</p>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">Please click the secure button below to activate your account and establish your personal password:</p>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${activationLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 14px 36px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">Activate Teacher Account</a>
             </div>
-            <p>We recommend that you change this temporary password after your first login.</p>
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${loginUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Log In to Portal</a>
-            </div>
-            <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
-              If the button doesn't work, copy and paste this link into your browser: <br />
-              <a href="${loginUrl}" target="_blank" rel="noopener noreferrer">${loginUrl}</a>
+            <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
+              This activation link is single-use and will expire shortly. If the button above does not work, copy and paste this link into your browser:<br />
+              <a href="${activationLink}" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; word-break: break-all;">${activationLink}</a>
             </p>
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated notification. Please do not reply directly to this email.</p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated institutional invitation. Please do not reply directly to this email.</p>
           </div>
         `;
 
@@ -310,31 +327,30 @@ export async function createTeacher(data: CreateUserData) {
           const { error: sendError } = await resend.emails.send({
             from: `${resendFromName} <${resendFromEmail}>`,
             to: email,
-            subject: 'Set Up Your Teacher Account \u2014 Klaxtrix Portal',
+            subject: `Activate Your Teacher Account — ${schoolName}`,
             html: emailHtml
           });
 
           if (sendError) {
-            console.error('[createTeacher] Resend error sending setup link:', sendError);
+            console.error('[createTeacher] Resend error sending activation link:', sendError);
           } else {
-            console.log('[createTeacher] Setup link email sent successfully to:', email);
+            console.log('[createTeacher] Activation link email sent successfully to:', email);
           }
         } catch (err: any) {
           console.error('[createTeacher] Failed to dispatch welcome email:', err.message);
         }
       } else {
         console.log('==================================================');
-        console.log('[createTeacher] MOCK EMAIL DISPATCH LOG (No Resend Key Found)');
+        console.log('[createTeacher] MOCK INVITATION DISPATCH LOG');
         console.log('To:', email);
-        console.log('Subject: Set Up Your Teacher Account — Klaxtrix Portal');
-        console.log('Password:', password);
-        console.log('Login URL:', loginUrl);
+        console.log('Subject: Activate Your Teacher Account —', schoolName);
+        console.log('Activation Link:', activationLink);
         console.log('==================================================');
       }
     }
 
     revalidatePath("/dashboard/admin/users/teachers");
-    return { success: true };
+    return { success: true, activationLink };
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred during teacher provisioning" };
   }
@@ -359,26 +375,26 @@ export async function resendTeacherCredentials(
       return { error: 'Teacher profile not found or email is missing.' };
     }
 
-    // 2. Compute login URL (needed for magic link redirect)
+    // 2. Compute activation URL (needed for magic link redirect)
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-    const loginUrl = process.env.NODE_ENV === 'production'
-      ? `https://${subdomain}.${rootDomain}/login`
-      : `http://${subdomain}.${rootDomain}/login`;
+    const activateUrl = process.env.NODE_ENV === 'production'
+      ? `https://${subdomain}.${rootDomain}/activate`
+      : `http://${subdomain}.${rootDomain}/activate`;
 
-    // 3. Generate a one-time magic link for secure account re-setup
+    // 3. Generate a one-time link for secure account activation
     const { data: linkData, error: linkError } = await tenantSupabase.auth.admin.generateLink({
       type: 'magiclink',
       email: profile.email,
-      options: { redirectTo: loginUrl },
+      options: { redirectTo: activateUrl },
     });
 
     if (linkError) {
       return { error: `Failed to generate setup link: ${linkError.message}` };
     }
 
-    const setupLink = linkData?.properties?.action_link || loginUrl;
+    const setupLink = linkData?.properties?.action_link || activateUrl;
 
-    // 4. Reset onboarding flags so the teacher goes through OTP + password change
+    // 4. Reset onboarding flags so the teacher goes through password setup
     await tenantSupabase.auth.admin.updateUserById(
       teacherId,
       {
@@ -421,23 +437,20 @@ export async function resendTeacherCredentials(
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
       const emailHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-          <h2 style="color: #4f46e5; margin-bottom: 24px;">Account Re-Setup — Klaxtrix Portal</h2>
-          <p>Hello <strong>${profile.full_name}</strong>,</p>
-          <p>An administrator has reset your teacher account credentials for the school portal.</p>
-          <p>Click the button below to securely set up your account and choose a new password:</p>
-          <div style="text-align: center; margin: 24px 0;">
-            <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 32px; border-radius: 12px; text-decoration: none; font-weight: 600;">Set Up My Account</a>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+          <h2 style="color: #4f46e5; margin-bottom: 16px; text-align: center; font-weight: 800;">Account Setup — Klaxtrix Portal</h2>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">Hello <strong>${profile.full_name}</strong>,</p>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">An administrator has resent your teacher account activation link for the school portal.</p>
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">Click the button below to securely activate your account and choose your password:</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: white; padding: 14px 36px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">Set Up My Account</a>
           </div>
-          <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
+          <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
             If the button doesn't work, copy and paste this link into your browser: <br />
-            <a href="${setupLink}" target="_blank" rel="noopener noreferrer">${setupLink}</a>
+            <a href="${setupLink}" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; word-break: break-all;">${setupLink}</a>
           </p>
-          <p style="color: #64748b; font-size: 14px; line-height: 1.5;">
-            This link is one-time use and will expire shortly. Upon setup, you will be prompted to verify your email via OTP and choose your own password.
-          </p>
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-          <p style="color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply directly to this email.</p>
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
+          <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated institutional invitation. Please do not reply directly to this email.</p>
         </div>
       `;
 
@@ -460,7 +473,7 @@ export async function resendTeacherCredentials(
       console.log('==================================================');
     }
 
-    return { success: true };
+    return { success: true, activationLink: setupLink };
   } catch (err: any) {
     console.error('[resendTeacherCredentials] Error:', err);
     return { error: err.message || 'Failed to resend credentials.' };

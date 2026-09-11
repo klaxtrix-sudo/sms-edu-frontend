@@ -50,10 +50,11 @@ export async function createStudent(data: any) {
     const cleanedAdmissionNo = admissionNo.toLowerCase().replace(/[^a-z0-9]/g, '-');
     const studentDummyEmail = `${cleanedAdmissionNo}@${subdomain.toLowerCase()}.klaxtrix.internal`;
 
-    // 4. Create Auth User in TENANT project
+    // 4. Create Auth User in TENANT project with student PIN
+    const studentPin = password || Math.floor(100000 + Math.random() * 900000).toString();
     const { data: { user }, error: authError } = await tenantSupabase.auth.admin.createUser({
       email: studentDummyEmail,
-      password,
+      password: studentPin,
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
@@ -136,7 +137,7 @@ export async function createStudent(data: any) {
     }
 
     revalidatePath("/dashboard/admin/users/students");
-    return { success: true };
+    return { success: true, studentPin };
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred during student provisioning" };
   }
@@ -280,16 +281,17 @@ export async function uploadStudentPassport(
   }
 }
 
-export async function resetStudentPassword(studentUserId: string, newPassword: string, subdomain: string) {
+export async function resetStudentPassword(studentUserId: string, newPassword: string | undefined, subdomain: string) {
   if (!subdomain) return { error: "Subdomain is required to reset student password." };
   try {
     const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
+    const resolvedPin = newPassword && newPassword.trim() ? newPassword.trim() : Math.floor(100000 + Math.random() * 900000).toString();
     const { error } = await tenantSupabase.auth.admin.updateUserById(studentUserId, {
-      password: newPassword
+      password: resolvedPin
     });
 
     if (error) return { error: `Tenant Auth Error: ${error.message}` };
-    return { success: true };
+    return { success: true, pin: resolvedPin };
   } catch (e: any) {
     return { error: e.message || "Failed to reset student password." };
   }
