@@ -54,18 +54,20 @@ export interface SidebarItem {
   label: string;
   href: string;
   icon: keyof typeof iconMap;
+  module?: string;
 }
 
 export interface SidebarProps {
   items: readonly SidebarItem[];
   role: string;
+  customRoleTitle?: string;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 
-export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ items, role, customRoleTitle, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
@@ -111,7 +113,7 @@ export function Sidebar({ items, role, isOpen, onClose }: SidebarProps) {
           </div>
         </div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
-          {role} Portal
+          {customRoleTitle || role} Portal
         </p>
       </div>
 
