@@ -31,7 +31,9 @@ import {
   FileSpreadsheet,
   Banknote,
   Sparkles,
+  Shield,
 } from "lucide-react";
+import { hasPermission } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +81,7 @@ export default function FinanceDashboard() {
 
   const [activeTab, setActiveTab] = useState<"payments" | "structures" | "debtors">("payments");
   const [loading, setLoading] = useState(true);
+  const [canManageFinance, setCanManageFinance] = useState(true);
 
   // Data states
   const [payments, setPayments] = useState<any[]>([]);
@@ -147,6 +150,29 @@ export default function FinanceDashboard() {
       fetchFinanceData();
     }
   }, [subdomain]);
+
+  useEffect(() => {
+    async function checkPermission() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_super_admin, role, permissions")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          const isSuper = profile.is_super_admin === true || profile.role === "super_admin";
+          const hasManage = isSuper || hasPermission(profile.permissions, "finance:manage");
+          setCanManageFinance(hasManage);
+        }
+      } catch (err) {
+        console.error("[Finance] Failed to check permissions:", err);
+      }
+    }
+    checkPermission();
+  }, [supabase]);
 
   // Fetch students for Debtors tab when class changes
   useEffect(() => {
@@ -388,14 +414,36 @@ export default function FinanceDashboard() {
               </div>
             </Link>
 
-            <RecordManualPaymentModal feeStructures={feeStructures} onSuccess={fetchFinanceData} />
-            <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
+            {canManageFinance ? (
+              <>
+                <RecordManualPaymentModal feeStructures={feeStructures} onSuccess={fetchFinanceData} />
+                <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
+              </>
+            ) : (
+              <Badge variant="outline" className="h-10 px-3.5 rounded-2xl border-amber-500/30 text-amber-500 bg-amber-500/10 font-bold text-xs gap-1.5 shadow-xs">
+                <Shield className="size-3.5" /> Auditor Mode (Read-Only)
+              </Badge>
+            )}
           </div>
         </div>
         
         {/* Decorative background glow */}
         <div className="absolute -top-24 -right-24 size-64 bg-primary/20 blur-[100px] rounded-full group-hover:bg-primary/30 transition-colors" />
       </header>
+
+      {/* Auditor Notice Banner */}
+      {!canManageFinance && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 backdrop-blur-md shadow-xs"
+        >
+          <Shield className="size-5 shrink-0 text-amber-500" />
+          <div className="text-xs leading-relaxed">
+            <span className="font-bold uppercase tracking-wider">Auditor Access (Read-Only Scope):</span> You have compliance and reporting oversight on institutional financial records. Configuring fee structures, editing fee items, approving manual transfers, and recording payments are restricted to authorized financial managers.
+          </div>
+        </motion.div>
+      )}
 
       {/* Bento Metric Grid with Period Scope Toggle */}
       <div className="space-y-4">
@@ -609,7 +657,7 @@ export default function FinanceDashboard() {
               </Button>
             )}
 
-            {activeTab === "structures" && (
+            {activeTab === "structures" && canManageFinance && (
               <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
             )}
           </div>
@@ -789,7 +837,7 @@ export default function FinanceDashboard() {
                                 {p.status}
                               </Badge>
 
-                              {p.status === "pending" && p.channel === "bank_transfer" && (
+                              {p.status === "pending" && p.channel === "bank_transfer" && canManageFinance && (
                                 <div className="flex items-center gap-1 mt-1.5">
                                   <Button
                                     size="sm"
@@ -923,10 +971,10 @@ export default function FinanceDashboard() {
                 <div className="space-y-1 max-w-sm mx-auto">
                   <h3 className="font-black text-base text-foreground">No Fee Structures Found</h3>
                   <p className="text-xs text-muted-foreground font-medium">
-                    No fee structures match the selected filters. Click below to add fee items for your classes.
+                    No fee structures match the selected filters.
                   </p>
                 </div>
-                <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />
+                {canManageFinance && <AddFeeStructureModal classes={classes} onSuccess={fetchFinanceData} />}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -956,24 +1004,26 @@ export default function FinanceDashboard() {
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setEditingFee(fs)}
-                            className="size-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground"
-                          >
-                            <Edit2 className="size-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setDeletingFee(fs)}
-                            className="size-8 rounded-xl hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
+                        {canManageFinance && (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setEditingFee(fs)}
+                              className="size-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                            >
+                              <Edit2 className="size-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setDeletingFee(fs)}
+                              className="size-8 rounded-xl hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-1">
@@ -1103,10 +1153,14 @@ export default function FinanceDashboard() {
                         </TableCell>
 
                         <TableCell className="py-4 text-right pr-6">
-                          <RecordManualPaymentModal 
-                            feeStructures={row.applicableFees.length > 0 ? row.applicableFees : feeStructures} 
-                            onSuccess={fetchFinanceData} 
-                          />
+                          {canManageFinance ? (
+                            <RecordManualPaymentModal 
+                              feeStructures={row.applicableFees.length > 0 ? row.applicableFees : feeStructures} 
+                              onSuccess={fetchFinanceData} 
+                            />
+                          ) : (
+                            <span className="text-[11px] text-muted-foreground font-medium italic">Read-only</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

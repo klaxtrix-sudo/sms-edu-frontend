@@ -32,6 +32,8 @@ const RecordManualPaymentSchema = z.object({
   notes: z.string().trim().optional(),
 });
 
+import { recordAuditLog } from "@/lib/services/audit-service";
+
 /**
  * Fetches comprehensive finance overview:
  * - Fee structures (with class name, enrolled student count, paid count, total collected)
@@ -46,7 +48,7 @@ export async function getFinanceOverview(
 ) {
   if (!subdomain) return { error: "Subdomain is required" };
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ["admin"]);
+    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ["admin"], "finance:read");
 
     // 1. Fetch Fee Structures
     let feeQuery = (tenantSupabase as any)
@@ -191,7 +193,7 @@ export async function getFinanceOverview(
  */
 export async function createFeeStructure(subdomain: string, rawPayload: any) {
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ["admin"]);
+    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, ["admin"], "finance:manage");
     const validated = CreateFeeStructureSchema.parse(rawPayload);
 
     if (validated.classId === "ALL") {
@@ -220,6 +222,17 @@ export async function createFeeStructure(subdomain: string, rawPayload: any) {
 
       if (insertErr) throw insertErr;
 
+      await recordAuditLog(tenantSupabase, {
+        schoolId,
+        actorId: user.id,
+        actorName: user.user_metadata?.full_name || "Admin",
+        actorRole: "admin",
+        action: "FEE_STRUCTURE_CREATE_BATCH",
+        module: "finance",
+        targetName: validated.name,
+        details: { amount: validated.amount, classCount: rows.length, academicYear: validated.academicYear, term: validated.term },
+      });
+
       revalidatePath(`/dashboard/admin/finance`);
       return { success: true, count: rows.length };
     }
@@ -238,6 +251,17 @@ export async function createFeeStructure(subdomain: string, rawPayload: any) {
 
     if (insertErr) throw insertErr;
 
+    await recordAuditLog(tenantSupabase, {
+      schoolId,
+      actorId: user.id,
+      actorName: user.user_metadata?.full_name || "Admin",
+      actorRole: "admin",
+      action: "FEE_STRUCTURE_CREATE",
+      module: "finance",
+      targetName: validated.name,
+      details: { amount: validated.amount, classId: validated.classId, academicYear: validated.academicYear, term: validated.term },
+    });
+
     revalidatePath(`/dashboard/admin/finance`);
     return { success: true, count: 1 };
   } catch (error: any) {
@@ -251,7 +275,7 @@ export async function createFeeStructure(subdomain: string, rawPayload: any) {
  */
 export async function updateFeeStructure(subdomain: string, id: string, rawPayload: any) {
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ["admin"]);
+    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, ["admin"], "finance:manage");
     if (!id) return { error: "Fee structure ID is required" };
 
     const validated = UpdateFeeStructureSchema.parse(rawPayload);
@@ -270,6 +294,18 @@ export async function updateFeeStructure(subdomain: string, id: string, rawPaylo
 
     if (updateErr) throw updateErr;
 
+    await recordAuditLog(tenantSupabase, {
+      schoolId,
+      actorId: user.id,
+      actorName: user.user_metadata?.full_name || "Admin",
+      actorRole: "admin",
+      action: "FEE_STRUCTURE_UPDATE",
+      module: "finance",
+      targetId: id,
+      targetName: validated.name,
+      details: { amount: validated.amount, classId: validated.classId, academicYear: validated.academicYear, term: validated.term },
+    });
+
     revalidatePath(`/dashboard/admin/finance`);
     return { success: true };
   } catch (error: any) {
@@ -283,7 +319,7 @@ export async function updateFeeStructure(subdomain: string, id: string, rawPaylo
  */
 export async function deleteFeeStructure(subdomain: string, id: string) {
   try {
-    const { tenantSupabase, schoolId } = await requireActionAuth(subdomain, ["admin"]);
+    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, ["admin"], "finance:manage");
     if (!id) return { error: "Fee structure ID is required" };
 
     // 1. Pre-flight Dependency Guard: check for existing fee payments
@@ -310,6 +346,16 @@ export async function deleteFeeStructure(subdomain: string, id: string) {
 
     if (deleteErr) throw deleteErr;
 
+    await recordAuditLog(tenantSupabase, {
+      schoolId,
+      actorId: user.id,
+      actorName: user.user_metadata?.full_name || "Admin",
+      actorRole: "admin",
+      action: "FEE_STRUCTURE_DELETE",
+      module: "finance",
+      targetId: id,
+    });
+
     revalidatePath(`/dashboard/admin/finance`);
     return { success: true };
   } catch (error: any) {
@@ -323,7 +369,7 @@ export async function deleteFeeStructure(subdomain: string, id: string) {
  */
 export async function recordManualPayment(subdomain: string, rawPayload: any) {
   try {
-    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, ["admin"]);
+    const { tenantSupabase, schoolId, user } = await requireActionAuth(subdomain, ["admin"], "finance:manage");
     const validated = RecordManualPaymentSchema.parse(rawPayload);
 
     // Verify student exists in this school
@@ -377,6 +423,24 @@ export async function recordManualPayment(subdomain: string, rawPayload: any) {
       });
 
     if (insertErr) throw insertErr;
+
+    await recordAuditLog(tenantSupabase, {
+      schoolId,
+      actorId: user.id,
+      actorName: user.user_metadata?.full_name || "Admin",
+      actorRole: "admin",
+      action: "FEE_PAYMENT_RECORD",
+      module: "finance",
+      targetId: reference,
+      targetName: feeStructure.name,
+      details: {
+        amount: validated.amount,
+        channel: validated.channel,
+        studentId: validated.studentId,
+        feeStructureId: validated.feeStructureId,
+        reference,
+      },
+    });
 
     revalidatePath(`/dashboard/admin/finance`);
     return { success: true, reference };
