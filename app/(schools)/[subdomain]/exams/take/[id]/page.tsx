@@ -821,11 +821,11 @@ export default function TakeExamPage() {
             <CheckCircle className="size-10" />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-black text-white">Exam Completed</CardTitle>
-            <CardDescription className="text-zinc-400">Your answers have been graded and recorded successfully.</CardDescription>
+            <CardTitle className="text-2xl font-black text-white">Exam Submitted Successfully</CardTitle>
+            <CardDescription className="text-zinc-400">Your answers have been securely recorded.</CardDescription>
           </div>
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm text-zinc-400">
-            Thank you for completing your examination. You can now close this tab safely.
+          <div className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm text-zinc-400 leading-relaxed">
+            Official examination scores will be released with the term report card. You can now close this tab safely.
           </div>
           <Button
             onClick={() => router.push('/')}

@@ -192,37 +192,30 @@ export default function ExamPortalPage() {
   );
 
   if (finished) return (
-    <div className="h-full max-w-2xl mx-auto flex items-center justify-center py-20 animate-in zoom-in duration-500">
-      <Card className="w-full text-center border border-border shadow-2xl bg-card overflow-hidden">
-        <div className="h-3 w-full bg-emerald-500" />
-        <CardContent className="pt-12 pb-12">
-          <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-6">
+    <div className="h-full max-w-lg mx-auto flex items-center justify-center py-20 animate-in zoom-in duration-500">
+      <Card className="w-full text-center border border-border shadow-2xl bg-card overflow-hidden rounded-3xl">
+        <div className="h-2 w-full bg-emerald-500" />
+        <CardContent className="pt-12 pb-10 px-8 space-y-6">
+          <div className="size-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-500 shadow-sm">
             <CheckCircle2 className="size-10 text-emerald-500" />
           </div>
-          <h2 className="text-3xl font-bold mb-2 text-foreground">Exam Finished!</h2>
-          <p className="text-muted-foreground mb-8">Your answers have been saved and graded.</p>
-          
-          <div className="bg-accent/30 rounded-2xl p-8 mb-8 border border-border/60">
-            <div className="text-6xl font-black text-primary mb-2">
-              {results?.score} <span className="text-2xl text-muted-foreground font-normal">/ {results?.totalMarks}</span>
-            </div>
-            <div className="text-sm font-semibold text-primary uppercase tracking-widest">Your Score</div>
-            
-            <div className="mt-6 pt-6 border-t border-border flex justify-around">
-              <div>
-                <div className="text-2xl font-bold">{results?.percentage}%</div>
-                <div className="text-[10px] text-muted-foreground uppercase">Grade Percentage</div>
-              </div>
-              <div className="border-l border-border" />
-              <div>
-                <div className="text-2xl font-bold">{Math.round((results?.score / results?.totalMarks) * 100) >= 40 ? "PASS" : "FAIL"}</div>
-                <div className="text-[10px] text-muted-foreground uppercase">Remark</div>
-              </div>
-            </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Exam Submitted Successfully</h2>
+            <p className="text-sm text-muted-foreground">
+              Your answers have been securely recorded.
+            </p>
           </div>
 
-          <Button className="w-full h-12 text-lg" onClick={() => router.push("/dashboard/student/exams")}>
-            Back to Dashboard
+          <div className="p-4 rounded-2xl bg-muted/40 border border-border/70 text-xs text-muted-foreground leading-relaxed">
+            Official examination scores and grading will be released with the end-of-term academic report card.
+          </div>
+
+          <Button 
+            className="w-full h-12 font-bold text-sm rounded-xl bg-primary hover:bg-primary/90 shadow-md" 
+            onClick={() => router.push("/dashboard/student/exams")}
+          >
+            Back to Examinations
           </Button>
         </CardContent>
       </Card>
