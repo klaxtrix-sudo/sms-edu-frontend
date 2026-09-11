@@ -111,6 +111,13 @@ export async function createSubAdmin(data: CreateSubAdminData) {
 
       if (tenantProfileError) {
         console.error("[SubAdmin Actions] Tenant Profile Error:", tenantProfileError.message);
+        // Roll back the created auth identity to prevent orphaned users
+        try {
+          await tenantSupabase.auth.admin.deleteUser(user.id);
+        } catch (delErr) {
+          console.error("[createSubAdmin] Failed to rollback auth user:", delErr);
+        }
+        return { error: `Failed to create administrator profile: ${tenantProfileError.message}` };
       }
 
       // 3. Generate single-use cryptographically signed activation link
@@ -334,6 +341,15 @@ export async function toggleAdminStatus(userId: string, isActive: boolean, subdo
 
     if (error) return { error: error.message };
 
+    // Sync active/suspended status with Supabase Auth via ban_duration
+    try {
+      await tenantSupabase.auth.admin.updateUserById(userId, {
+        ban_duration: !isActive ? "876000h" : "none",
+      });
+    } catch (authBanErr) {
+      console.warn("[toggleAdminStatus] Failed to update auth ban_duration:", authBanErr);
+    }
+
     // Record Audit Log
     await recordAuditLog(tenantSupabase, {
       schoolId,
@@ -363,12 +379,20 @@ export async function resendAdminCredentials(userId: string, schoolId: string, s
     // 1. Get profile
     const { data: profile, error: profileError } = await (tenantSupabase as any)
       .from("profiles")
-      .select("email, full_name, custom_role_title")
+      .select("email, full_name, custom_role_title, is_active, onboarding_completed")
       .eq("id", userId)
       .single();
 
     if (profileError || !profile || !profile.email) {
       return { error: "Administrator profile not found or email is missing." };
+    }
+
+    if (!profile.is_active) {
+      return { error: "Cannot generate or resend activation credentials for a suspended administrator." };
+    }
+
+    if (profile.onboarding_completed) {
+      return { error: "This administrator has already completed setup and activated their account." };
     }
 
     // 2. Compute activation URL
@@ -608,11 +632,12 @@ export async function sendPendingInvitationReminders(schoolId: string, subdomain
   try {
     const { tenantSupabase, user: caller } = await requireActionAuth(subdomain, ["admin"], "admins");
 
-    // Fetch all active pending users across all roles (admins, teachers, parents)
+    // Fetch active pending administrators only
     const { data: pendingUsers, error: pendingErr } = await (tenantSupabase as any)
       .from("profiles")
       .select("id, email, full_name, role, custom_role_title, invitation_expires_at")
       .eq("school_id", schoolId)
+      .eq("role", "admin")
       .eq("is_active", true)
       .eq("onboarding_completed", false);
 

@@ -80,7 +80,7 @@ export async function requireActionAuth(
   if (userRole === "admin") {
     const { data: profile } = await (tenantSupabase as any)
       .from('profiles')
-      .select('is_active, is_super_admin, permissions')
+      .select('is_active, is_super_admin, permissions, session_revoked_at')
       .eq('id', user.id)
       .single();
 
@@ -88,14 +88,23 @@ export async function requireActionAuth(
       throw new Error("Forbidden: Your administrator account has been suspended by a Super Administrator.");
     }
 
+    if (profile?.session_revoked_at) {
+      const revokedTime = new Date(profile.session_revoked_at).getTime();
+      const authTime = new Date(user.last_sign_in_at || user.created_at).getTime();
+      // If session was revoked after the user last signed in, reject the request
+      if (revokedTime > authTime) {
+        throw new Error("Session revoked or expired. Please sign in again.");
+      }
+    }
+
     if (requiredPermission) {
       const profileIsSuper = profile?.is_super_admin === true || user.user_metadata?.is_super_admin === true;
-      const combinedPerms = Array.from(new Set([
-        ...(Array.isArray(user.user_metadata?.permissions) ? user.user_metadata.permissions : []),
-        ...(Array.isArray(profile?.permissions) ? profile.permissions : [])
-      ]));
+      // Authoritative database profile permissions take precedence over stale JWT metadata
+      const effectivePerms = Array.isArray(profile?.permissions)
+        ? profile.permissions
+        : (Array.isArray(user.user_metadata?.permissions) ? user.user_metadata.permissions : []);
 
-      if (!profileIsSuper && !hasPermission(combinedPerms, requiredPermission)) {
+      if (!profileIsSuper && !hasPermission(effectivePerms, requiredPermission)) {
         throw new Error(
           `Forbidden: You do not have permission for the '${requiredPermission}' action or module.`
         );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -70,7 +70,7 @@ export function EditAdminPermissionsModal({
     return "manage";
   };
 
-  const togglePermission = (moduleId: string) => {
+  const togglePermission = useCallback((moduleId: string) => {
     setSelectedPermissions((prev) => {
       const isSelected =
         prev.includes(moduleId) ||
@@ -85,16 +85,16 @@ export function EditAdminPermissionsModal({
         return [...prev, `${moduleId}:manage`];
       }
     });
-  };
+  }, []);
 
-  const setModuleScope = (moduleId: string, scope: "manage" | "read") => {
+  const setModuleScope = useCallback((moduleId: string, scope: "manage" | "read") => {
     setSelectedPermissions((prev) => {
       const filtered = prev.filter(
         (p) => p !== moduleId && p !== `${moduleId}:manage` && p !== `${moduleId}:read`
       );
       return [...filtered, `${moduleId}:${scope}`];
     });
-  };
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

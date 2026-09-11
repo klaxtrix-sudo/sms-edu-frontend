@@ -190,9 +190,14 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
 
   const handleCloseModal = () => {
     if (loading) return;
+    if (createdData) {
+      onSuccess();
+    }
     setCreatedData(null);
     setCopied(false);
     form.reset();
+    setSelectedPreset("bursar");
+    setSelectedPermissions(["finance", "analytics"]);
     onClose();
   };
 
@@ -200,6 +205,8 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
     setCreatedData(null);
     setCopied(false);
     form.reset();
+    setSelectedPreset("bursar");
+    setSelectedPermissions(["finance", "analytics"]);
     onSuccess();
     onClose();
   };
@@ -218,7 +225,10 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
 
   const handleShareWhatsApp = () => {
     if (!createdData) return;
-    const cleanPhone = createdData.phone.replace(/\D/g, "");
+    let cleanPhone = createdData.phone.replace(/\D/g, "");
+    if (cleanPhone.startsWith("0") && cleanPhone.length === 11) {
+      cleanPhone = "234" + cleanPhone.slice(1);
+    }
     const message = encodeURIComponent(
       `Hello ${createdData.fullName},\n\nYou have been invited as an Administrator (${createdData.customRoleTitle}) on the Klaxtrix school portal. Click the link below to securely activate your account and choose your password:\n\n${createdData.activationLink}`
     );
@@ -418,7 +428,10 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setSelectedPermissions(AVAILABLE_MODULES.map((m) => `${m.id}:manage`))}
+                      onClick={() => {
+                        setSelectedPreset("custom");
+                        setSelectedPermissions(AVAILABLE_MODULES.map((m) => `${m.id}:manage`));
+                      }}
                       className="text-[10px] text-primary hover:underline font-semibold"
                     >
                       Select All
@@ -426,7 +439,10 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                     <span className="text-[10px] text-muted-foreground">•</span>
                     <button
                       type="button"
-                      onClick={() => setSelectedPermissions([])}
+                      onClick={() => {
+                        setSelectedPreset("custom");
+                        setSelectedPermissions([]);
+                      }}
                       className="text-[10px] text-muted-foreground hover:underline font-semibold"
                     >
                       Clear

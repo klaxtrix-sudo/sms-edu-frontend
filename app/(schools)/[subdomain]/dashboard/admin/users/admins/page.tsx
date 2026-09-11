@@ -142,7 +142,7 @@ export default function AdminsDirectoryPage() {
     }
     loadCallerIdentity();
     fetchAdmins();
-  }, [tenant?.id]);
+  }, [tenant?.id, tenant?.supabaseUrl, tenant?.supabaseAnonKey, subdomain]);
 
   const handleToggleStatus = async (admin: any) => {
     if (admin.is_super_admin) {
@@ -168,6 +168,7 @@ export default function AdminsDirectoryPage() {
       if (result.success && result.activationLink) {
         await navigator.clipboard.writeText(result.activationLink);
         toast.success(`Activation link copied for ${admin.full_name}!`);
+        fetchAdmins();
       } else {
         toast.error(result.error || "Failed to generate activation link.");
       }
@@ -185,6 +186,7 @@ export default function AdminsDirectoryPage() {
     const result = await resendAdminCredentials(admin.id, tenant.id, subdomain as string);
     if (result.success) {
       toast.success(`Activation email resent to ${admin.email}.`);
+      fetchAdmins();
       if (result.activationLink) {
         try {
           await navigator.clipboard.writeText(result.activationLink);
@@ -241,18 +243,20 @@ export default function AdminsDirectoryPage() {
   const subAdminCount = useMemo(() => admins.filter(a => !a.is_super_admin).length, [admins]);
 
   const filteredAdmins = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return admins.filter(admin => {
-      const matchesSearch = 
-        admin.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        admin.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        admin.custom_role_title?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !q || (
+        Boolean(admin.full_name && admin.full_name.toLowerCase().includes(q)) ||
+        Boolean(admin.email && admin.email.toLowerCase().includes(q)) ||
+        Boolean(admin.custom_role_title && admin.custom_role_title.toLowerCase().includes(q))
+      );
 
       const matchesRole = 
         roleFilter === 'all' ? true :
         roleFilter === 'super' ? admin.is_super_admin :
         !admin.is_super_admin;
 
-      return matchesSearch && matchesRole;
+      return Boolean(matchesSearch && matchesRole);
     });
   }, [admins, searchQuery, roleFilter]);
 
@@ -395,7 +399,7 @@ export default function AdminsDirectoryPage() {
               filteredAdmins.map((admin) => {
                 const isSuper = admin.is_super_admin;
                 const permissions: string[] = Array.isArray(admin.permissions) ? admin.permissions : [];
-                const isPendingSetup = admin.is_active && !admin.onboarding_completed;
+                const isPendingSetup = !isSuper && admin.is_active && !admin.onboarding_completed;
                 const isInviteExpired = isPendingSetup && admin.invitation_expires_at && new Date() > new Date(admin.invitation_expires_at);
                 const isSelf = admin.id === currentUserId;
 
@@ -539,31 +543,35 @@ export default function AdminsDirectoryPage() {
                                 <SlidersHorizontal className="size-3.5 text-primary" /> Edit Permissions & Role
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem 
-                                className="gap-2 text-xs font-medium cursor-pointer"
-                                disabled={isActionLoading[admin.id]}
-                                onClick={() => handleCopyActivationLink(admin)}
-                              >
-                                <Copy className="size-3.5 text-blue-500" /> 
-                                {isActionLoading[admin.id] 
-                                  ? "Generating..." 
-                                  : isInviteExpired 
-                                    ? "Renew Link & Copy" 
-                                    : "Copy Activation Link"}
-                              </DropdownMenuItem>
+                              {isPendingSetup && admin.is_active && (
+                                <>
+                                  <DropdownMenuItem 
+                                    className="gap-2 text-xs font-medium cursor-pointer"
+                                    disabled={isActionLoading[admin.id]}
+                                    onClick={() => handleCopyActivationLink(admin)}
+                                  >
+                                    <Copy className="size-3.5 text-blue-500" /> 
+                                    {isActionLoading[admin.id] 
+                                      ? "Generating..." 
+                                      : isInviteExpired 
+                                        ? "Renew Link & Copy" 
+                                        : "Copy Activation Link"}
+                                  </DropdownMenuItem>
 
-                              <DropdownMenuItem 
-                                className="gap-2 text-xs font-medium cursor-pointer text-indigo-600 focus:text-indigo-600 focus:bg-indigo-500/10"
-                                disabled={isActionLoading[admin.id]}
-                                onClick={() => handleResendCredentials(admin)}
-                              >
-                                <Mail className="size-3.5" /> 
-                                {isActionLoading[admin.id] 
-                                  ? "Sending..." 
-                                  : isInviteExpired 
-                                    ? "Renew Link & Resend" 
-                                    : "Resend Invite Email"}
-                              </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="gap-2 text-xs font-medium cursor-pointer text-indigo-600 focus:text-indigo-600 focus:bg-indigo-500/10"
+                                    disabled={isActionLoading[admin.id]}
+                                    onClick={() => handleResendCredentials(admin)}
+                                  >
+                                    <Mail className="size-3.5" /> 
+                                    {isActionLoading[admin.id] 
+                                      ? "Sending..." 
+                                      : isInviteExpired 
+                                        ? "Renew Link & Resend" 
+                                        : "Resend Invite Email"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
 
                               <DropdownMenuSeparator className="bg-primary/10" />
 
