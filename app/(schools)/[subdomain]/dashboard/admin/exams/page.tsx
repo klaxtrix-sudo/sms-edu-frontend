@@ -44,6 +44,8 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { AddExamModal } from "@/components/admin/add-exam-modal";
+import { EditExamModal } from "@/components/admin/edit-exam-modal";
+import { DeleteExamModal } from "@/components/admin/delete-exam-modal";
 import { ScheduleExamModal } from "@/components/admin/schedule-exam-modal";
 import { createTenantClient } from "@/lib/supabase/client";
 import { cn, getBackendUrl } from "@/lib/utils";
@@ -85,6 +87,10 @@ export default function ExamsPage() {
   const [loadingTimetable, setLoadingTimetable] = useState(false);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedExamForEdit, setSelectedExamForEdit] = useState<Exam | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedExamForDelete, setSelectedExamForDelete] = useState<Exam | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("papers");
   
@@ -329,12 +335,30 @@ export default function ExamsPage() {
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 border-none shadow-xl">
+                      <DropdownMenuContent align="end" className="w-48 shadow-xl">
                         <DropdownMenuItem 
                           className="cursor-pointer"
                           onClick={() => router.push(`/dashboard/admin/exams/${exam._id}/questions`)}
                         >
                           <Play className="mr-2 h-4 w-4" /> Question Studio
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            setSelectedExamForEdit(exam);
+                            setIsEditModalOpen(true);
+                          }}
+                        >
+                          <Edit className="mr-2 h-4 w-4" /> Edit Exam Paper
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer text-destructive focus:text-destructive"
+                          onClick={() => {
+                            setSelectedExamForDelete(exam);
+                            setIsDeleteModalOpen(true);
+                          }}
+                        >
+                          <Trash className="mr-2 h-4 w-4" /> Delete Exam Paper
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -476,6 +500,26 @@ export default function ExamsPage() {
         open={isAddModalOpen} 
         onOpenChange={setIsAddModalOpen} 
         onSuccess={fetchExams}
+      />
+
+      <EditExamModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        exam={selectedExamForEdit}
+        onSuccess={() => {
+          fetchExams();
+          fetchTimetable();
+        }}
+      />
+
+      <DeleteExamModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        exam={selectedExamForDelete}
+        onSuccess={() => {
+          fetchExams();
+          fetchTimetable();
+        }}
       />
 
       <ScheduleExamModal
