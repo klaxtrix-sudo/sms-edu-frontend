@@ -9,7 +9,8 @@ import {
   BookOpen, 
   Zap, 
   ShieldCheck, 
-  ChevronRight 
+  ChevronRight,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,9 +35,15 @@ const settingsLinks = [
   },
   {
     title: 'Security',
-    description: 'Access and audit logs',
+    description: 'Access and authentication',
     href: '/dashboard/admin/settings/security',
     icon: ShieldCheck,
+  },
+  {
+    title: 'Audit Trail',
+    description: 'Activity & governance logs',
+    href: '/dashboard/admin/settings/audit-logs',
+    icon: History,
   },
 ];
 

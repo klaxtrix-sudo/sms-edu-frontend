@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 export default function SecuritySettings() {
   return (
@@ -103,9 +104,11 @@ export default function SecuritySettings() {
                ))}
             </div>
 
-            <Button variant="ghost" className="w-full text-xs font-bold text-muted-foreground group hover:text-primary py-6">
-                View Full Log <ArrowRight className="w-3 h-3 ml-2 transition-transform group-hover:translate-x-1" />
-            </Button>
+            <Link href="audit-logs" className="w-full block">
+              <Button variant="ghost" className="w-full text-xs font-bold text-muted-foreground group hover:text-primary py-6">
+                  View Full Audit Trail <ArrowRight className="w-3 h-3 ml-2 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
           </div>
 
           <div className="glass-panel p-8 rounded-[2rem] bg-card text-card-foreground border border-border/80 space-y-4 relative overflow-hidden group shadow-md">
