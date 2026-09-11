@@ -12,7 +12,6 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { 
   FileSpreadsheet, 
@@ -24,8 +23,7 @@ import {
   BookOpen,
   ArrowLeft,
   Calendar,
-  Layers,
-  Award
+  Layers
 } from "lucide-react";
 import { 
   getClasses, 
@@ -198,9 +196,11 @@ export default function AdminResultsPage() {
           
           {/* Academic Session Selector */}
           <Select value={academicYear} onValueChange={setAcademicYear}>
-            <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-card border-border/80">
-              <Calendar className="size-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue placeholder="Session" />
+            <SelectTrigger className="h-9 w-[125px] text-xs font-semibold rounded-xl bg-card border-border/80">
+              <span className="flex items-center gap-1.5 truncate">
+                <Calendar className="size-3.5 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Session" />
+              </span>
             </SelectTrigger>
             <SelectContent>
               {getAcademicSessionOptions(academicCycle?.academicYear || academicYear).map((s) => (
@@ -213,8 +213,10 @@ export default function AdminResultsPage() {
 
           {/* Term Selector */}
           <Select value={currentTerm.toString()} onValueChange={(val) => setCurrentTerm(parseInt(val))}>
-            <SelectTrigger className="h-9 w-[115px] text-xs font-semibold rounded-xl bg-card border-border/80">
-              <SelectValue placeholder="Term" />
+            <SelectTrigger className="h-9 w-[110px] text-xs font-semibold rounded-xl bg-card border-border/80">
+              <span className="flex items-center gap-1.5 truncate">
+                <SelectValue placeholder="Term" />
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="1" className="text-xs font-medium">1st Term</SelectItem>
@@ -228,9 +230,11 @@ export default function AdminResultsPage() {
             value={selectedClassId || "all"} 
             onValueChange={(val) => setSelectedClassId(val === "all" ? "" : val)}
           >
-            <SelectTrigger className="h-9 w-[150px] text-xs font-semibold rounded-xl bg-card border-border/80">
-              <GraduationCap className="size-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue placeholder="All Classrooms" />
+            <SelectTrigger className="h-9 w-[145px] text-xs font-semibold rounded-xl bg-card border-border/80">
+              <span className="flex items-center gap-1.5 truncate">
+                <GraduationCap className="size-3.5 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="All Classrooms" />
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs font-medium text-primary">
@@ -251,9 +255,11 @@ export default function AdminResultsPage() {
               onValueChange={setSelectedSubjectId}
               disabled={loadingSubjects || classSubjects.length === 0}
             >
-              <SelectTrigger className="h-9 min-w-[150px] text-xs font-semibold rounded-xl bg-card border-border/80">
-                <BookOpen className="size-3.5 mr-1.5 text-muted-foreground" />
-                <SelectValue placeholder={loadingSubjects ? "Loading subjects..." : "Select Subject"} />
+              <SelectTrigger className="h-9 w-[160px] text-xs font-semibold rounded-xl bg-card border-border/80">
+                <span className="flex items-center gap-1.5 truncate">
+                  <BookOpen className="size-3.5 shrink-0 text-muted-foreground" />
+                  <SelectValue placeholder={loadingSubjects ? "Loading..." : "Select Subject"} />
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {classSubjects.map(s => (
@@ -295,18 +301,6 @@ export default function AdminResultsPage() {
               </button>
             </div>
           )}
-
-          {/* Promotions Action */}
-          <Link href={`/dashboard/admin/academics/promotions`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 text-xs font-semibold rounded-xl bg-card border-border hover:bg-primary/5 hover:text-primary"
-            >
-              <Award className="size-3.5 text-primary" />
-              Promotions
-            </Button>
-          </Link>
 
           {/* Refresh Action */}
           <Button

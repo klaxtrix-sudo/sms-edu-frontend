@@ -638,11 +638,12 @@ export function SubjectScoresheet({
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
-            size="icon" 
+            size="sm" 
             onClick={onBack}
-            className="size-9 rounded-xl border border-border/60 hover:bg-muted"
+            title="Return to All Classrooms (Readiness Matrix)"
+            className="h-8.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold px-2.5 rounded-xl border border-border/60 hover:bg-muted"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-3.5" /> Classes
           </Button>
 
           <div>
@@ -650,9 +651,6 @@ export function SubjectScoresheet({
               <h2 className="text-xl font-bold text-foreground">{subjectName}</h2>
               <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border-border">
                 {className}
-              </Badge>
-              <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border-primary/20">
-                {academicYear} • {termLabel}
               </Badge>
               {cycleStatus === 'published' ? (
                 <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-bold flex items-center gap-1">
@@ -680,18 +678,6 @@ export function SubjectScoresheet({
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          
-          {/* Master Broadsheet Switcher */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onViewBroadsheet}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
-          >
-            <FileSpreadsheet className="size-3.5 mr-1.5 text-indigo-500" />
-            Class BroadSheet
-          </Button>
-
           {/* Import from Online Exam (CBT) */}
           <Button
             variant="outline"
@@ -784,17 +770,21 @@ export function SubjectScoresheet({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-muted/30 border border-border/70 p-3 rounded-xl">
         <div className="space-y-0.5">
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Class Average</span>
-          <p className="text-lg font-black text-foreground">{gradedCount > 0 ? `${classAvg}%` : "—"}</p>
+          <p className={cn("text-lg font-black", gradedCount > 0 ? "text-foreground" : "text-muted-foreground")}>
+            {gradedCount > 0 ? `${classAvg}%` : "—"}
+          </p>
         </div>
 
         <div className="space-y-0.5">
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Pass Rate</span>
-          <p className="text-lg font-black text-emerald-500">{gradedCount > 0 ? `${passRate}%` : "—"}</p>
+          <p className={cn("text-lg font-black", gradedCount > 0 ? "text-emerald-500" : "text-muted-foreground")}>
+            {gradedCount > 0 ? `${passRate}%` : "—"}
+          </p>
         </div>
 
         <div className="space-y-0.5">
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Highest / Lowest</span>
-          <p className="text-lg font-black text-foreground">
+          <p className={cn("text-lg font-black", gradedCount > 0 ? "text-foreground" : "text-muted-foreground")}>
             {gradedCount > 0 ? `${highest}% / ${lowest}%` : "—"}
           </p>
         </div>
@@ -807,20 +797,30 @@ export function SubjectScoresheet({
         </div>
       </div>
 
-      {/* Search Input */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative w-full max-w-sm">
+      {/* Search & Shortcuts Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card/40 p-2 rounded-xl border border-border/60">
+        <div className="relative w-full max-w-md">
           <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
           <Input
             placeholder="Search student name or admission no..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-9 text-xs rounded-xl bg-background border-border/80"
+            className="h-8.5 pl-9 text-xs rounded-lg bg-background border-border/80 focus-visible:ring-1"
           />
         </div>
-        <p className="text-[11px] text-muted-foreground hidden sm:block">
-          💡 <span className="font-semibold">Pro-tip:</span> Use <kbd className="px-1 py-0.5 text-[10px] rounded bg-muted border">Enter</kbd> or <kbd className="px-1 py-0.5 text-[10px] rounded bg-muted border">↓</kbd> to jump to the next student.
-        </p>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="text-[11px] font-medium hidden md:inline-block">
+            Showing <strong className="text-foreground">{filteredStudents.length}</strong> of {students.length} students
+          </span>
+          <div className="h-3 w-px bg-border hidden md:block" />
+          <p className="text-[11px] flex items-center gap-1.5">
+            <span>💡 Use</span>
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-muted border border-border/80 text-foreground shadow-2xs">Enter</kbd>
+            <span>or</span>
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-muted border border-border/80 text-foreground shadow-2xs">↓</kbd>
+            <span>to jump rows</span>
+          </p>
+        </div>
       </div>
 
       {/* 3. Smart Grading Table */}
@@ -845,11 +845,13 @@ export function SubjectScoresheet({
                   <TableHead className="min-w-[200px] text-xs font-bold">Student Name</TableHead>
                   
                   {metrics.map((m, idx) => (
-                    <TableHead key={m.id || idx} className="w-[110px] text-center text-xs font-bold">
-                      {m.name}
-                      <span className="block text-[10px] font-normal text-muted-foreground">
-                        Max {m.weight}
-                      </span>
+                    <TableHead key={m.id || idx} className="w-[130px] min-w-[125px] text-center text-xs font-bold py-3">
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <span className="leading-tight line-clamp-1" title={m.name}>{m.name}</span>
+                        <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
+                          Max {m.weight}
+                        </span>
+                      </div>
                     </TableHead>
                   ))}
 
@@ -908,7 +910,7 @@ export function SubjectScoresheet({
                         const isSpecialCode = scoreVal === "ABS" || scoreVal === "EX";
 
                         return (
-                          <TableCell key={m.id || mIdx} className="text-center p-2">
+                          <TableCell key={m.id || mIdx} className="text-center p-1.5">
                             <Input
                               id={`cell-${sIdx}-${mIdx}`}
                               type="text"
@@ -919,12 +921,12 @@ export function SubjectScoresheet({
                               onChange={(e) => handleScoreChange(student.id, key, e.target.value, m.weight)}
                               onKeyDown={(e) => handleKeyDown(e, sIdx, mIdx)}
                               className={cn(
-                                "w-20 mx-auto text-center h-8 text-xs font-bold rounded-lg transition-all",
+                                "w-20 mx-auto text-center h-8 text-xs font-mono font-bold rounded-lg transition-all shadow-2xs",
                                 isOverweight 
                                   ? "border-rose-500 bg-rose-500/10 text-rose-500 focus-visible:ring-rose-500" 
                                   : isSpecialCode
                                   ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono"
-                                  : "bg-background border-border/80",
+                                  : "bg-background/90 dark:bg-card border-border/90 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/30",
                                 isLocked && "opacity-70 cursor-not-allowed bg-muted/40"
                               )}
                             />
@@ -964,7 +966,7 @@ export function SubjectScoresheet({
                             {remark}
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground italic font-normal">Pending</span>
+                          <span className="text-muted-foreground/40 text-xs">—</span>
                         )}
                       </TableCell>
                     </TableRow>

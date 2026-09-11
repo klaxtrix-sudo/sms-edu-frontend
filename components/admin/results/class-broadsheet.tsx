@@ -259,19 +259,17 @@ export function ClassBroadsheet({
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
-            size="icon" 
+            size="sm" 
             onClick={onBack}
-            className="size-9 rounded-xl border border-border/60 hover:bg-muted"
+            title="Return to All Classrooms (Readiness Matrix)"
+            className="h-8.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold px-2.5 rounded-xl border border-border/60 hover:bg-muted"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-3.5" /> Classes
           </Button>
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-bold text-foreground">{data.className} Master BroadSheet</h2>
-              <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary border-primary/20">
-                {academicYear} • {termLabel}
-              </Badge>
               {data.status === 'published' ? (
                 <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-bold flex items-center gap-1">
                   <CheckCircle2 className="size-3" /> Published to Parents
