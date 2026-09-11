@@ -15,7 +15,9 @@ import {
   MapPin, 
   Loader2,
   CalendarRange,
-  FileText
+  FileText,
+  FileCheck,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,8 +57,12 @@ interface Exam {
   subjectId: string;
   durationMins: number;
   status: 'draft' | 'published' | 'ended';
-  startAt: string;
-  endAt: string;
+  workflowStatus?: 'draft' | 'pending_questions' | 'ready_for_review' | 'changes_requested' | 'approved' | 'published' | 'ended';
+  academicYear?: string;
+  term?: number;
+  assignedTeacherId?: string;
+  startAt?: string;
+  endAt?: string;
   questionCount: number;
 }
 
@@ -188,7 +194,19 @@ export default function ExamsPage() {
     e.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, workflowStatus?: string) => {
+    if (workflowStatus === 'ready_for_review') {
+      return <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30">Needs Review</Badge>;
+    }
+    if (workflowStatus === 'changes_requested') {
+      return <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">Revisions Requested</Badge>;
+    }
+    if (workflowStatus === 'approved') {
+      return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Approved</Badge>;
+    }
+    if (workflowStatus === 'pending_questions') {
+      return <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">Setting Questions</Badge>;
+    }
     switch (status) {
       case "published": return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20">Active</Badge>;
       case "draft": return <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border/80">Draft</Badge>;
@@ -304,7 +322,7 @@ export default function ExamsPage() {
                 <div className="h-2 w-full bg-primary/10 group-hover:bg-primary transition-colors" />
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between mb-2">
-                    {getStatusBadge(exam.status)}
+                    {getStatusBadge(exam.status, exam.workflowStatus)}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -316,26 +334,47 @@ export default function ExamsPage() {
                           className="cursor-pointer"
                           onClick={() => router.push(`/dashboard/admin/exams/${exam._id}/questions`)}
                         >
-                          <Play className="mr-2 h-4 w-4" /> Manage Qs
+                          <Play className="mr-2 h-4 w-4" /> Question Studio
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                   <CardTitle className="text-xl line-clamp-1">{exam.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1">
+                  <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                       {subjectsMap[exam.subjectId] || exam.subjectId}
                     </span>
                     <span className="text-xs font-semibold text-zinc-500">• {classesMap[exam.classId] || exam.classId}</span>
+                    {exam.academicYear && (
+                      <span className="text-[11px] text-muted-foreground">• {exam.academicYear} (T{exam.term || 1})</span>
+                    )}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-foreground/80">
-                      <Clock className="h-4 w-4 text-primary" />
-                      <span>{exam.durationMins} Mins • {exam.questionCount} Questions</span>
-                    </div>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-foreground/80">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <span>{exam.durationMins} Mins • {exam.questionCount} Questions</span>
                   </div>
+
+                  {/* Direct Action Button based on Workflow */}
+                  {exam.workflowStatus === 'ready_for_review' ? (
+                    <Button 
+                      size="sm" 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1.5 shadow-sm"
+                      onClick={() => router.push(`/dashboard/admin/exams/${exam._id}/questions`)}
+                    >
+                      <FileCheck className="h-4 w-4" /> Review Questions
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full gap-1.5"
+                      onClick={() => router.push(`/dashboard/admin/exams/${exam._id}/questions`)}
+                    >
+                      <Play className="h-3.5 w-3.5 text-primary fill-primary" /> Open Question Studio
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}

@@ -14,7 +14,12 @@ import {
   MapPin, 
   Loader2,
   CalendarRange,
-  FileText
+  FileText,
+  Edit,
+  RotateCcw,
+  Eye,
+  Sparkles,
+  FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,8 +60,12 @@ interface Exam {
   subjectId: string;
   durationMins: number;
   status: 'draft' | 'published' | 'ended';
-  startAt: string;
-  endAt: string;
+  workflowStatus?: 'draft' | 'pending_questions' | 'ready_for_review' | 'changes_requested' | 'approved' | 'published' | 'ended';
+  academicYear?: string;
+  term?: number;
+  assignedTeacherId?: string;
+  startAt?: string;
+  endAt?: string;
   questionCount: number;
   isActive: boolean;
 }
@@ -136,13 +145,14 @@ export default function TeacherExamsPage() {
         },
       });
       const result = await response.json();
-      if (result.success && allAssignments.length > 0) {
-        // Filter exams to only show assigned classes & subjects
-        const teacherExams = result.data.filter((exam: Exam) => 
+      if (result.success) {
+        // Filter exams to only show assigned classes & subjects or directly assigned teacher
+        const teacherExams = (result.data || []).filter((exam: any) => 
+          (exam.assignedTeacherId && exam.assignedTeacherId === session.user.id) ||
           allAssignments.some(a => a.class_id === exam.classId && a.subject_id === exam.subjectId)
         );
         setExams(teacherExams);
-      } else if (result.success) {
+      } else {
         setExams([]);
       }
     } catch (error) {
@@ -244,10 +254,22 @@ export default function TeacherExamsPage() {
   );
 
   const getStatusBadge = (exam: Exam) => {
-    if (exam.isActive) {
-      return <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/15">Active</Badge>;
+    if (exam.workflowStatus === 'ready_for_review') {
+      return <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30">Under Review</Badge>;
     }
-    return <Badge variant="secondary" className="bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400 font-semibold">Draft / Offline</Badge>;
+    if (exam.workflowStatus === 'changes_requested') {
+      return <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">Revisions Requested</Badge>;
+    }
+    if (exam.workflowStatus === 'approved') {
+      return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Approved</Badge>;
+    }
+    if (exam.workflowStatus === 'pending_questions') {
+      return <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">Setting Questions</Badge>;
+    }
+    if (exam.status === 'published' || exam.isActive) {
+      return <Badge className="bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30">Published</Badge>;
+    }
+    return <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border/80">Draft</Badge>;
   };
 
   return (
@@ -396,25 +418,51 @@ export default function TeacherExamsPage() {
                     </div>
                   </div>
                   
-                  <div className="mt-6 flex gap-2">
-                    <Button 
-                      onClick={() => handleToggleActive(exam._id, exam.isActive)}
-                      variant={exam.isActive ? "outline" : "default"}
-                      className={cn(
-                        "flex-1 text-xs h-9",
-                        !exam.isActive && "bg-emerald-600 hover:bg-emerald-700 text-white"
-                      )}
-                    >
-                      {exam.isActive ? (
-                        <>
-                          <StopCircle className="mr-2 h-3.5 w-3.5 text-destructive" /> Set Offline
-                        </>
-                      ) : (
-                        <>
-                          <Play className="mr-2 h-3.5 w-3.5" /> Go Active
-                        </>
-                      )}
-                    </Button>
+                  {/* Action Button based on Workflow */}
+                  <div className="mt-5">
+                    {exam.workflowStatus === 'changes_requested' ? (
+                      <Button 
+                        size="sm"
+                        className="w-full bg-rose-600 hover:bg-rose-700 text-white gap-1.5 shadow-sm"
+                        onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" /> Revise Questions
+                      </Button>
+                    ) : exam.workflowStatus === 'pending_questions' ? (
+                      <Button 
+                        size="sm"
+                        className="w-full bg-primary hover:bg-primary/90 text-white gap-1.5 shadow-sm"
+                        onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
+                      >
+                        <Edit className="h-3.5 w-3.5" /> Set Questions
+                      </Button>
+                    ) : exam.workflowStatus === 'ready_for_review' ? (
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 gap-1.5"
+                        onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
+                      >
+                        <Eye className="h-3.5 w-3.5" /> View Submitted Qs
+                      </Button>
+                    ) : exam.workflowStatus === 'approved' ? (
+                      <Button 
+                        size="sm"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm"
+                        onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Approved — Go to Studio
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="w-full gap-1.5"
+                        onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
+                      >
+                        <Play className="h-3.5 w-3.5 text-primary fill-primary" /> Question Studio
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

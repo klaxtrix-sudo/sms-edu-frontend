@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -33,23 +33,29 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, UserCheck } from "lucide-react";
 import { getBackendUrl } from "@/lib/utils";
+
+function generateRandomPin(): string {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
 
 const examSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
+  academicYear: z.string().min(1, "Please select an academic session"),
+  term: z.coerce.number().int().min(1).max(3),
   classId: z.string().min(1, "Please select a class"),
   subjectId: z.string().min(1, "Please select a subject"),
+  assignedTeacherId: z.string().min(1, "Please select an assigned teacher"),
   durationMins: z.coerce.number().int().min(5).max(180),
   totalMarks: z.coerce.number().int().min(1),
   questionCount: z.coerce.number().int().min(1),
   randomiseQuestions: z.boolean().default(true),
   randomiseOptions: z.boolean().default(true),
-  startAt: z.string().min(1, "Start date is required"),
-  endAt: z.string().min(1, "End date is required"),
   studentPin: z.string().min(4, "PIN must be at least 4 characters").max(8, "PIN must be at most 8 characters"),
 });
 
@@ -61,10 +67,21 @@ interface AddExamModalProps {
   onSuccess: () => void;
 }
 
+interface TeacherOption {
+  id: string;
+  name: string;
+  email?: string;
+}
+
 export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProps) {
   const [loading, setLoading] = useState(false);
+  const [detectingTeacher, setDetectingTeacher] = useState(false);
+  const [autoDetectedTeacherName, setAutoDetectedTeacherName] = useState<string | null>(null);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
+  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [userRole, setUserRole] = useState<string>("admin");
+
   const supabase = createClient();
 
   const form = useForm<ExamFormValues>({
@@ -72,16 +89,58 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
     defaultValues: {
       title: "",
       description: "",
+      academicYear: "2025/2026",
+      term: 1,
+      classId: "",
+      subjectId: "",
+      assignedTeacherId: "",
       durationMins: 60,
       totalMarks: 100,
       questionCount: 50,
       randomiseQuestions: true,
       randomiseOptions: true,
-      startAt: "",
-      endAt: "",
-      studentPin: "",
+      studentPin: generateRandomPin(),
     },
   });
+
+  const selectedClassId = form.watch("classId");
+  const selectedSubjectId = form.watch("subjectId");
+
+  // Auto-detect teacher when Class & Subject are both selected
+  const handleAutoDetectTeacher = useCallback(async (classId: string, subjectId: string) => {
+    if (!classId || !subjectId) return;
+    setDetectingTeacher(true);
+    try {
+      const { data: assignment } = await (supabase as any)
+        .from("class_subject_teachers")
+        .select(`
+          teacher_id,
+          teacher:teacher_id ( id, full_name, email )
+        `)
+        .eq("class_id", classId)
+        .eq("subject_id", subjectId)
+        .maybeSingle();
+
+      if (assignment?.teacher_id) {
+        form.setValue("assignedTeacherId", assignment.teacher_id, { shouldValidate: true });
+        const teacherName = assignment.teacher?.full_name || assignment.teacher?.email || "Assigned Teacher";
+        setAutoDetectedTeacherName(teacherName);
+      } else {
+        setAutoDetectedTeacherName(null);
+      }
+    } catch (err) {
+      console.error("[Auto-Detect Teacher Error]:", err);
+      setAutoDetectedTeacherName(null);
+    } finally {
+      setDetectingTeacher(false);
+    }
+  }, [supabase, form]);
+
+  useEffect(() => {
+    if (selectedClassId && selectedSubjectId && userRole === "admin") {
+      handleAutoDetectTeacher(selectedClassId, selectedSubjectId);
+    }
+  }, [selectedClassId, selectedSubjectId, userRole, handleAutoDetectTeacher]);
 
   useEffect(() => {
     async function fetchData() {
@@ -90,61 +149,101 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("school_id, role")
+        .select("school_id, role, full_name")
         .eq("id", user.id)
         .single() as any;
 
-      if (profile?.school_id) {
-        if (profile.role === "teacher") {
-          // Fetch assigned classes and subjects from both class_subject_teachers and timetables
-          const [{ data: directAssignments }, { data: timetableAssignments }] = await Promise.all([
-            supabase
-              .from("class_subject_teachers")
-              .select(`
-                class_id,
-                subject_id,
-                classes:class_id ( id, name ),
-                subjects:subject_id ( id, name )
-              `)
-              .eq("teacher_id", user.id),
-            supabase
-              .from("timetables")
-              .select(`
-                class_id,
-                subject_id,
-                classes:class_id ( id, name ),
-                subjects:subject_id ( id, name )
-              `)
-              .eq("teacher_id", user.id)
-          ]) as any[];
+      if (!profile?.school_id) return;
+      setUserRole(profile.role);
 
-          const allAssignments = [...(directAssignments || []), ...(timetableAssignments || [])];
+      // Fetch School Active Session & Term
+      const { data: schoolData } = await supabase
+        .from("schools")
+        .select("academic_year, current_term")
+        .eq("id", profile.school_id)
+        .single() as any;
 
-          if (allAssignments.length > 0) {
-            const uniqueClasses: Record<string, any> = {};
-            const uniqueSubjects: Record<string, any> = {};
+      if (schoolData?.academic_year) {
+        form.setValue("academicYear", schoolData.academic_year);
+      }
+      if (schoolData?.current_term) {
+        form.setValue("term", schoolData.current_term);
+      }
 
-            allAssignments.forEach((a: any) => {
-              if (a.classes) uniqueClasses[a.classes.id] = a.classes;
-              if (a.subjects) uniqueSubjects[a.subjects.id] = a.subjects;
-            });
+      // If logged in user is a teacher, assign directly to self
+      if (profile.role === "teacher") {
+        form.setValue("assignedTeacherId", user.id);
+        setTeachers([{ id: user.id, name: profile.full_name || "Self" }]);
 
-            setClasses(Object.values(uniqueClasses));
-            setSubjects(Object.values(uniqueSubjects));
-          }
-        } else {
-          // Admin fetches all classes and subjects
-          const [{ data: classesData }, { data: subjectsData }] = await Promise.all([
-            (supabase as any).from("classes").select("id, name").eq("school_id", profile.school_id),
-            (supabase as any).from("subjects").select("id, name").eq("school_id", profile.school_id),
-          ]);
-          if (classesData) setClasses(classesData);
-          if (subjectsData) setSubjects(subjectsData);
+        const [{ data: directAssignments }, { data: timetableAssignments }] = await Promise.all([
+          supabase
+            .from("class_subject_teachers")
+            .select(`
+              class_id,
+              subject_id,
+              classes:class_id ( id, name ),
+              subjects:subject_id ( id, name )
+            `)
+            .eq("teacher_id", user.id),
+          supabase
+            .from("timetables")
+            .select(`
+              class_id,
+              subject_id,
+              classes:class_id ( id, name ),
+              subjects:subject_id ( id, name )
+            `)
+            .eq("teacher_id", user.id)
+        ]) as any[];
+
+        const allAssignments = [...(directAssignments || []), ...(timetableAssignments || [])];
+        if (allAssignments.length > 0) {
+          const uniqueClasses: Record<string, any> = {};
+          const uniqueSubjects: Record<string, any> = {};
+
+          allAssignments.forEach((a: any) => {
+            if (a.classes) uniqueClasses[a.classes.id] = a.classes;
+            if (a.subjects) uniqueSubjects[a.subjects.id] = a.subjects;
+          });
+
+          setClasses(Object.values(uniqueClasses));
+          setSubjects(Object.values(uniqueSubjects));
+        }
+      } else {
+        // Admin: fetch all classes, subjects, and teachers
+        const [{ data: classesData }, { data: subjectsData }, { data: teachersData }] = await Promise.all([
+          (supabase as any).from("classes").select("id, name").eq("school_id", profile.school_id).order("name"),
+          (supabase as any).from("subjects").select("id, name").eq("school_id", profile.school_id).order("name"),
+          (supabase as any)
+            .from("profiles")
+            .select("id, full_name, email")
+            .eq("school_id", profile.school_id)
+            .eq("role", "teacher")
+            .eq("is_active", true)
+            .eq("is_archived", false)
+            .order("full_name")
+        ]);
+
+        if (classesData) setClasses(classesData);
+        if (subjectsData) setSubjects(subjectsData);
+        if (teachersData) {
+          setTeachers(
+            teachersData.map((t: any) => ({
+              id: t.id,
+              name: t.full_name || t.email || "Unnamed Teacher",
+              email: t.email
+            }))
+          );
         }
       }
     }
-    if (open) fetchData();
-  }, [open, supabase]);
+
+    if (open) {
+      form.setValue("studentPin", generateRandomPin());
+      setAutoDetectedTeacherName(null);
+      fetchData();
+    }
+  }, [open, supabase, form]);
 
   const onSubmit = async (values: ExamFormValues) => {
     setLoading(true);
@@ -158,64 +257,77 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          ...values,
-          startAt: new Date(values.startAt).toISOString(),
-          endAt: new Date(values.endAt).toISOString(),
-        }),
+        body: JSON.stringify(values),
       });
 
       const result = await response.json();
-      if (!result.success) throw new Error(result.message || "Failed to create exam");
+      if (!result.success) throw new Error(result.message || "Failed to create exam paper");
 
-      toast.success("Exam created as a draft.");
+      toast.success("Exam paper created! The assigned teacher has been notified.");
       onSuccess();
       onOpenChange(false);
-      form.reset();
+      form.reset({
+        ...form.getValues(),
+        title: "",
+        description: "",
+        studentPin: generateRandomPin(),
+      });
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+      toast.error(error.message || "Something went wrong creating exam paper");
     } finally {
       setLoading(false);
     }
+  };
+
+  const regeneratePin = () => {
+    const newPin = generateRandomPin();
+    form.setValue("studentPin", newPin, { shouldValidate: true });
+    toast.info(`Generated new student PIN: ${newPin}`);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New MCQ Exam</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Create Exam Paper
+          </DialogTitle>
           <DialogDescription>
-            Define the exam settings. You will be able to add questions after creation.
+            Specify the exam syllabus criteria and assign the subject teacher to compile questions. Scheduling dates/times are managed via the Exam Timetable.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Title */}
               <FormField
                 control={form.control}
                 name="title"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel>Exam Title</FormLabel>
+                    <FormLabel className="font-semibold">Exam Title *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Second Term Physics Mid-Term" {...field} />
+                      <Input placeholder="e.g. First Term Mathematics Examination" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Description */}
               <FormField
                 control={form.control}
                 name="description"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormLabel>Instructions & Overview (Optional)</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Instructions for students..." 
+                        placeholder="Guidance for candidates (e.g. Attempt all questions, calculator allowed)..." 
                         className="resize-none"
+                        rows={2}
                         {...field} 
                       />
                     </FormControl>
@@ -224,13 +336,66 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                 )}
               />
 
+              {/* Academic Session */}
+              <FormField
+                control={form.control}
+                name="academicYear"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-semibold">Academic Session *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select session" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="2024/2025">2024/2025 Session</SelectItem>
+                        <SelectItem value="2025/2026">2025/2026 Session</SelectItem>
+                        <SelectItem value="2026/2027">2026/2027 Session</SelectItem>
+                        <SelectItem value="2027/2028">2027/2028 Session</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Term */}
+              <FormField
+                control={form.control}
+                name="term"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-semibold">Academic Term *</FormLabel>
+                    <Select 
+                      onValueChange={(val) => field.onChange(Number(val))} 
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select term" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">1st Term</SelectItem>
+                        <SelectItem value="2">2nd Term</SelectItem>
+                        <SelectItem value="3">3rd Term</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Class */}
               <FormField
                 control={form.control}
                 name="classId"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Class</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="font-semibold">Target Class *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select class" />
@@ -247,13 +412,14 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                 )}
               />
 
+              {/* Subject */}
               <FormField
                 control={form.control}
                 name="subjectId"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Subject</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="font-semibold">Subject *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select subject" />
@@ -270,15 +436,61 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                 )}
               />
 
+              {/* Assigned Teacher (with Auto-detection & Override) */}
               <FormField
                 control={form.control}
-                name="durationMins"
-                render={({ field }: { field: any }) => (
+                name="assignedTeacherId"
+                render={({ field }) => (
+                  <FormItem className="col-span-1 md:col-span-2 bg-muted/40 p-3 rounded-lg border">
+                    <div className="flex items-center justify-between pb-1">
+                      <FormLabel className="font-semibold flex items-center gap-2">
+                        <UserCheck className="h-4 w-4 text-primary" />
+                        Assigned Subject Teacher *
+                      </FormLabel>
+                      {detectingTeacher && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Detecting teacher...
+                        </span>
+                      )}
+                      {!detectingTeacher && autoDetectedTeacherName && (
+                        <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                          Auto-Detected ({autoDetectedTeacherName})
+                        </Badge>
+                      )}
+                    </div>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={userRole === "teacher"}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select or verify teacher" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {teachers.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name} {t.email ? `(${t.email})` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-xs">
+                      This teacher will receive an in-app notification to author exam questions in the Question Studio.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Question Count & Total Marks */}
+              <FormField
+                control={form.control}
+                name="questionCount"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration (Minutes)</FormLabel>
+                    <FormLabel className="font-semibold">Target Questions *</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" min={1} max={200} {...field} />
                     </FormControl>
+                    <FormDescription className="text-xs">Total questions for this paper</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -287,13 +499,29 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
               <FormField
                 control={form.control}
                 name="totalMarks"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Marks</FormLabel>
+                    <FormLabel className="font-semibold">Total Marks *</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" min={1} max={500} {...field} />
                     </FormControl>
-                    <FormDescription>Max possible score for this exam</FormDescription>
+                    <FormDescription className="text-xs">Max obtainable score</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Duration & Access PIN */}
+              <FormField
+                control={form.control}
+                name="durationMins"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-semibold">Duration (Minutes) *</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={5} max={180} {...field} />
+                    </FormControl>
+                    <FormDescription className="text-xs">CBT countdown clock</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -301,35 +529,54 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
 
               <FormField
                 control={form.control}
-                name="questionCount"
-                render={({ field }: { field: any }) => (
+                name="studentPin"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Questions to Display</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="font-semibold">Student Access PIN *</FormLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-primary gap-1"
+                        onClick={regeneratePin}
+                      >
+                        <RefreshCw className="h-3 w-3" /> Regenerate
+                      </Button>
+                    </div>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <PasswordInput
+                        placeholder="e.g. 4827"
+                        maxLength={8}
+                        className="font-mono tracking-widest bg-background"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormDescription>Number of random questions each student will take</FormDescription>
+                    <FormDescription className="text-xs">
+                      PIN required to unlock the exam on test day.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-2 col-span-1 md:col-span-2">
+              {/* Randomise Options */}
+              <div className="grid grid-cols-2 gap-3 col-span-1 md:col-span-2 pt-2">
                 <FormField
                   control={form.control}
                   name="randomiseQuestions"
-                  render={({ field }: { field: any }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-3 bg-muted/20">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Randomise Questions</FormLabel>
-                        <FormDescription>
-                          Shuffle question sequence.
+                      <div className="space-y-0.5 leading-none">
+                        <FormLabel className="text-sm font-medium">Shuffle Questions</FormLabel>
+                        <FormDescription className="text-xs">
+                          Randomise order per student
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -339,87 +586,38 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                 <FormField
                   control={form.control}
                   name="randomiseOptions"
-                  render={({ field }: { field: any }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-3 bg-muted/20">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Randomise Options</FormLabel>
-                        <FormDescription>
-                          Shuffle MCQ answers sequence.
+                      <div className="space-y-0.5 leading-none">
+                        <FormLabel className="text-sm font-medium">Shuffle Options</FormLabel>
+                        <FormDescription className="text-xs">
+                          Randomise A/B/C/D order
                         </FormDescription>
                       </div>
                     </FormItem>
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="startAt"
-                render={({ field }: { field: any }) => (
-                  <FormItem>
-                    <FormLabel>Start Date & Time</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="endAt"
-                render={({ field }: { field: any }) => (
-                  <FormItem>
-                    <FormLabel>End Date & Time</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="studentPin"
-                render={({ field }: { field: any }) => (
-                  <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel>Student Exam PIN</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder="e.g. 4827"
-                        maxLength={8}
-                        className="font-mono tracking-widest"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Students must enter this PIN alongside their admission number to access the exam. Share it with students before the exam begins.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            <DialogFooter className="pt-4 mt-4 border-t">
+            <DialogFooter className="pt-4 border-t gap-2">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
+                disabled={loading}
               >
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Exam Shell
+                Create Exam Paper
               </Button>
             </DialogFooter>
           </form>
