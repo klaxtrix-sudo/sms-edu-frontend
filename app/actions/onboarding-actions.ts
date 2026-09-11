@@ -27,8 +27,8 @@ function getSubdomainFromCookies(): string | null {
  * admin.updateUserById and service-role DB access) — both pointing at the
  * correct tenant project.
  */
-async function createTenantClients() {
-  const subdomain = getSubdomainFromCookies();
+async function createTenantClients(explicitSubdomain?: string) {
+  const subdomain = explicitSubdomain || getSubdomainFromCookies();
   if (!subdomain) throw new Error('Could not determine school context. Please refresh and try again.');
 
   const tenantKeys = await resolveTenantKeys(subdomain);
@@ -220,31 +220,48 @@ export async function verifyOnboardingOTP(email: string, token: string) {
 // FINALIZE PASSWORD
 // ──────────────────────────────────────────────────────────────────────────────
 
-export async function finalizeAccount(password: string) {
+export async function finalizeAccount(password: string, subdomain?: string, userId?: string) {
   try {
-    const { anonClient, adminClient } = await createTenantClients();
+    const { anonClient, adminClient } = await createTenantClients(subdomain);
 
-    // Verify session
-    const { data: { user } } = await anonClient.auth.getUser();
-    if (!user) throw new Error('User session not found.');
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const { data: { user } } = await anonClient.auth.getUser();
+      targetUserId = user?.id;
+    }
+    if (!targetUserId) throw new Error('User session not found. Please click your activation link again.');
 
-    // 1. Update password via the anon session client (requires active session)
-    const { error: passwordError } = await anonClient.auth.updateUser({ password });
-    if (passwordError) throw passwordError;
+    // Check invitation expiry (72h lifecycle)
+    const { data: profileCheck } = await (adminClient as any)
+      .from('profiles')
+      .select('invitation_expires_at, onboarding_completed')
+      .eq('id', targetUserId)
+      .maybeSingle();
 
-    // 2. Clear must_change_password flag via admin (more reliable than session updateUser)
-    await (adminClient as any).auth.admin.updateUserById(user.id, {
+    if (profileCheck && !profileCheck.onboarding_completed && profileCheck.invitation_expires_at) {
+      if (new Date() > new Date(profileCheck.invitation_expires_at)) {
+        throw new Error('This invitation link has expired. Please request a fresh invitation from your school administrator.');
+      }
+    }
+
+    // 1. Update password & metadata via admin client to ensure reliable execution
+    const { error: passwordError } = await adminClient.auth.admin.updateUserById(targetUserId, {
+      password,
       user_metadata: {
-        ...user.user_metadata,
         must_change_password: false,
+        email_onboarding_verified: true,
       },
     });
+    if (passwordError) throw passwordError;
 
-    // 3. Update profile to mark onboarding as complete
+    // 2. Update profile to mark onboarding as complete and record activation timestamp
     await (adminClient as any)
       .from('profiles')
-      .update({ onboarding_completed: true })
-      .eq('id', user.id);
+      .update({ 
+        onboarding_completed: true,
+        activated_at: new Date().toISOString(),
+      })
+      .eq('id', targetUserId);
 
     revalidatePath('/', 'layout');
     return { success: true };
@@ -253,6 +270,9 @@ export async function finalizeAccount(password: string) {
     return { error: error.message || 'Failed to finalize account setup' };
   }
 }
+
+/** Alias for activate-account flow */
+export const finalizeActivation = finalizeAccount;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // HELPERS
