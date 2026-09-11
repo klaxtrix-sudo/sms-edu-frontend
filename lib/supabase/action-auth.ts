@@ -42,7 +42,10 @@ export async function requireActionAuth(
   }
 
   // 2. Resolve caller session from cookies
-  const serverSupabase = createServerClient();
+  const serverSupabase = createServerClient(
+    tenantKeys.supabaseUrl,
+    tenantKeys.supabaseAnonKey
+  );
   const {
     data: { user },
     error: authError,
