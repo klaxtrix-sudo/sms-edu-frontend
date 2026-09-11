@@ -153,12 +153,18 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
               setAutoDetectedTeacherName(null);
             }
           } else {
-            // Fallback to all school subjects if no mappings exist for this class
+            // Strict binding: no subjects configured for this class
             setClassAssignments([]);
+            form.setValue("subjectId", "");
+            form.setValue("assignedTeacherId", "");
+            setAutoDetectedTeacherName(null);
           }
         } catch (err) {
           console.error("[Class Subjects Load Error]:", err);
           setClassAssignments([]);
+          form.setValue("subjectId", "");
+          form.setValue("assignedTeacherId", "");
+          setAutoDetectedTeacherName(null);
         } finally {
           setLoadingClassData(false);
         }
@@ -170,8 +176,11 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
     }
   }, [selectedClassId, userRole, open, supabase, form]);
 
-  // Derived available subjects for the selected class
+  // Derived available subjects for the selected class (Strict Binding)
   const availableSubjects = useMemo(() => {
+    if (userRole === "teacher") {
+      return allSchoolSubjects;
+    }
     if (classAssignments.length > 0) {
       const uniqueSubs = new Map<string, string>();
       classAssignments.forEach(a => {
@@ -181,8 +190,8 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
       });
       return Array.from(uniqueSubs.entries()).map(([id, name]) => ({ id, name }));
     }
-    return allSchoolSubjects;
-  }, [classAssignments, allSchoolSubjects]);
+    return [];
+  }, [classAssignments, allSchoolSubjects, userRole]);
 
   // Cascading Enhancement 2: When Subject changes, auto-detect assigned teacher
   useEffect(() => {
@@ -499,21 +508,42 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                           <Loader2 className="h-3 w-3 animate-spin" /> Loading curriculum...
                         </span>
                       )}
+                      {!loadingClassData && selectedClassId && availableSubjects.length === 0 && (
+                        <span className="text-[11px] text-amber-500 font-normal">
+                          0 subjects configured
+                        </span>
+                      )}
                     </div>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
-                      disabled={!selectedClassId || loadingClassData}
+                      disabled={!selectedClassId || loadingClassData || availableSubjects.length === 0}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={!selectedClassId ? "Choose class first" : "Select subject"} />
+                          <SelectValue 
+                            placeholder={
+                              !selectedClassId 
+                                ? "Choose class first" 
+                                : loadingClassData 
+                                ? "Loading curriculum..." 
+                                : availableSubjects.length === 0 
+                                ? "No subjects configured for this class" 
+                                : "Select subject"
+                            } 
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableSubjects.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                        ))}
+                        {availableSubjects.length === 0 ? (
+                          <div className="py-3 px-2 text-center text-xs text-muted-foreground">
+                            No subjects configured for this class.
+                          </div>
+                        ) : (
+                          availableSubjects.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
