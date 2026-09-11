@@ -550,16 +550,16 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
                     >
                       <FormControl>
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="No teacher assigned (Admin managed)" />
+                          <SelectValue placeholder="None" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="unassigned" className="font-medium text-muted-foreground">
-                          None (Admin will author & manage questions directly)
+                          None
                         </SelectItem>
                         {teachers.map((t) => (
                           <SelectItem key={t.id} value={t.id}>
-                            {t.name} {t.email ? `(${t.email})` : ""}
+                            {t.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
