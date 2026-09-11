@@ -2,14 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { 
-  Plus, 
   Search, 
-  Calendar, 
   Clock, 
-  MoreVertical, 
-  Trash, 
   Play, 
-  StopCircle, 
   ClipboardList, 
   MapPin, 
   Loader2,
@@ -18,19 +13,12 @@ import {
   Edit,
   RotateCcw,
   Eye,
-  Sparkles,
-  FileCheck
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { 
   Table, 
   TableBody, 
@@ -45,7 +33,6 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { AddExamModal } from "@/components/admin/add-exam-modal";
 import { createTenantClient } from "@/lib/supabase/client";
 import { getBackendUrl } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -88,7 +75,6 @@ export default function TeacherExamsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingTimetable, setLoadingTimetable] = useState(false);
   const [search, setSearch] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("papers");
   
   // Mapping lookups
@@ -199,55 +185,7 @@ export default function TeacherExamsPage() {
     fetchTimetable();
   });
 
-  const handleToggleActive = async (examId: string, currentActive: boolean) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
 
-      const response = await fetch(`${getBackendUrl()}/exams/${examId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ isActive: !currentActive, status: !currentActive ? 'published' : 'draft' }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success(`Exam set to ${!currentActive ? 'Active' : 'Inactive'}`);
-        fetchExams();
-      } else {
-        throw new Error(result.message || "Failed to toggle status");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error updating exam status");
-    }
-  };
-
-  const handleDelete = async (examId: string) => {
-    if (!confirm("Are you sure you want to delete this exam? This action cannot be undone.")) return;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const response = await fetch(`${getBackendUrl()}/exams/${examId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-        },
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success("Exam deleted.");
-        fetchExams();
-      } else {
-        throw new Error(result.message || "Failed to delete exam");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error deleting exam");
-    }
-  };
 
   const filteredExams = exams.filter(e => 
     e.title.toLowerCase().includes(search.toLowerCase())
@@ -361,12 +299,6 @@ export default function TeacherExamsPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button 
-              className="shrink-0 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Create New Exam
-            </Button>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -380,27 +312,6 @@ export default function TeacherExamsPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between mb-2">
                     {getStatusBadge(exam)}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 border-none shadow-xl">
-                        <DropdownMenuItem 
-                          className="cursor-pointer"
-                          onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
-                        >
-                          <Play className="mr-2 h-4 w-4" /> Manage Qs
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="cursor-pointer text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(exam._id)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                   <CardTitle className="text-xl line-clamp-1">{exam.title}</CardTitle>
                   <CardDescription className="flex items-center gap-2 mt-1">
@@ -475,7 +386,7 @@ export default function TeacherExamsPage() {
                 <ClipboardList className="size-10 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold">No assigned exams found</h3>
-              <p className="text-muted-foreground mt-1">Create an examination paper for your assigned classes to get started.</p>
+              <p className="text-muted-foreground mt-1">Exam papers created by school administration for your assigned classes and subjects will appear here.</p>
             </div>
           )}
         </TabsContent>
@@ -542,11 +453,6 @@ export default function TeacherExamsPage() {
         </TabsContent>
       </Tabs>
 
-      <AddExamModal 
-        open={isAddModalOpen} 
-        onOpenChange={setIsAddModalOpen} 
-        onSuccess={fetchExams}
-      />
     </div>
   );
 }

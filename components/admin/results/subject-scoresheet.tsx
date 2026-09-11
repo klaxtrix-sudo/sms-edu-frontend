@@ -79,8 +79,8 @@ interface SubjectScoresheetProps {
   academicYear: string;
   term: number;
   termLabel: string;
-  onBack: () => void;
-  onViewBroadsheet: () => void;
+  onBack?: () => void;
+  onViewBroadsheet?: () => void;
 }
 
 export function SubjectScoresheet({
@@ -636,15 +636,17 @@ export function SubjectScoresheet({
       {/* 1. Header Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-4">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onBack}
-            title="Return to All Classrooms (Readiness Matrix)"
-            className="h-8.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold px-2.5 rounded-xl border border-border/60 hover:bg-muted"
-          >
-            <ArrowLeft className="size-3.5" /> Classes
-          </Button>
+          {onBack && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onBack}
+              title="Return to Class Selection"
+              className="h-8.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold px-2.5 rounded-xl border border-border/60 hover:bg-muted"
+            >
+              <ArrowLeft className="size-3.5" /> Classes
+            </Button>
+          )}
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -841,14 +843,14 @@ export function SubjectScoresheet({
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[100px] text-xs font-bold">Adm No</TableHead>
-                  <TableHead className="min-w-[200px] text-xs font-bold">Student Name</TableHead>
+                  <TableHead className="w-[140px] min-w-[135px] text-xs font-bold whitespace-nowrap pl-4">Adm No</TableHead>
+                  <TableHead className="w-[200px] min-w-[160px] text-xs font-bold">Student Name</TableHead>
                   
                   {metrics.map((m, idx) => (
-                    <TableHead key={m.id || idx} className="w-[130px] min-w-[125px] text-center text-xs font-bold py-3">
+                    <TableHead key={m.id || idx} className="w-[135px] min-w-[125px] text-center text-xs font-bold py-2.5">
                       <div className="flex flex-col items-center justify-center gap-0.5">
-                        <span className="leading-tight line-clamp-1" title={m.name}>{m.name}</span>
-                        <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
+                        <span className="leading-tight text-center text-xs" title={m.name}>{m.name}</span>
+                        <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40 whitespace-nowrap">
                           Max {m.weight}
                         </span>
                       </div>
@@ -895,11 +897,14 @@ export function SubjectScoresheet({
 
                   return (
                     <TableRow key={student.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-mono text-xs font-semibold text-muted-foreground">
+                      <TableCell className="font-mono text-xs font-semibold text-muted-foreground whitespace-nowrap pl-4">
                         {student.admission_no}
                       </TableCell>
 
-                      <TableCell className="font-medium text-xs text-foreground">
+                      <TableCell 
+                        className="font-medium text-xs text-foreground whitespace-nowrap truncate max-w-[220px]"
+                        title={student.profiles?.full_name || "Unnamed Student"}
+                      >
                         {student.profiles?.full_name || "Unnamed Student"}
                       </TableCell>
 

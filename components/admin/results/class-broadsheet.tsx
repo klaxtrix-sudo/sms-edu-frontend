@@ -437,8 +437,8 @@ export function ClassBroadsheet({
             <TableHeader className="sticky top-0 z-20 bg-muted/95 backdrop-blur-sm shadow-xs">
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="w-[70px] text-center text-xs font-black">Rank</TableHead>
-                <TableHead className="w-[110px] text-xs font-bold">Adm No</TableHead>
-                <TableHead className="min-w-[180px] text-xs font-bold">Student Name</TableHead>
+                <TableHead className="w-[140px] min-w-[135px] text-xs font-bold whitespace-nowrap">Adm No</TableHead>
+                <TableHead className="w-[200px] min-w-[160px] text-xs font-bold">Student Name</TableHead>
 
                 {/* Subject Columns */}
                 {data.subjects.map((subj) => (
@@ -500,11 +500,14 @@ export function ClassBroadsheet({
                       )}
                     </TableCell>
 
-                    <TableCell className="font-mono text-xs text-muted-foreground font-semibold">
+                    <TableCell className="font-mono text-xs text-muted-foreground font-semibold whitespace-nowrap">
                       {student.admissionNo}
                     </TableCell>
 
-                    <TableCell className="font-medium text-xs text-foreground">
+                    <TableCell 
+                      className="font-medium text-xs text-foreground whitespace-nowrap truncate max-w-[220px]"
+                      title={student.fullName}
+                    >
                       {student.fullName}
                     </TableCell>
 

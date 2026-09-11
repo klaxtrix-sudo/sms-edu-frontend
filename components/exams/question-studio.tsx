@@ -642,14 +642,10 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
                 </Button>
               )}
               {exam.workflowStatus === 'approved' && (
-                <Button 
-                  onClick={handlePublishExam}
-                  disabled={actionLoading}
-                  className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Publish Exam
-                </Button>
+                <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 gap-1.5 py-1.5 px-3 font-semibold text-xs">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Questions Approved by Admin
+                </Badge>
               )}
             </>
           )}
