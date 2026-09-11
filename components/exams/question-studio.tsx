@@ -854,17 +854,6 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
                           <Badge variant="secondary" className="text-xs">
                             {q.marks || 1} {q.marks === 1 ? 'Mark' : 'Marks'}
                           </Badge>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "text-xs capitalize",
-                              q.difficulty === 'easy' && "text-emerald-600 border-emerald-300",
-                              q.difficulty === 'medium' && "text-amber-600 border-amber-300",
-                              q.difficulty === 'hard' && "text-rose-600 border-rose-300"
-                            )}
-                          >
-                            {q.difficulty}
-                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -947,14 +936,6 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
                       );
                     })}
                   </div>
-
-                  {/* Explanation (if provided) */}
-                  {q.explanation && (
-                    <div className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-md flex items-start gap-2 mt-2">
-                      <HelpCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
-                      <span><strong>Explanation:</strong> {q.explanation}</span>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}
@@ -968,14 +949,14 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
           <DialogHeader>
             <DialogTitle>{editingQuestion ? "Edit Question" : "Add New MCQ Question"}</DialogTitle>
             <DialogDescription>
-              Write the question stem, upload optional diagram assets, define 4 options, and select the correct answer.
+              Write the question, upload optional diagram assets, define 4 options, and select the correct answer.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
             {/* Question Text */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold">Question Stem *</label>
+              <label className="text-sm font-semibold">Question *</label>
               <Textarea 
                 placeholder="Type the question content here..." 
                 rows={3} 
@@ -1081,41 +1062,15 @@ export function QuestionStudio({ examId, role }: QuestionStudioProps) {
               </div>
             </div>
 
-            {/* Marks & Difficulty */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold">Marks Allocated</label>
-                <Input 
-                  type="number" 
-                  min={1} 
-                  max={50} 
-                  value={marks} 
-                  onChange={(e) => setMarks(Number(e.target.value))} 
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold">Difficulty Level</label>
-                <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value as any)}
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Explanation */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold">Solution Explanation (Optional)</label>
-              <Textarea 
-                placeholder="Walk students through why the answer is correct..." 
-                rows={2} 
-                value={explanation} 
-                onChange={(e) => setExplanation(e.target.value)} 
+            {/* Marks Allocated */}
+            <div className="space-y-1.5 pt-2 max-w-[200px]">
+              <label className="text-xs font-semibold">Marks Allocated</label>
+              <Input 
+                type="number" 
+                min={1} 
+                max={50} 
+                value={marks} 
+                onChange={(e) => setMarks(Number(e.target.value))} 
               />
             </div>
           </div>
