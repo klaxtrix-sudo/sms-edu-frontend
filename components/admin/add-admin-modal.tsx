@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -134,16 +134,18 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
     },
   });
 
-  const handleSelectPreset = (presetId: string) => {
+  const handleSelectPreset = useCallback((presetId: string) => {
     setSelectedPreset(presetId);
     const preset = ROLE_PRESETS.find((p) => p.id === presetId);
-    if (preset) {
-      if (preset.id !== "custom") {
-        form.setValue("customRoleTitle", preset.title);
-        setSelectedPermissions(preset.permissions);
-      }
+    if (preset && preset.id !== "custom") {
+      // Defer updating form title and multiple checkbox states to the next macro-task
+      // so Radix Select can cleanly finish its dropdown closing animation and unmount
+      setTimeout(() => {
+        form.setValue("customRoleTitle", preset.title, { shouldValidate: true });
+        setSelectedPermissions([...preset.permissions]);
+      }, 0);
     }
-  };
+  }, [form]);
 
   const isModuleChecked = (moduleId: string) => {
     return (
@@ -158,10 +160,14 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
     return "manage";
   };
 
-  const togglePermission = (moduleId: string) => {
+  const togglePermission = useCallback((moduleId: string) => {
     setSelectedPreset("custom");
     setSelectedPermissions((prev) => {
-      const isSelected = isModuleChecked(moduleId);
+      const isSelected =
+        prev.includes(moduleId) ||
+        prev.includes(`${moduleId}:manage`) ||
+        prev.includes(`${moduleId}:read`);
+
       if (isSelected) {
         return prev.filter(
           (p) => p !== moduleId && p !== `${moduleId}:manage` && p !== `${moduleId}:read`
@@ -170,9 +176,9 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
         return [...prev, `${moduleId}:manage`];
       }
     });
-  };
+  }, []);
 
-  const setModuleScope = (moduleId: string, scope: "manage" | "read") => {
+  const setModuleScope = useCallback((moduleId: string, scope: "manage" | "read") => {
     setSelectedPreset("custom");
     setSelectedPermissions((prev) => {
       const filtered = prev.filter(
@@ -180,7 +186,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
       );
       return [...filtered, `${moduleId}:${scope}`];
     });
-  };
+  }, []);
 
   const handleCloseModal = () => {
     if (loading) return;
@@ -259,14 +265,14 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseModal}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px] p-0 flex flex-col max-h-[88vh] overflow-hidden rounded-[2rem] border border-border/80 bg-card text-card-foreground shadow-2xl">
         {createdData ? (
-          <div className="space-y-5 py-2">
+          <div className="space-y-5 p-6 md:p-8">
             <DialogHeader className="text-center">
               <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <DialogTitle className="text-xl">Administrator Invited!</DialogTitle>
+              <DialogTitle className="text-xl font-bold">Administrator Invited!</DialogTitle>
               <DialogDescription className="text-center text-xs">
                 An invitation email has been dispatched to <strong className="text-foreground">{createdData.email}</strong> for the role of <strong className="text-primary">{createdData.customRoleTitle}</strong>.
               </DialogDescription>
@@ -323,24 +329,28 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
             </div>
 
             <DialogFooter className="pt-2">
-              <Button type="button" onClick={handleDone} className="w-full h-10 font-semibold">
+              <Button type="button" onClick={handleDone} className="w-full h-10 font-semibold rounded-xl">
                 Done
               </Button>
             </DialogFooter>
           </div>
         ) : (
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl">
-                <UserCog className="w-5 h-5 text-primary" />
-                Invite Administrator / Sub-Admin
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                Create a scoped administrative account with granular permissions. They will set their own password via the activation link.
-              </DialogDescription>
-            </DialogHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-6 pb-4 shrink-0 border-b border-border/60">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+                  <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <UserCog className="w-5 h-5" />
+                  </div>
+                  Invite Administrator / Sub-Admin
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
+                  Create a scoped administrative account with granular permissions. They will set their own password via the activation link.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
 
-            <div className="space-y-4 py-2">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar min-h-0">
               {/* Personal Info */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5 col-span-2">
@@ -424,7 +434,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 gap-2">
                   {AVAILABLE_MODULES.map((module) => {
                     const isChecked = isModuleChecked(module.id);
                     const scope = getModuleScope(module.id);
@@ -441,8 +451,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                         >
                           <Checkbox
                             checked={isChecked}
-                            onCheckedChange={() => togglePermission(module.id)}
-                            className="mt-0.5"
+                            className="mt-0.5 pointer-events-none"
                           />
                           <div className="space-y-0.5 flex-1">
                             <p className={`text-xs font-semibold ${isChecked ? "text-primary" : "text-foreground"}`}>
@@ -496,15 +505,17 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
               </div>
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={handleCloseModal} disabled={loading}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading} className="gap-2 font-semibold">
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Send Administrator Invitation
-              </Button>
-            </DialogFooter>
+            <div className="p-6 pt-3 border-t border-border/60 shrink-0 bg-card">
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button type="button" variant="outline" onClick={handleCloseModal} disabled={loading} className="rounded-xl font-semibold">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading} className="gap-2 rounded-xl font-semibold bg-primary hover:bg-primary/90 shadow-md">
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Send Administrator Invitation
+                </Button>
+              </DialogFooter>
+            </div>
           </form>
         )}
       </DialogContent>

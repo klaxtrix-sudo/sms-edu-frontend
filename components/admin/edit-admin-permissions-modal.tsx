@@ -72,7 +72,11 @@ export function EditAdminPermissionsModal({
 
   const togglePermission = (moduleId: string) => {
     setSelectedPermissions((prev) => {
-      const isSelected = isModuleChecked(moduleId);
+      const isSelected =
+        prev.includes(moduleId) ||
+        prev.includes(`${moduleId}:manage`) ||
+        prev.includes(`${moduleId}:read`);
+
       if (isSelected) {
         return prev.filter(
           (p) => p !== moduleId && p !== `${moduleId}:manage` && p !== `${moduleId}:read`
@@ -133,19 +137,23 @@ export function EditAdminPermissionsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
-        <form onSubmit={handleSave} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <UserCog className="w-5 h-5 text-primary" />
-              Edit Permissions
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Modify assigned modules for <strong className="text-foreground">{adminUser?.full_name}</strong> ({adminUser?.email}).
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[520px] p-0 flex flex-col max-h-[88vh] overflow-hidden rounded-[2rem] border border-border/80 bg-card text-card-foreground shadow-2xl">
+        <form onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="p-6 pb-4 shrink-0 border-b border-border/60">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+                <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <UserCog className="w-5 h-5" />
+                </div>
+                Edit Permissions
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
+                Modify assigned modules for <strong className="text-foreground">{adminUser?.full_name}</strong> ({adminUser?.email}).
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-          <div className="space-y-4 py-2">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar min-h-0">
             <div className="space-y-1.5">
               <Label htmlFor="edit-role-title" className="text-xs font-semibold">Administrative Title</Label>
               <Input
@@ -183,7 +191,7 @@ export function EditAdminPermissionsModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 gap-2">
                 {AVAILABLE_MODULES.map((module) => {
                   const isChecked = isModuleChecked(module.id);
                   const scope = getModuleScope(module.id);
@@ -200,8 +208,7 @@ export function EditAdminPermissionsModal({
                       >
                         <Checkbox
                           checked={isChecked}
-                          onCheckedChange={() => togglePermission(module.id)}
-                          className="mt-0.5"
+                          className="mt-0.5 pointer-events-none"
                         />
                         <div className="space-y-0.5 flex-1">
                           <p className={`text-xs font-semibold ${isChecked ? "text-primary" : "text-foreground"}`}>
@@ -225,8 +232,8 @@ export function EditAdminPermissionsModal({
                               }}
                               className={`px-2 py-0.5 rounded font-medium transition-all ${
                                 scope === "manage"
-                                  ? "bg-primary text-primary-foreground shadow-xs"
-                                  : "text-muted-foreground hover:text-foreground"
+                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground"
                               }`}
                             >
                               Full Control (Manage)
@@ -255,15 +262,17 @@ export function EditAdminPermissionsModal({
             </div>
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="gap-2 font-semibold">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save Permissions
-            </Button>
-          </DialogFooter>
+          <div className="p-6 pt-3 border-t border-border/60 shrink-0 bg-card">
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="rounded-xl font-semibold">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} className="gap-2 rounded-xl font-semibold bg-primary hover:bg-primary/90 shadow-md">
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Save Permissions
+              </Button>
+            </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
