@@ -198,9 +198,9 @@ export default function RegisterPage() {
     <main className="min-h-screen pt-24 pb-12 bg-background selection:bg-primary/20">
       <LandingHeader />
 
-      <div className="container px-4 mx-auto max-w-4xl">
+      <div className="container px-3 sm:px-4 mx-auto max-w-4xl">
         {/* Progress Stepper */}
-        <div className="flex justify-between mb-12 relative">
+        <div className="flex justify-between mb-8 sm:mb-12 relative">
           <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted -translate-y-1/2 -z-10" />
           <div
             className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 -z-10 transition-all duration-500"
@@ -209,15 +209,15 @@ export default function RegisterPage() {
           {STEPS.map((step, i) => (
             <div key={step.id} className="flex flex-col items-center group">
               <div className={cn(
-                'w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300',
+                'w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300',
                 i <= currentStep
                   ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
                   : 'bg-background border-muted text-muted-foreground'
               )}>
-                <step.icon className="w-5 h-5" />
+                <step.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               </div>
               <span className={cn(
-                'text-xs font-bold mt-2 hidden md:block',
+                'text-[10px] sm:text-xs font-bold mt-1.5 sm:mt-2 hidden sm:block',
                 i <= currentStep ? 'text-foreground' : 'text-muted-foreground'
               )}>
                 {step.title}
@@ -235,7 +235,7 @@ export default function RegisterPage() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="p-8 md:p-12 glass-card overflow-hidden">
+            <Card className="p-5 sm:p-8 md:p-12 glass-card overflow-hidden">
               {/* ── Step 0: Verify ── */}
               {currentStep === 0 && (
                 <div className="space-y-8 py-4">
@@ -414,29 +414,29 @@ export default function RegisterPage() {
               )}
 
               {/* Navigation */}
-              <div className="flex items-center justify-between mt-12 pt-8 border-t border-border/50">
-                <Button variant="ghost" onClick={handlePrev} disabled={currentStep === 0 || isLaunching} className="rounded-xl px-6">
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+              <div className="flex items-center justify-between mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border/50 gap-3">
+                <Button variant="ghost" onClick={handlePrev} disabled={currentStep === 0 || isLaunching} className="rounded-xl px-4 sm:px-6 text-xs sm:text-sm">
+                  <ArrowLeft className="w-4 h-4 mr-1.5 sm:mr-2" /> Back
                 </Button>
 
                 {currentStep === STEPS.length - 1 ? (
                   <Button
-                    className="rounded-xl px-8 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform h-12 text-base font-bold"
+                    className="rounded-xl px-5 sm:px-8 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform h-11 sm:h-12 text-sm sm:text-base font-bold"
                     onClick={handleLaunch}
                     disabled={isLaunching}
                   >
                     {isLaunching
                       ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Provisioning…</>
-                      : <>Launch Institution <Zap className="ml-2 w-4 h-4 fill-white" /></>
+                      : <>Launch Institution <Zap className="ml-1.5 sm:ml-2 w-4 h-4 fill-white" /></>
                     }
                   </Button>
                 ) : (
                   <Button
-                    className="rounded-xl px-8 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform h-12 text-base font-bold"
+                    className="rounded-xl px-5 sm:px-8 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform h-11 sm:h-12 text-sm sm:text-base font-bold"
                     onClick={stepAction()}
                     disabled={isVerifying}
                   >
-                    {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ArrowRight className="ml-2 w-4 h-4" /></>}
+                    {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ArrowRight className="ml-1.5 sm:ml-2 w-4 h-4" /></>}
                   </Button>
                 )}
               </div>

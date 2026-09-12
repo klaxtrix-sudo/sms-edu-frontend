@@ -16,26 +16,26 @@ export default function RootPage() {
       <LandingSolutions />
 
       {/* Trust Section / Stats / Bento */}
-      <section className="py-24 container px-4 mx-auto">
-         <div className="grid md:grid-cols-2 gap-8">
-            <div className="p-10 rounded-3xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 flex flex-col justify-between">
+      <section className="py-16 sm:py-24 container px-4 mx-auto">
+         <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
+            <div className="p-6 sm:p-10 rounded-3xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 flex flex-col justify-between">
                <div>
-                  <h2 className="text-3xl font-heading font-bold mb-4">Ready to Transform?</h2>
-                  <p className="text-muted-foreground mb-8 text-lg">
+                  <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-3 sm:mb-4">Ready to Transform?</h2>
+                  <p className="text-muted-foreground mb-6 sm:mb-8 text-base sm:text-lg">
                     Join hundreds of institutions using Klaxtrix to pioneer the future of academics.
                   </p>
                </div>
                <div className="flex items-center gap-4">
-                  <Button size="lg" className="rounded-full h-12 px-8 bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform" asChild>
+                  <Button size="lg" className="rounded-full h-11 sm:h-12 px-6 sm:px-8 bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform text-sm sm:text-base" asChild>
                      <Link href="/register">Register Today</Link>
                   </Button>
                </div>
             </div>
             
-            <div className="p-10 rounded-3xl bg-muted/40 border border-border/50 flex flex-col justify-center items-center text-center">
-               <Globe className="w-12 h-12 text-primary/40 mb-6 animate-pulse" />
-               <h3 className="text-xl font-heading font-bold mb-2">Global Infrastructure</h3>
-               <p className="text-muted-foreground">
+            <div className="p-6 sm:p-10 rounded-3xl bg-muted/40 border border-border/50 flex flex-col justify-center items-center text-center">
+               <Globe className="w-10 h-10 sm:w-12 sm:h-12 text-primary/40 mb-4 sm:mb-6 animate-pulse" />
+               <h3 className="text-lg sm:text-xl font-heading font-bold mb-2">Global Infrastructure</h3>
+               <p className="text-muted-foreground text-sm sm:text-base">
                  Deploying in 15+ regions with zero-latency data access for every student.
                </p>
             </div>

@@ -22,9 +22,9 @@ export default async function LoginPage({ params }: PageProps) {
         <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
           {/* Logo & Header (SSR-ready) */}
           <div className="text-center mb-8">
-            <div className="text-center space-y-3">
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-glow uppercase">
-                {schoolName} <span className="text-primary tracking-widest text-lg md:text-xl align-middle">PORTAL</span>
+            <div className="text-center space-y-2 sm:space-y-3">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter text-glow uppercase break-words">
+                {schoolName} <span className="text-primary tracking-widest text-base sm:text-lg md:text-xl align-middle">PORTAL</span>
               </h1>
             </div>
           </div>
