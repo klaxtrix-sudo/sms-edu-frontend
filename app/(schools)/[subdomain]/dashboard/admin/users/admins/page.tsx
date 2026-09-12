@@ -260,24 +260,24 @@ export default function AdminsDirectoryPage() {
   }, [admins, searchQuery, roleFilter]);
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 w-full">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
             Institutional Administrators
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Manage administrative personnel and assign dashboard roles and permissions.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           <Button
             variant="outline"
             disabled={isSendingReminders}
             onClick={handleSendReminders}
-            className="h-11 px-4 rounded-xl font-bold border-primary/20 hover:bg-primary/5 flex items-center gap-2 text-xs"
+            className="h-10 sm:h-11 px-3.5 sm:px-4 rounded-xl font-bold border-primary/20 hover:bg-primary/5 flex items-center justify-center gap-2 text-xs w-full sm:w-auto"
           >
             {isSendingReminders ? <Loader2 className="size-4 animate-spin" /> : <BellRing className="size-4 text-primary" />}
             <span>Dispatch Pending Reminders</span>
@@ -285,7 +285,7 @@ export default function AdminsDirectoryPage() {
 
           <Button
             onClick={() => setIsAddModalOpen(true)}
-            className="h-11 px-5 rounded-xl gradient-brand font-bold text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2 text-xs"
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-xl gradient-brand font-bold text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 text-xs w-full sm:w-auto"
           >
             <UserPlus className="size-4" />
             <span>Invite Administrator</span>
@@ -294,22 +294,22 @@ export default function AdminsDirectoryPage() {
       </div>
 
       {/* Controls & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 bg-card p-4 rounded-2xl border border-primary/10 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 bg-card p-3 sm:p-4 rounded-2xl border border-primary/10 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input 
             placeholder="Search by name, email, or role title..." 
-            className="pl-10 h-11 bg-background/50 border-primary/10 rounded-xl"
+            className="pl-10 h-10 sm:h-11 bg-background/50 border-primary/10 rounded-xl text-xs sm:text-sm"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+        <div className="flex items-center overflow-x-auto no-scrollbar p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md shrink-0">
           <button 
             onClick={() => setRoleFilter('all')}
             className={cn(
-              "relative flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-200",
+              "relative flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 shrink-0",
               roleFilter === 'all' 
                 ? "bg-background text-foreground shadow-md border border-border/60" 
                 : "text-muted-foreground hover:text-foreground"
@@ -324,7 +324,7 @@ export default function AdminsDirectoryPage() {
           <button 
             onClick={() => setRoleFilter('super')}
             className={cn(
-              "relative flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-200",
+              "relative flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 shrink-0",
               roleFilter === 'super' 
                 ? "bg-background text-foreground shadow-md border border-border/60" 
                 : "text-muted-foreground hover:text-foreground"
@@ -340,7 +340,7 @@ export default function AdminsDirectoryPage() {
           <button 
             onClick={() => setRoleFilter('sub')}
             className={cn(
-              "relative flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-200",
+              "relative flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 shrink-0",
               roleFilter === 'sub' 
                 ? "bg-background text-foreground shadow-md border border-border/60" 
                 : "text-muted-foreground hover:text-foreground"
@@ -357,7 +357,7 @@ export default function AdminsDirectoryPage() {
 
       {/* Administrators Table */}
       <div className="bg-card rounded-2xl border border-primary/10 shadow-xl overflow-hidden">
-        <Table>
+        <Table className="min-w-[680px]">
           <TableHeader className="bg-muted/50">
             <TableRow className="hover:bg-transparent border-primary/10">
               <TableHead className="font-bold uppercase tracking-widest text-[10px] py-5 px-6">Administrator</TableHead>

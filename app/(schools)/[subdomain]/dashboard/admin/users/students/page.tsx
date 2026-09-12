@@ -209,31 +209,31 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Students</h1>
-          <p className="text-muted-foreground mt-1">Manage the student body and enrollment details.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Students</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage the student body and enrollment details.</p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)}>
+        <Button onClick={() => setIsAddModalOpen(true)} className="w-full sm:w-auto h-10 sm:h-11 font-bold text-xs">
           <UserPlus className="mr-2 h-4 w-4" />
           Enroll Student
         </Button>
       </div>
 
-      <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm rounded-2xl overflow-hidden">
+        <CardHeader className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search students..." 
-              className="pl-9 h-10"
+              className="pl-9 h-10 text-xs sm:text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 w-full sm:max-w-xs">
             <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger className="h-10 w-full">
+              <SelectTrigger className="h-10 w-full text-xs sm:text-sm font-medium">
                 <SelectValue placeholder="Filter by class" />
               </SelectTrigger>
               <SelectContent>
@@ -248,7 +248,7 @@ export default function StudentsPage() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 pt-0">
           {isTenantLoading || loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -256,11 +256,11 @@ export default function StudentsPage() {
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No students yet.</p>
+              <p className="text-muted-foreground text-sm font-medium">No students yet.</p>
             </div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
-              <Table>
+            <div className="rounded-xl border overflow-hidden">
+              <Table className="min-w-[620px]">
                 <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead>Admission No</TableHead>

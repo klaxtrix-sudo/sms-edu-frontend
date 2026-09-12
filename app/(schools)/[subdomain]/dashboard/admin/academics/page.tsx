@@ -281,10 +281,10 @@ export default function AcademicsPage() {
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="w-full">
         {/* Navigation & Controls Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+          <TabsList className="flex items-center overflow-x-auto no-scrollbar max-w-full p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md shrink-0">
             <TabsTrigger 
               value="classes" 
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground shrink-0"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -310,7 +310,7 @@ export default function AcademicsPage() {
 
             <TabsTrigger 
               value="subjects" 
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground shrink-0"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -489,7 +489,7 @@ export default function AcademicsPage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="bg-card border border-border/80 rounded-2xl shadow-sm overflow-hidden"
               >
-                <Table>
+                <Table className="min-w-[620px]">
                   <TableHeader className="bg-muted/30 border-b border-border/80">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4 pl-6">
@@ -852,7 +852,7 @@ export default function AcademicsPage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="bg-card border border-border/80 rounded-2xl shadow-sm overflow-hidden"
               >
-                <Table>
+                <Table className="min-w-[620px]">
                   <TableHeader className="bg-muted/30 border-b border-border/80">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="font-black text-[11px] uppercase tracking-wider text-muted-foreground py-4 pl-6">

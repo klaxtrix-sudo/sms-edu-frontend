@@ -375,7 +375,7 @@ export default function FinanceDashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Header */}
-      <header className="relative overflow-hidden glass-panel rounded-[2.5rem] p-8 md:p-10 group bg-white/5 border-white/10 text-foreground">
+      <header className="relative overflow-hidden glass-panel rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] p-5 sm:p-8 md:p-10 group bg-white/5 border-white/10 text-foreground">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
@@ -388,10 +388,10 @@ export default function FinanceDashboard() {
                 </Badge>
               )}
             </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-glow">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight text-glow">
               Fee & <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Revenue Engine</span>
             </h1>
-            <p className="text-muted-foreground text-sm md:text-base max-w-xl font-medium">
+            <p className="text-muted-foreground text-xs sm:text-sm md:text-base max-w-xl font-medium">
               Manage class fee structures, audit incoming receipts, and track school collections.
             </p>
           </div>
@@ -465,12 +465,12 @@ export default function FinanceDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center bg-card/90 dark:bg-muted/40 border border-border/80 rounded-2xl p-1 text-xs self-start sm:self-auto shadow-xs backdrop-blur-md">
+          <div className="flex items-center overflow-x-auto no-scrollbar max-w-full bg-card/90 dark:bg-muted/40 border border-border/80 rounded-2xl p-1 text-xs self-start sm:self-auto shadow-xs backdrop-blur-md shrink-0">
             <button
               type="button"
               onClick={() => setPeriodFilter("current")}
               className={cn(
-                "px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-2",
+                "px-3 py-1.5 sm:px-3.5 rounded-xl font-bold transition-all flex items-center gap-2 shrink-0 text-xs",
                 periodFilter === "current"
                   ? "bg-primary text-white shadow-sm shadow-primary/25"
                   : "text-muted-foreground hover:text-foreground"
@@ -483,7 +483,7 @@ export default function FinanceDashboard() {
               type="button"
               onClick={() => setPeriodFilter("all")}
               className={cn(
-                "px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-2",
+                "px-3 py-1.5 sm:px-3.5 rounded-xl font-bold transition-all flex items-center gap-2 shrink-0 text-xs",
                 periodFilter === "all"
                   ? "bg-primary text-white shadow-sm shadow-primary/25"
                   : "text-muted-foreground hover:text-foreground"
@@ -564,10 +564,10 @@ export default function FinanceDashboard() {
       {/* Main Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
-          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+          <TabsList className="flex items-center overflow-x-auto no-scrollbar max-w-full p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md shrink-0">
             <TabsTrigger
               value="payments"
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground shrink-0"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -593,7 +593,7 @@ export default function FinanceDashboard() {
 
             <TabsTrigger
               value="structures"
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground shrink-0"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -619,7 +619,7 @@ export default function FinanceDashboard() {
 
             <TabsTrigger
               value="debtors"
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground shrink-0"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -762,7 +762,7 @@ export default function FinanceDashboard() {
               </div>
             ) : (
               <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
-                <Table>
+                <Table className="min-w-[750px]">
                   <TableHeader className="bg-white/10">
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="font-bold py-4 text-foreground text-xs pl-6">Student</TableHead>
@@ -1099,7 +1099,7 @@ export default function FinanceDashboard() {
               </div>
             ) : (
               <div className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-white/5">
-                <Table>
+                <Table className="min-w-[680px]">
                   <TableHeader className="bg-white/10">
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="font-bold py-4 text-foreground text-xs pl-6">Student</TableHead>

@@ -78,23 +78,23 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   });
 
   return (
-    <div className="min-h-screen pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Executive Hero Header */}
-      <header className="relative overflow-hidden glass-panel rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 group">
+      <header className="relative overflow-hidden glass-panel rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] p-5 sm:p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 group">
         <div className="relative z-10 space-y-2">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-glow">
             Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
           </h1>
-          <p className="text-muted-foreground text-lg max-w-xl font-medium">
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-xl font-medium">
              {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} teachers across {classesCount.count ?? 0} classes today.
           </p>
         </div>
         
-        <div className="relative z-10 glass-panel rounded-2xl p-6 border-white/10 flex flex-col items-center justify-center w-full md:min-w-[200px] hover:scale-105 transition-transform duration-500 bg-white/5">
-          <Calendar className="size-8 text-primary mb-2" />
-          <span className="text-sm font-bold text-primary uppercase tracking-tighter">Today's Date</span>
-          <span className="text-base md:text-lg font-bold text-center">{today}</span>
+        <div className="relative z-10 glass-panel rounded-2xl p-5 sm:p-6 border-white/10 flex flex-col items-center justify-center w-full md:min-w-[200px] hover:scale-105 transition-transform duration-500 bg-white/5">
+          <Calendar className="size-7 sm:size-8 text-primary mb-2" />
+          <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-tighter">Today's Date</span>
+          <span className="text-sm sm:text-base md:text-lg font-bold text-center">{today}</span>
         </div>
 
         {/* Decorative background glow */}
@@ -102,20 +102,20 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
       </header>
 
       {/* Modern Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         
         {/* LARGE BENTO CELL: Institutional Growth Chart */}
-        <div className="md:col-span-2 lg:col-span-2 glass-panel rounded-[2rem] overflow-hidden group hover:shadow-primary/5 transition-all duration-500 border border-white/5 bg-white/5">
-          <div className="p-8 space-y-6">
+        <div className="md:col-span-2 lg:col-span-2 glass-panel rounded-2xl sm:rounded-[2rem] overflow-hidden group hover:shadow-primary/5 transition-all duration-500 border border-white/5 bg-white/5">
+          <div className="p-5 sm:p-6 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2">
                   <TrendingUp className="size-5 text-primary" />
                   Academic Performance
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">Performance over time</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Performance over time</p>
               </div>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs">
                 Live Analytics
               </Badge>
             </div>
@@ -124,39 +124,39 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
         </div>
 
         {/* SMALL BENTO CELLS: Core Stats with Glowing Gradients */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:col-span-2 lg:col-span-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:col-span-2 lg:col-span-2 gap-4 sm:gap-6">
           {stats.map((stat) => (
-            <div key={stat.label} className="glass-panel rounded-[1.8rem] p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-white/5 overflow-hidden">
-               <div className={`size-12 rounded-2xl bg-gradient-to-br ${stat.color} p-3 mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+            <div key={stat.label} className="glass-panel rounded-2xl sm:rounded-[1.8rem] p-5 sm:p-6 group hover:translate-y-[-4px] transition-all duration-300 border border-white/5 bg-white/5 overflow-hidden">
+               <div className={`size-11 sm:size-12 rounded-2xl bg-gradient-to-br ${stat.color} p-2.5 sm:p-3 mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
                 <stat.icon className="size-full text-white" />
               </div>
               <div className="space-y-1">
-                <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">{stat.label}</span>
-                <div className="text-3xl font-black">{stat.value}</div>
+                <span className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-widest">{stat.label}</span>
+                <div className="text-2xl sm:text-3xl font-black">{stat.value}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* MEDIUM BENTO CELL: Quick Action Command Center */}
-        <div className="lg:col-span-1 glass-panel rounded-[2rem] p-8 space-y-6 border border-white/5 bg-white/5">
-          <h3 className="text-xl font-bold">Quick Actions</h3>
+        <div className="lg:col-span-1 glass-panel rounded-2xl sm:rounded-[2rem] p-5 sm:p-6 md:p-8 space-y-5 border border-white/5 bg-white/5">
+          <h3 className="text-lg sm:text-xl font-bold">Quick Actions</h3>
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start gap-3 h-14 rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group" asChild>
+            <Button variant="outline" className="w-full justify-start gap-3 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group font-medium text-xs sm:text-sm" asChild>
               <Link href="/dashboard/admin/users/students">
-                <Plus className="size-5" />
+                <Plus className="size-4 sm:size-5" />
                 Enroll Student
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3 h-14 rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group" asChild>
+            <Button variant="outline" className="w-full justify-start gap-3 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group font-medium text-xs sm:text-sm" asChild>
                <Link href="/dashboard/admin/communications">
-                <Bell className="size-5" />
+                <Bell className="size-4 sm:size-5" />
                 Post Announcement
               </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3 h-14 rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group" asChild>
+            <Button variant="outline" className="w-full justify-start gap-3 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all group font-medium text-xs sm:text-sm" asChild>
               <Link href="/dashboard/admin/academics/results">
-                <TrendingUp className="size-5" />
+                <TrendingUp className="size-4 sm:size-5" />
                 Generate Reports
               </Link>
             </Button>

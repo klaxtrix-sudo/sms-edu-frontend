@@ -55,20 +55,20 @@ export default function SettingsLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col gap-8 h-full">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-heading font-extrabold tracking-tight text-foreground drop-shadow-sm flex items-center gap-3">
-          <Settings className="w-10 h-10 text-primary" />
+    <div className="flex flex-col gap-6 sm:gap-8 h-full">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold tracking-tight text-foreground drop-shadow-sm flex items-center gap-2.5 sm:gap-3">
+          <Settings className="w-7 h-7 sm:w-9 sm:h-9 lg:w-10 lg:h-10 text-primary shrink-0" />
           Settings
         </h1>
-        <p className="text-muted-foreground font-medium">
+        <p className="text-muted-foreground text-sm sm:text-base font-medium">
           Manage your school profile, academic year, and integrations.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
-        {/* Settings Navigation */}
-        <div className="glass-panel p-4 rounded-[2rem] space-y-2 border border-border/60 bg-card/60">
+      <div className="flex flex-col lg:grid lg:grid-cols-[280px_1fr] gap-6 lg:gap-8 items-start">
+        {/* Settings Navigation: horizontal scrolling bar on mobile, rich vertical panel on desktop */}
+        <div className="glass-panel p-2 sm:p-3 lg:p-4 rounded-2xl lg:rounded-[2rem] border border-border/60 bg-card/60 w-full flex lg:flex-col overflow-x-auto no-scrollbar gap-2 touch-scroll">
           {settingsLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -76,29 +76,29 @@ export default function SettingsLayout({
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "group flex items-start gap-4 p-4 rounded-2xl transition-all duration-300",
+                  "group flex items-center lg:items-start gap-3 p-2.5 sm:p-3 lg:p-4 rounded-xl lg:rounded-2xl transition-all duration-300 shrink-0",
                   isActive 
-                    ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]" 
+                    ? "bg-primary text-primary-foreground shadow-lg scale-[1.01]" 
                     : "hover:bg-muted text-muted-foreground hover:text-foreground"
                 )}
               >
                 <div className={cn(
-                  "p-2 rounded-xl transition-colors duration-300",
+                  "p-2 rounded-lg lg:rounded-xl transition-colors duration-300 shrink-0",
                   isActive ? "bg-white/20 text-white" : "bg-muted group-hover:bg-card text-muted-foreground"
                 )}>
-                  <link.icon className="w-5 h-5" />
+                  <link.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold">{link.title}</span>
+                  <span className="font-bold text-xs sm:text-sm whitespace-nowrap lg:whitespace-normal">{link.title}</span>
                   <span className={cn(
-                    "text-xs font-medium opacity-80",
+                    "hidden lg:block text-xs font-medium opacity-80",
                     isActive ? "text-primary-foreground/80" : "text-muted-foreground"
                   )}>
                     {link.description}
                   </span>
                 </div>
                 {isActive && (
-                  <ChevronRight className="w-5 h-5 ml-auto self-center text-primary-foreground/50" />
+                  <ChevronRight className="hidden lg:block w-5 h-5 ml-auto self-center text-primary-foreground/50" />
                 )}
               </Link>
             );
@@ -106,7 +106,7 @@ export default function SettingsLayout({
         </div>
 
         {/* Settings Content */}
-        <div className="h-full min-h-[600px]">
+        <div className="h-full min-h-[400px] w-full min-w-0">
           {children}
         </div>
       </div>

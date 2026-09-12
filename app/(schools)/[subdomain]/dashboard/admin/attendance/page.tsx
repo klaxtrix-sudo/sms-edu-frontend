@@ -137,18 +137,18 @@ export default function AdminAttendanceDashboard() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden relative">
-        <div className="z-10">
-          <h1 className="text-5xl font-black tracking-tighter text-primary">Attendance</h1>
-          <p className="text-muted-foreground mt-2 text-xl font-medium">See attendance across the whole school.</p>
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter text-primary">Attendance</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base font-medium">See attendance across the whole school.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4 z-10">
-          <div className="space-y-1.5 font-bold">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="space-y-1 font-bold flex-1 sm:flex-none min-w-[140px]">
             <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">Class</label>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="w-[180px] bg-card/40 border-none ring-1 ring-border shadow-xl backdrop-blur-md">
+              <SelectTrigger className="w-full sm:w-[180px] bg-card/40 border-none ring-1 ring-border shadow-xl backdrop-blur-md">
                 <SelectValue placeholder="All Classes" />
               </SelectTrigger>
               <SelectContent>
@@ -160,7 +160,7 @@ export default function AdminAttendanceDashboard() {
             </Select>
           </div>
 
-          <div className="space-y-1.5 font-bold">
+          <div className="space-y-1 font-bold flex-1 sm:flex-none min-w-[140px]">
             <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">Date</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -168,18 +168,18 @@ export default function AdminAttendanceDashboard() {
                 type="date" 
                 value={date} 
                 onChange={(e) => setDate(e.target.value)}
-                className="pl-10 w-[170px] bg-card/40 border-none ring-1 ring-border shadow-xl backdrop-blur-md"
+                className="pl-9 w-full sm:w-[170px] bg-card/40 border-none ring-1 ring-border shadow-xl backdrop-blur-md"
               />
             </div>
           </div>
 
-          <Button variant="outline" size="icon" className="size-10 rounded-xl mt-5 shadow-xl">
+          <Button variant="outline" size="icon" className="size-10 rounded-xl mt-5 shadow-xl shrink-0">
             <Download className="size-4" />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard 
           title="Daily Average" 
           value={`${stats.avgAttendance}%`} 
@@ -193,18 +193,18 @@ export default function AdminAttendanceDashboard() {
         <MetricCard title="Late Arrivals" value={stats.lateCount} icon={Clock} status="late" />
       </div>
 
-      <Card className="border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-[2.5rem] overflow-hidden">
-        <CardHeader className="p-10 border-b border-border/50">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <Card className="border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+        <CardHeader className="p-4 sm:p-6 lg:p-10 border-b border-border/50">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
             <div>
-              <CardTitle className="text-3xl font-black tracking-tight">Daily Roll Call</CardTitle>
-              <CardDescription className="text-lg font-medium opacity-80">Roster for {new Date(date).toDateString()} • {summary.length} students</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight">Daily Roll Call</CardTitle>
+              <CardDescription className="text-sm sm:text-base font-medium opacity-80">Roster for {new Date(date).toDateString()} • {summary.length} students</CardDescription>
             </div>
-            <div className="relative">
+            <div className="relative w-full md:w-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
               <Input 
                 placeholder="Search name, class or ID..." 
-                className="pl-12 w-80 h-12 bg-background/50 border-none ring-1 ring-border focus-visible:ring-primary rounded-2xl shadow-inner font-medium"
+                className="pl-12 w-full md:w-80 h-11 sm:h-12 bg-background/50 border-none ring-1 ring-border focus-visible:ring-primary rounded-2xl shadow-inner font-medium"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -213,55 +213,55 @@ export default function AdminAttendanceDashboard() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-6">
-              <Loader2 className="size-16 animate-spin text-primary opacity-20" />
-              <p className="text-muted-foreground font-bold text-xl animate-pulse">Loading roll call...</p>
+            <div className="flex flex-col items-center justify-center py-20 sm:py-32 gap-6">
+              <Loader2 className="size-12 sm:size-16 animate-spin text-primary opacity-20" />
+              <p className="text-muted-foreground font-bold text-base sm:text-xl animate-pulse">Loading roll call...</p>
             </div>
           ) : (
-            <Table>
+            <Table className="min-w-[650px]">
               <TableHeader className="bg-muted/30">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="py-6 pl-10 font-black uppercase tracking-widest text-xs">Student Profile</TableHead>
+                  <TableHead className="py-4 pl-4 sm:pl-6 font-black uppercase tracking-widest text-xs">Student Profile</TableHead>
                   <TableHead className="font-black uppercase tracking-widest text-xs">Classroom</TableHead>
                   <TableHead className="font-black uppercase tracking-widest text-xs">Status</TableHead>
                   <TableHead className="font-black uppercase tracking-widest text-xs">Remarks</TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-xs pr-10">Timestamp</TableHead>
+                  <TableHead className="font-black uppercase tracking-widest text-xs pr-4 sm:pr-6">Timestamp</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredSummary.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-32 text-center text-muted-foreground italic text-xl">
+                    <TableCell colSpan={5} className="py-20 sm:py-32 text-center text-muted-foreground italic text-base sm:text-xl">
                       No attendance taken on this date.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredSummary.map((a) => (
                     <TableRow key={a.id} className="hover:bg-accent/30 transition-all group border-b border-border/20">
-                      <TableCell className="py-6 pl-10">
-                        <div className="flex items-center gap-5">
-                          <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-lg text-primary group-hover:rotate-12 transition-transform shadow-lg">
+                      <TableCell className="py-4 pl-4 sm:pl-6">
+                        <div className="flex items-center gap-3 sm:gap-5">
+                          <div className="size-10 sm:size-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-base sm:text-lg text-primary group-hover:rotate-12 transition-transform shadow-lg shrink-0">
                             {a.students?.profiles?.full_name?.charAt(0)}
                           </div>
                           <div>
-                            <div className="font-black text-lg text-foreground group-hover:text-primary transition-colors">
+                            <div className="font-black text-sm sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
                               {a.students?.profiles?.full_name}
                             </div>
-                            <div className="text-xs text-muted-foreground font-bold tracking-[0.15em] uppercase opacity-70">
+                            <div className="text-[11px] sm:text-xs text-muted-foreground font-bold tracking-[0.15em] uppercase opacity-70">
                               {a.students?.admission_no}
                             </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="rounded-lg px-3 py-1 bg-background/50 font-bold border-none ring-1 ring-border shadow-sm">
+                        <Badge variant="outline" className="rounded-lg px-2.5 py-0.5 sm:px-3 sm:py-1 bg-background/50 font-bold border-none ring-1 ring-border shadow-sm text-xs">
                           {a.classes?.name}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge 
                           className={cn(
-                            "capitalize rounded-full px-4 py-1 font-black tracking-tight text-[10px] shadow-lg",
+                            "capitalize rounded-full px-3 sm:px-4 py-0.5 sm:py-1 font-black tracking-tight text-[10px] shadow-lg",
                             a.status === 'present' && "bg-emerald-500 hover:bg-emerald-600 text-white",
                             a.status === 'absent' && "bg-rose-500 hover:bg-rose-600 text-white",
                             a.status === 'late' && "bg-amber-500 hover:bg-amber-600 text-white",
@@ -271,10 +271,10 @@ export default function AdminAttendanceDashboard() {
                           {a.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate italic text-sm text-muted-foreground font-medium">
+                      <TableCell className="max-w-[200px] truncate italic text-xs sm:text-sm text-muted-foreground font-medium">
                         {a.remarks || "-"}
                       </TableCell>
-                      <TableCell className="text-sm font-bold text-muted-foreground pr-10">
+                      <TableCell className="text-xs sm:text-sm font-bold text-muted-foreground pr-4 sm:pr-6 whitespace-nowrap">
                         {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </TableCell>
                     </TableRow>

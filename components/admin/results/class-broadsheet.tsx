@@ -256,20 +256,20 @@ export function ClassBroadsheet({
       
       {/* 1. Header & Executive Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onBack}
             title="Return to All Classrooms (Readiness Matrix)"
-            className="h-8.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold px-2.5 rounded-xl border border-border/60 hover:bg-muted"
+            className="h-8.5 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold px-2.5 rounded-xl border border-border/60 hover:bg-muted self-start shrink-0"
           >
             <ArrowLeft className="size-3.5" /> Classes
           </Button>
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-bold text-foreground">{data.className} Master BroadSheet</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">{data.className} Master BroadSheet</h2>
               {data.status === 'published' ? (
                 <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-bold flex items-center gap-1">
                   <CheckCircle2 className="size-3" /> Published to Parents
@@ -432,8 +432,8 @@ export function ClassBroadsheet({
 
       {/* 3. Master BroadSheet Table */}
       <div className="border border-border/80 rounded-xl overflow-hidden bg-card shadow-xs">
-        <div className="overflow-x-auto max-h-[65vh]">
-          <Table className="relative">
+        <div className="overflow-x-auto max-h-[65vh] touch-scroll custom-scrollbar">
+          <Table className="relative min-w-[900px]">
             <TableHeader className="sticky top-0 z-20 bg-muted/95 backdrop-blur-sm shadow-xs">
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="w-[70px] text-center text-xs font-black">Rank</TableHead>
