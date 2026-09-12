@@ -10,12 +10,11 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Shield, UserCog } from "lucide-react";
+import { Loader2, Shield, UserCog, Check } from "lucide-react";
 import { updateAdminPermissions } from "@/app/actions/subadmin-actions";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const AVAILABLE_MODULES = [
   { id: "finance", label: "Fee & Finance Management", desc: "Fee structures, invoices, payment recording, receipts" },
@@ -47,12 +46,10 @@ export function EditAdminPermissionsModal({
   subdomain,
 }: EditAdminPermissionsModalProps) {
   const [loading, setLoading] = useState(false);
-  const [customRoleTitle, setCustomRoleTitle] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
     if (adminUser) {
-      setCustomRoleTitle(adminUser.custom_role_title || "Sub-Admin");
       setSelectedPermissions(Array.isArray(adminUser.permissions) ? adminUser.permissions : []);
     }
   }, [adminUser]);
@@ -100,13 +97,8 @@ export function EditAdminPermissionsModal({
     e.preventDefault();
     if (!adminUser) return;
 
-    if (!customRoleTitle.trim()) {
-      toast.error("Administrative role title cannot be empty.");
-      return;
-    }
-
     if (selectedPermissions.length === 0) {
-      toast.error("Please assign at least one module permission.");
+      toast.error("Please assign at least one role/module permission.");
       return;
     }
 
@@ -115,7 +107,7 @@ export function EditAdminPermissionsModal({
       const result = await updateAdminPermissions(
         adminUser.id,
         {
-          customRoleTitle: customRoleTitle.trim(),
+          customRoleTitle: adminUser.custom_role_title || "Admin",
           permissions: selectedPermissions,
         },
         subdomain
@@ -124,12 +116,12 @@ export function EditAdminPermissionsModal({
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(`Permissions updated for ${adminUser.full_name}.`);
+        toast.success(`Roles updated for ${adminUser.full_name}.`);
         onSuccess();
         onClose();
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to update permissions.");
+      toast.error(err.message || "Failed to update roles.");
     } finally {
       setLoading(false);
     }
@@ -145,32 +137,20 @@ export function EditAdminPermissionsModal({
                 <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                   <UserCog className="w-5 h-5" />
                 </div>
-                Edit Permissions
+                Edit Roles
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-1">
-                Modify assigned modules for <strong className="text-foreground">{adminUser?.full_name}</strong> ({adminUser?.email}).
+                Modify assigned dashboard roles for <strong className="text-foreground">{adminUser?.full_name}</strong> ({adminUser?.email}).
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar min-h-0">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-role-title" className="text-xs font-semibold">Administrative Title</Label>
-              <Input
-                id="edit-role-title"
-                value={customRoleTitle}
-                onChange={(e) => setCustomRoleTitle(e.target.value)}
-                placeholder="e.g. Bursar, Academic Officer"
-                className="h-9 text-sm"
-                required
-              />
-            </div>
-
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-primary" />
-                  Granted Modules ({selectedPermissions.length} selected)
+                  Roles ({selectedPermissions.length} selected)
                 </Label>
                 <div className="flex gap-2">
                   <button
@@ -206,10 +186,16 @@ export function EditAdminPermissionsModal({
                         className="flex items-start gap-2.5 cursor-pointer"
                         onClick={() => togglePermission(module.id)}
                       >
-                        <Checkbox
-                          checked={isChecked}
-                          className="mt-0.5 pointer-events-none"
-                        />
+                        <div
+                          className={cn(
+                            "h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center transition-colors mt-0.5",
+                            isChecked
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "border-primary/60 bg-transparent"
+                          )}
+                        >
+                          {isChecked && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
+                        </div>
                         <div className="space-y-0.5 flex-1">
                           <p className={`text-xs font-semibold ${isChecked ? "text-primary" : "text-foreground"}`}>
                             {module.label}
@@ -232,8 +218,8 @@ export function EditAdminPermissionsModal({
                               }}
                               className={`px-2 py-0.5 rounded font-medium transition-all ${
                                 scope === "manage"
-                                    ? "bg-primary text-primary-foreground shadow-xs"
-                                    : "text-muted-foreground hover:text-foreground"
+                                  ? "bg-primary text-primary-foreground shadow-xs"
+                                  : "text-muted-foreground hover:text-foreground"
                               }`}
                             >
                               Full Control (Manage)
@@ -269,7 +255,7 @@ export function EditAdminPermissionsModal({
               </Button>
               <Button type="submit" disabled={loading} className="gap-2 rounded-xl font-semibold bg-primary hover:bg-primary/90 shadow-md">
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Save Permissions
+                Save Roles
               </Button>
             </DialogFooter>
           </div>

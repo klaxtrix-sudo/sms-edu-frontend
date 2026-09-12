@@ -12,7 +12,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Dialog, 
   DialogContent, 
@@ -37,7 +36,8 @@ import {
   TrendingUp,
   MessageSquare,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Check
 } from "lucide-react";
 import { 
   getClassBroadsheetData, 
@@ -653,12 +653,20 @@ export function ClassBroadsheet({
               </label>
 
               {/* In-App Notifications Checkbox */}
-              <div className="flex items-start space-x-3 p-3 rounded-xl border border-border/80 bg-card hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => setNotifyInApp(!notifyInApp)}>
-                <Checkbox 
-                  checked={notifyInApp} 
-                  onCheckedChange={(checked) => setNotifyInApp(!!checked)} 
-                  className="mt-0.5"
-                />
+              <div 
+                className="flex items-start space-x-3 p-3 rounded-xl border border-border/80 bg-card hover:bg-muted/20 transition-colors cursor-pointer select-none" 
+                onClick={() => setNotifyInApp(!notifyInApp)}
+              >
+                <div
+                  className={cn(
+                    "h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center transition-colors mt-0.5",
+                    notifyInApp
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-primary/60 bg-transparent"
+                  )}
+                >
+                  {notifyInApp && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
+                </div>
                 <div className="space-y-0.5">
                   <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <CheckCircle2 className="size-3.5 text-emerald-500" />
@@ -671,12 +679,20 @@ export function ClassBroadsheet({
               </div>
 
               {/* Termii SMS Notification Checkbox */}
-              <div className="flex items-start space-x-3 p-3 rounded-xl border border-border/80 bg-card hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => setNotifySMS(!notifySMS)}>
-                <Checkbox 
-                  checked={notifySMS} 
-                  onCheckedChange={(checked) => setNotifySMS(!!checked)} 
-                  className="mt-0.5"
-                />
+              <div 
+                className="flex items-start space-x-3 p-3 rounded-xl border border-border/80 bg-card hover:bg-muted/20 transition-colors cursor-pointer select-none" 
+                onClick={() => setNotifySMS(!notifySMS)}
+              >
+                <div
+                  className={cn(
+                    "h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center transition-colors mt-0.5",
+                    notifySMS
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-primary/60 bg-transparent"
+                  )}
+                >
+                  {notifySMS && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
+                </div>
                 <div className="space-y-0.5">
                   <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <MessageSquare className="size-3.5 text-blue-500" />

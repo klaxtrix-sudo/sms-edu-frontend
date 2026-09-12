@@ -15,70 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Loader2, Copy, Check, Share2, Sparkles, CheckCircle2, Shield, UserCog } from "lucide-react";
 import { createSubAdmin } from "@/app/actions/subadmin-actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-interface RolePreset {
-  id: string;
-  title: string;
-  description: string;
-  permissions: string[];
-}
-
-const ROLE_PRESETS: RolePreset[] = [
-  {
-    id: "bursar",
-    title: "Bursar / Accounts Officer",
-    description: "Manage fee structures, invoices, payment records, and financial analytics.",
-    permissions: ["finance", "analytics"],
-  },
-  {
-    id: "academic_officer",
-    title: "Academic Officer / VP Academic",
-    description: "Manage classrooms, subjects, timetables, exams, results, and attendance.",
-    permissions: ["academics", "exams", "results", "attendance", "analytics"],
-  },
-  {
-    id: "exam_officer",
-    title: "Exam Officer / CBT Director",
-    description: "Manage exams, CBT question studio, score compilation, and broadsheets.",
-    permissions: ["exams", "results", "academics"],
-  },
-  {
-    id: "admissions_officer",
-    title: "Admissions Officer / Registrar",
-    description: "Enroll students, manage student profiles, parent linkages, and promotions.",
-    permissions: ["students", "parents", "academics"],
-  },
-  {
-    id: "communications_officer",
-    title: "Communications / PR Officer",
-    description: "Publish school notices and send SMS/Email broadcasts.",
-    permissions: ["communications"],
-  },
-  {
-    id: "auditor",
-    title: "Auditor / Financial Inspector",
-    description: "Read-only access to financial records, invoices, transactions, and analytics.",
-    permissions: ["finance:read", "analytics:read"],
-  },
-  {
-    id: "custom",
-    title: "Custom Administrator",
-    description: "Select arbitrary module permissions manually.",
-    permissions: [],
-  },
-];
 
 const AVAILABLE_MODULES = [
   { id: "finance", label: "Fee & Finance Management", desc: "Fee structures, invoices, payment recording, receipts" },
@@ -98,7 +38,6 @@ const adminSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 characters"),
-  customRoleTitle: z.string().min(2, "Role title is required"),
 });
 
 type AdminFormValues = z.infer<typeof adminSchema>;
@@ -114,13 +53,11 @@ interface AddAdminModalProps {
 export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain }: AddAdminModalProps) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState("bursar");
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(["finance", "analytics"]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [createdData, setCreatedData] = useState<{
     fullName: string;
     email: string;
     phone: string;
-    customRoleTitle: string;
     activationLink: string;
   } | null>(null);
 
@@ -130,25 +67,8 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
       fullName: "",
       email: "",
       phone: "",
-      customRoleTitle: "Bursar / Accounts Officer",
     },
   });
-
-  const handleSelectPreset = useCallback((presetId: string) => {
-    setSelectedPreset(presetId);
-    const preset = ROLE_PRESETS.find((p) => p.id === presetId);
-    if (preset) {
-      if (preset.id !== "custom") {
-        form.setValue("customRoleTitle", preset.title, { shouldValidate: true });
-        setSelectedPermissions([...preset.permissions]);
-      } else {
-        const currentTitle = form.getValues("customRoleTitle");
-        if (!currentTitle || ROLE_PRESETS.some((p) => p.id !== "custom" && p.title === currentTitle)) {
-          form.setValue("customRoleTitle", "Custom Administrator", { shouldValidate: true });
-        }
-      }
-    }
-  }, [form]);
 
   const isModuleChecked = (moduleId: string) => {
     return (
@@ -164,7 +84,6 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
   };
 
   const togglePermission = useCallback((moduleId: string) => {
-    setSelectedPreset("custom");
     setSelectedPermissions((prev) => {
       const isSelected =
         prev.includes(moduleId) ||
@@ -182,7 +101,6 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
   }, []);
 
   const setModuleScope = useCallback((moduleId: string, scope: "manage" | "read") => {
-    setSelectedPreset("custom");
     setSelectedPermissions((prev) => {
       const filtered = prev.filter(
         (p) => p !== moduleId && p !== `${moduleId}:manage` && p !== `${moduleId}:read`
@@ -199,8 +117,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
     setCreatedData(null);
     setCopied(false);
     form.reset();
-    setSelectedPreset("bursar");
-    setSelectedPermissions(["finance", "analytics"]);
+    setSelectedPermissions([]);
     onClose();
   };
 
@@ -208,8 +125,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
     setCreatedData(null);
     setCopied(false);
     form.reset();
-    setSelectedPreset("bursar");
-    setSelectedPermissions(["finance", "analytics"]);
+    setSelectedPermissions([]);
     onSuccess();
     onClose();
   };
@@ -233,7 +149,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
       cleanPhone = "234" + cleanPhone.slice(1);
     }
     const message = encodeURIComponent(
-      `Hello ${createdData.fullName},\n\nYou have been invited as an Administrator (${createdData.customRoleTitle}) on the Klaxtrix school portal. Click the link below to securely activate your account and choose your password:\n\n${createdData.activationLink}`
+      `Hello ${createdData.fullName},\n\nYou have been invited as an Administrator on the Klaxtrix school portal. Click the link below to securely activate your account and choose your password:\n\n${createdData.activationLink}`
     );
     const url = cleanPhone ? `https://wa.me/${cleanPhone}?text=${message}` : `https://api.whatsapp.com/send?text=${message}`;
     window.open(url, "_blank");
@@ -241,7 +157,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
 
   const onSubmit = async (values: AdminFormValues) => {
     if (selectedPermissions.length === 0) {
-      toast.error("Please select at least one module permission for this administrator.");
+      toast.error("Please assign at least one role/module permission for this administrator.");
       return;
     }
 
@@ -251,7 +167,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
         fullName: values.fullName,
         email: values.email,
         phone: values.phone,
-        customRoleTitle: values.customRoleTitle,
+        customRoleTitle: "Admin",
         permissions: selectedPermissions,
         schoolId,
         subdomain,
@@ -265,7 +181,6 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
           fullName: values.fullName,
           email: values.email,
           phone: values.phone,
-          customRoleTitle: values.customRoleTitle,
           activationLink: result.activationLink || "",
         });
       }
@@ -287,7 +202,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
               </div>
               <DialogTitle className="text-xl font-bold">Administrator Invited!</DialogTitle>
               <DialogDescription className="text-center text-xs">
-                An invitation email has been dispatched to <strong className="text-foreground">{createdData.email}</strong> for the role of <strong className="text-primary">{createdData.customRoleTitle}</strong>.
+                An invitation email has been dispatched to <strong className="text-foreground">{createdData.email}</strong> with administrator access.
               </DialogDescription>
             </DialogHeader>
 
@@ -355,10 +270,10 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                   <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                     <UserCog className="w-5 h-5" />
                   </div>
-                  Invite Administrator / Sub-Admin
+                  Invite Administrator
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-1">
-                  Create a scoped administrative account with granular permissions. They will set their own password via the activation link.
+                  Create an administrator account and assign dashboard roles. They will set their own password via the activation link.
                 </DialogDescription>
               </DialogHeader>
             </div>
@@ -391,50 +306,17 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                 </div>
               </div>
 
-              {/* Role Preset & Title */}
-              <div className="p-3.5 rounded-xl bg-muted/30 border border-border/80 space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                    <span>Role Template Preset</span>
-                    <span className="text-[10px] text-primary font-normal">Auto-fills permissions</span>
-                  </Label>
-                  <Select value={selectedPreset} onValueChange={handleSelectPreset}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Choose a preset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLE_PRESETS.map((p) => (
-                        <SelectItem key={p.id} value={p.id} className="text-xs">
-                          {p.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="customRoleTitle" className="text-xs font-semibold">Administrative Title <span className="text-destructive">*</span></Label>
-                  <Input id="customRoleTitle" {...form.register("customRoleTitle")} placeholder="e.g. Bursar, Dean of Studies" className="h-9 text-sm" />
-                  {form.formState.errors.customRoleTitle && (
-                    <p className="text-xs text-destructive">{form.formState.errors.customRoleTitle.message}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Module Permissions Checklist */}
+              {/* Roles Checklist */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-primary" />
-                    Authorized Modules ({selectedPermissions.length} selected)
+                    Roles ({selectedPermissions.length} selected)
                   </Label>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedPreset("custom");
-                        setSelectedPermissions(AVAILABLE_MODULES.map((m) => `${m.id}:manage`));
-                      }}
+                      onClick={() => setSelectedPermissions(AVAILABLE_MODULES.map((m) => `${m.id}:manage`))}
                       className="text-[10px] text-primary hover:underline font-semibold"
                     >
                       Select All
@@ -442,10 +324,7 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                     <span className="text-[10px] text-muted-foreground">•</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedPreset("custom");
-                        setSelectedPermissions([]);
-                      }}
+                      onClick={() => setSelectedPermissions([])}
                       className="text-[10px] text-muted-foreground hover:underline font-semibold"
                     >
                       Clear
@@ -468,10 +347,16 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
                           className="flex items-start gap-2.5 cursor-pointer"
                           onClick={() => togglePermission(module.id)}
                         >
-                          <Checkbox
-                            checked={isChecked}
-                            className="mt-0.5 pointer-events-none"
-                          />
+                          <div
+                            className={cn(
+                              "h-4 w-4 shrink-0 rounded-sm border flex items-center justify-center transition-colors mt-0.5",
+                              isChecked
+                                ? "bg-primary border-primary text-primary-foreground"
+                                : "border-primary/60 bg-transparent"
+                            )}
+                          >
+                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
+                          </div>
                           <div className="space-y-0.5 flex-1">
                             <p className={`text-xs font-semibold ${isChecked ? "text-primary" : "text-foreground"}`}>
                               {module.label}
