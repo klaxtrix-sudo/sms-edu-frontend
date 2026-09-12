@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useTheme } from 'next-themes';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { cn } from '@/lib/utils';
 import {
@@ -14,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Moon, Sun, Monitor, Menu, Calendar } from 'lucide-react';
+import { LogOut, Menu, Calendar } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth-actions';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 
@@ -23,7 +22,6 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
-  const { theme, setTheme } = useTheme();
   const { tenant, academicCycle, holidays } = useTenant();
 
   const handleSignOut = async () => {
@@ -133,25 +131,6 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
               </p>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Theme
-          </DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer gap-2">
-            <Sun className="h-4 w-4" />
-            <span>Light</span>
-            {theme === 'light' && <span className="ml-auto text-xs text-muted-foreground">Active</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer gap-2">
-            <Moon className="h-4 w-4" />
-            <span>Dark</span>
-            {theme === 'dark' && <span className="ml-auto text-xs text-muted-foreground">Active</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme('system')} className="cursor-pointer gap-2">
-            <Monitor className="h-4 w-4" />
-            <span>System</span>
-            {theme === 'system' && <span className="ml-auto text-xs text-muted-foreground">Active</span>}
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer gap-2 text-destructive focus:text-destructive focus:bg-destructive/10">
             <LogOut className="h-4 w-4" />
