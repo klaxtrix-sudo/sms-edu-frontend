@@ -7,10 +7,6 @@ import {
   BookOpen, 
   Plus, 
   TrendingUp, 
-  Bell, 
-  Calendar,
-  CheckCircle2,
-  ArrowRight,
   ClipboardCheck,
   Megaphone
 } from "lucide-react";
@@ -41,17 +37,21 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   // Multi-tenant safe ID resolution: fallback to tenantKeys.id if metadata is absent
   const schoolId = tenantKeys.id || user.user_metadata?.school_id;
 
-  // Format local date string YYYY-MM-DD
+  // Format local display date
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const formattedDate = now.toLocaleDateString(undefined, { 
+    weekday: 'long', 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
 
-  // Fetch real counts, attendance vitals, and performance data
-  const [teachersCount, studentsCount, classesCount, subjectsCount, todayAttnCount] = await Promise.all([
+  // Fetch real counts and performance data
+  const [teachersCount, studentsCount, classesCount, subjectsCount] = await Promise.all([
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'teacher'),
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'student'),
     (supabase as any).from('classes').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     (supabase as any).from('subjects').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-    (supabase as any).from('attendance').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('date', todayStr),
   ]);
 
   // Fetch performance trend from backend
@@ -104,50 +104,36 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       
-      {/* Executive Hero Header */}
-      <header className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 border border-border/50 bg-card/40 backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl group">
-        <div className="relative z-10 space-y-2">
+      {/* Executive Overview Header */}
+      <header className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-border/50 bg-card/40 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg group">
+        <div className="relative z-10 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary">Institution Overview</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Institution Overview</span>
             <span className="size-1 rounded-full bg-border" />
             <span className="text-xs font-medium text-muted-foreground">{subdomain}.klaxtrix.site</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground">
             Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-xl font-medium">
-             {studentsCount.count ?? 0} students and {teachersCount.count ?? 0} teachers across {classesCount.count ?? 0} classrooms.
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium">
+            Administrative overview and academic analytics for the active session.
           </p>
         </div>
-        
-        {/* Actionable Institutional Vital: Attendance Pulse */}
-        <div className="relative z-10 rounded-2xl p-5 border border-border/50 bg-background/60 backdrop-blur-md flex flex-col justify-between w-full md:min-w-[220px] shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-primary" />
-              Attendance Pulse
-            </span>
-            <Badge variant="outline" className="text-[10px] font-bold px-2 py-0 border-primary/30 text-primary">
-              Today
-            </Badge>
-          </div>
-          <div className="my-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-foreground">
-              {todayAttnCount.count ?? 0}
-              <span className="text-xs text-muted-foreground font-normal ml-1.5">
-                / {studentsCount.count ?? 0} marked
-              </span>
+
+        <div className="relative z-10 flex items-center gap-3 shrink-0">
+          <div className="text-left sm:text-right">
+            <div className="text-xs sm:text-sm font-bold text-foreground">
+              {formattedDate}
+            </div>
+            <div className="text-[11px] text-muted-foreground font-medium flex items-center sm:justify-end gap-1.5 mt-0.5">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Academic Portal Active
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="h-7 text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 p-0 justify-start gap-1" asChild>
-            <Link href="/dashboard/admin/attendance">
-              Review Roster <ArrowRight className="size-3" />
-            </Link>
-          </Button>
         </div>
 
         {/* Decorative background glow */}
-        <div className="absolute -top-24 -right-24 size-64 bg-primary/15 blur-[90px] rounded-full group-hover:bg-primary/25 transition-colors pointer-events-none" />
+        <div className="absolute -top-20 -right-20 size-48 bg-primary/10 blur-[80px] rounded-full group-hover:bg-primary/20 transition-colors pointer-events-none" />
       </header>
 
       {/* Modern Bento Grid */}
@@ -165,7 +151,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
                 <p className="text-xs text-muted-foreground font-medium mt-0.5">Aggregated assessment averages by month</p>
               </div>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs font-bold">
-                CBT & Exam Pulse
+                Assessment Trends
               </Badge>
             </div>
             <PerformanceChart data={performanceData} />

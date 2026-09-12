@@ -99,7 +99,7 @@ export function PerformanceChart({ data = defaultData }: PerformanceChartProps) 
               Awaiting Graded Assessments
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Performance pulse will chart automatically as students submit CBT tests and term exams.
+              Academic trends will chart automatically as students complete exams and tests.
             </p>
           </div>
         </div>
