@@ -84,7 +84,7 @@ export default function AdminLayout({
         supabase.removeChannel(activeChannel);
       }
     };
-  }, [tenant]);
+  }, [tenant?.supabaseUrl, tenant?.supabaseAnonKey]);
 
   useEffect(() => {
     if (!isLoading && tenant && !tenant.isSetupCompleted && !pathname.includes('/setup')) {

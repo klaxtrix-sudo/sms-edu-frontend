@@ -10,7 +10,7 @@ export interface CreateSubAdminData {
   fullName: string;
   email: string;
   phone: string;
-  customRoleTitle: string;
+  customRoleTitle?: string;
   permissions: string[];
   schoolId: string;
   subdomain: string;
@@ -76,7 +76,7 @@ export async function createSubAdmin(data: CreateSubAdminData) {
         role: "admin",
         school_id: schoolId,
         is_super_admin: false,
-        custom_role_title: customRoleTitle || "Sub-Admin",
+        custom_role_title: customRoleTitle || "Admin",
         permissions: permissions || [],
         must_change_password: true,
         email_onboarding_verified: false,
@@ -101,7 +101,7 @@ export async function createSubAdmin(data: CreateSubAdminData) {
           phone,
           role: "admin",
           is_super_admin: false,
-          custom_role_title: customRoleTitle || "Sub-Admin",
+          custom_role_title: customRoleTitle || "Admin",
           permissions: permissions || [],
           is_active: true,
           invited_at: now.toISOString(),
@@ -242,7 +242,7 @@ export async function createSubAdmin(data: CreateSubAdminData) {
 
 export async function updateAdminPermissions(
   userId: string,
-  data: { customRoleTitle: string; permissions: string[] },
+  data: { customRoleTitle?: string; permissions: string[] },
   subdomain: string
 ) {
   if (!subdomain) return { error: "Subdomain is required." };
@@ -265,11 +265,13 @@ export async function updateAdminPermissions(
       return { error: "Super Administrator permissions cannot be restricted." };
     }
 
+    const effectiveTitle = data.customRoleTitle || targetProfile.custom_role_title || "Admin";
+
     // 2. Update profiles table
     const { error: updateError } = await (tenantSupabase as any)
       .from("profiles")
       .update({
-        custom_role_title: data.customRoleTitle,
+        custom_role_title: effectiveTitle,
         permissions: data.permissions,
         session_revoked_at: new Date().toISOString(),
       })
@@ -280,7 +282,7 @@ export async function updateAdminPermissions(
     // 3. Update Supabase Auth user_metadata
     await tenantSupabase.auth.admin.updateUserById(userId, {
       user_metadata: {
-        custom_role_title: data.customRoleTitle,
+        custom_role_title: effectiveTitle,
         permissions: data.permissions,
       },
     });
@@ -297,7 +299,7 @@ export async function updateAdminPermissions(
       targetName: targetProfile.full_name,
       details: {
         previousTitle: targetProfile.custom_role_title,
-        newTitle: data.customRoleTitle,
+        newTitle: effectiveTitle,
         previousPermissions: targetProfile.permissions,
         newPermissions: data.permissions,
       },

@@ -47,7 +47,6 @@ import {
   MoreHorizontal, 
   Power, 
   Shield, 
-  ShieldCheck, 
   Sparkles, 
   Copy, 
   Trash2, 
@@ -265,16 +264,11 @@ export default function AdminsDirectoryPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="outline" className="gap-1.5 py-1 px-2.5 text-xs font-bold uppercase tracking-wider bg-primary/5 text-primary border-primary/20">
-              <ShieldCheck className="size-3.5" /> Granular RBAC
-            </Badge>
-          </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             Institutional Administrators
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage administrative personnel, configure role titles (Bursar, Exam Officer, etc.), and assign granular module permissions.
+            Manage administrative personnel and assign dashboard roles and permissions.
           </p>
         </div>
 
@@ -353,7 +347,7 @@ export default function AdminsDirectoryPage() {
             )}
           >
             <UserCog className="size-3 text-primary" />
-            <span>Sub-Admins</span>
+            <span>Admins</span>
             <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-mono">
               {isLoading ? "..." : subAdminCount}
             </Badge>
@@ -368,7 +362,7 @@ export default function AdminsDirectoryPage() {
             <TableRow className="hover:bg-transparent border-primary/10">
               <TableHead className="font-bold uppercase tracking-widest text-[10px] py-5 px-6">Administrator</TableHead>
               <TableHead className="font-bold uppercase tracking-widest text-[10px]">Contact Info</TableHead>
-              <TableHead className="font-bold uppercase tracking-widest text-[10px]">Assigned Modules</TableHead>
+              <TableHead className="font-bold uppercase tracking-widest text-[10px]">Roles</TableHead>
               <TableHead className="font-bold uppercase tracking-widest text-[10px]">Status</TableHead>
               <TableHead className="font-bold uppercase tracking-widest text-[10px]">Joined</TableHead>
               <TableHead className="text-right px-6"></TableHead>
@@ -426,7 +420,7 @@ export default function AdminsDirectoryPage() {
                             )}
                           </div>
                           <p className="text-xs font-semibold text-primary mt-0.5">
-                            {admin.custom_role_title || (isSuper ? "Super Administrator" : "Sub-Admin")}
+                            {isSuper ? "Super Administrator" : (admin.custom_role_title || "Admin")}
                           </p>
                         </div>
                       </div>
@@ -606,8 +600,8 @@ export default function AdminsDirectoryPage() {
         </Table>
       </div>
 
-      {/* Add Sub-Admin Modal */}
-      {tenant?.id && (
+      {/* Add Admin Modal */}
+      {isAddModalOpen && tenant?.id && (
         <AddAdminModal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
@@ -617,8 +611,8 @@ export default function AdminsDirectoryPage() {
         />
       )}
 
-      {/* Edit Sub-Admin Permissions Modal */}
-      {selectedAdmin && (
+      {/* Edit Admin Permissions Modal */}
+      {isEditModalOpen && selectedAdmin && (
         <EditAdminPermissionsModal
           isOpen={isEditModalOpen}
           onClose={() => {
@@ -640,7 +634,7 @@ export default function AdminsDirectoryPage() {
             </div>
             <DialogTitle className="text-xl font-bold">Delete Administrator Account</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground pt-1">
-              Are you sure you want to delete <span className="font-bold text-foreground">{adminToDelete?.full_name}</span> ({adminToDelete?.custom_role_title || "Sub-Admin"})?
+              Are you sure you want to delete <span className="font-bold text-foreground">{adminToDelete?.full_name}</span> ({adminToDelete?.is_super_admin ? "Super Administrator" : (adminToDelete?.custom_role_title || "Admin")})?
               This will revoke their access and permanently delete their login credentials.
             </DialogDescription>
           </DialogHeader>
