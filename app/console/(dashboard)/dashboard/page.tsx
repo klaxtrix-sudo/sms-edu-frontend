@@ -223,15 +223,15 @@ export default function ConsoleDashboard() {
       <div className="space-y-8">
         {/* School Registry Table - Now Full Width */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
               <Shield className="w-5 h-5 text-cyan-400" /> School Registry
             </h2>
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
                   placeholder="Search schools..."
-                  className="pl-10 h-10 bg-slate-900/50 border-slate-800 rounded-xl text-sm"
+                  className="pl-10 h-10 bg-slate-900/50 border-slate-800 rounded-xl text-sm w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -239,8 +239,8 @@ export default function ConsoleDashboard() {
           </div>
           
           <Card className="bg-[#0c0c0c]/50 border-slate-800/50 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto touch-scroll custom-scrollbar">
+              <table className="w-full min-w-[650px] text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-800/50 bg-slate-900/30">
                     <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">School</th>

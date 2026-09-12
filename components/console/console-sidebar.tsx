@@ -45,11 +45,11 @@ export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
 
   return (
     <aside className={cn(
-      "w-72 border-r border-slate-800/50 bg-[#0a0a0a] flex flex-col transition-transform duration-300 z-50",
+      "w-72 max-w-[85vw] h-[100dvh] border-r border-slate-800/50 bg-[#0a0a0a] flex flex-col transition-transform duration-300 z-50",
       "lg:translate-x-0 lg:static fixed inset-y-0 left-0",
-      isOpen ? "translate-x-0" : "-translate-x-full"
+      isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
     )}>
-      <div className="p-8 border-b border-slate-800/50 flex items-center justify-between">
+      <div className="p-5 sm:p-6 lg:p-8 border-b border-slate-800/50 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
             <Shield className="w-6 h-6" />
@@ -61,19 +61,20 @@ export function ConsoleSidebar({ isOpen, onClose }: ConsoleSidebarProps) {
         {/* Mobile Close Button */}
         <button 
           onClick={onClose}
-          className="lg:hidden p-2 rounded-lg bg-slate-800/50 text-slate-400"
+          className="lg:hidden p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:text-white transition-colors"
+          aria-label="Close Navigation Menu"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <nav className="flex-1 p-6 space-y-2">
+      <nav className="flex-1 p-4 sm:p-6 space-y-1.5 overflow-y-auto custom-scrollbar touch-scroll">
         {MENU_ITEMS.map((item) => (
           <Link
             key={item.id}
             href={item.href}
             className={cn(
-              "flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 group",
+              "flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl transition-all duration-300 group",
               pathname === item.href 
                 ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_-5px_rgba(6,182,212,0.3)]"
                 : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/30 border border-transparent"
