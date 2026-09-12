@@ -226,61 +226,78 @@ export default function ExamPortalPage() {
   const totalQs = attempt!.questions.length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <header className="flex items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 border-b border-border">
-        <div>
-          <h2 className="text-xl font-bold truncate max-w-[200px] md:max-w-none text-foreground">{attempt?.examTitle}</h2>
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 bg-background/90 backdrop-blur-md py-3 sm:py-4 border-b border-border">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-bold truncate max-w-[180px] sm:max-w-none text-foreground">{attempt?.examTitle}</h2>
           <p className="text-xs text-muted-foreground">Question {currentIdx + 1} of {totalQs}</p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full font-mono font-bold text-lg border-2 transition-colors shadow-sm",
+            "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-mono font-bold text-sm sm:text-lg border-2 transition-colors shadow-sm",
             timeLeft < 300 ? "bg-destructive/10 text-destructive border-destructive/30 animate-pulse" : "bg-card text-primary border-border"
           )}>
-            <Clock className="size-5" />
+            <Clock className="size-4 sm:size-5 shrink-0" />
             {formatTime(timeLeft)}
           </div>
-          <Button variant="destructive" size="sm" onClick={() => submitExam()} disabled={isSubmitting}>
-            <Send className="mr-2 h-4 w-4" /> Submit
+          <Button variant="destructive" size="sm" onClick={() => submitExam()} disabled={isSubmitting} className="h-9 px-3 sm:px-4 text-xs sm:text-sm">
+            <Send className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Submit
           </Button>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Mobile Question Quick-Jump Bar (< lg) */}
+      <div className="flex lg:hidden overflow-x-auto no-scrollbar gap-1.5 py-1 touch-scroll">
+        {attempt?.questions.map((q, idx) => (
+          <button
+            key={q._id}
+            onClick={() => setCurrentIdx(idx)}
+            className={cn(
+              "size-9 rounded-lg text-xs font-bold transition-all border-2 shrink-0 flex items-center justify-center",
+              currentIdx === idx ? "border-primary shadow-sm ring-1 ring-primary/30" : "border-transparent",
+              answers[q._id] !== undefined ? "bg-primary text-white" : "bg-accent/60 text-muted-foreground hover:bg-accent"
+            )}
+          >
+            {idx + 1}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
         {/* Main Question Area */}
         <div className="lg:col-span-3 space-y-6">
-          <Card className="border border-border shadow-xl min-h-[400px] bg-card">
-            <CardHeader className="border-b bg-accent/5">
+          <Card className="border border-border shadow-xl min-h-[350px] sm:min-h-[400px] bg-card">
+            <CardHeader className="border-b bg-accent/5 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <Badge variant="outline" className="bg-background">Question {currentIdx + 1}</Badge>
-                <div className="text-xs text-muted-foreground">{currentQ.marks} Marks</div>
+                <Badge variant="outline" className="bg-background font-semibold">Question {currentIdx + 1}</Badge>
+                <div className="text-xs text-muted-foreground font-semibold">{currentQ.marks} Marks</div>
               </div>
             </CardHeader>
-            <CardContent className="pt-8 space-y-8">
-              <h3 className="text-2xl font-medium leading-relaxed">{currentQ.text}</h3>
+            <CardContent className="p-4 sm:p-6 pt-5 sm:pt-8 space-y-6 sm:space-y-8">
+              <h3 className="text-base sm:text-xl lg:text-2xl font-medium leading-relaxed">{currentQ.text}</h3>
               
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {currentQ.options.map((option, idx) => (
                   <button
                     key={idx}
                     onClick={() => setOption(currentQ._id, idx)}
                     className={cn(
-                      "w-full flex items-center gap-4 p-5 rounded-2xl border-2 text-left transition-all group",
+                      "w-full flex items-center gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl border-2 text-left transition-all group",
                       answers[currentQ._id] === idx 
                         ? "bg-primary/5 border-primary text-primary shadow-md ring-1 ring-primary/20" 
                         : "bg-background border-border hover:bg-accent/50 hover:border-accent-foreground/20"
                     )}
                   >
                     <div className={cn(
-                      "size-8 flex items-center justify-center rounded-full font-bold transition-colors",
+                      "size-7 sm:size-8 flex items-center justify-center rounded-full text-xs sm:text-sm font-bold transition-colors shrink-0",
                       answers[currentQ._id] === idx ? "bg-primary text-white" : "bg-accent text-accent-foreground group-hover:bg-accent-foreground/10"
                     )}>
                       {String.fromCharCode(65 + idx)}
                     </div>
-                    <span className="flex-1 text-lg">{option}</span>
+                    <span className="flex-1 text-sm sm:text-base lg:text-lg">{option}</span>
                     <div className={cn(
-                      "size-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                      "size-5 sm:size-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0",
                       answers[currentQ._id] === idx ? "border-primary bg-primary" : "border-border"
                     )}>
                       {answers[currentQ._id] === idx && <div className="size-2 rounded-full bg-white animate-in zoom-in duration-200" />}
@@ -289,19 +306,21 @@ export default function ExamPortalPage() {
                 ))}
               </div>
             </CardContent>
-            <CardFooter className="border-t bg-accent/5 flex justify-between p-6">
+            <CardFooter className="border-t bg-accent/5 flex justify-between p-4 sm:p-6">
               <Button 
                 variant="outline" 
                 onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
                 disabled={currentIdx === 0}
+                className="h-10 px-3 sm:px-4 text-xs sm:text-sm"
               >
-                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+                <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" /> Previous
               </Button>
               <Button 
                 onClick={() => setCurrentIdx(prev => Math.min(totalQs - 1, prev + 1))}
                 disabled={currentIdx === totalQs - 1}
+                className="h-10 px-3 sm:px-4 text-xs sm:text-sm"
               >
-                Next <ChevronRight className="ml-2 h-4 w-4" />
+                Next <ChevronRight className="ml-1 sm:ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>

@@ -223,22 +223,22 @@ export default function ParentFinancePage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-10 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 bg-card/50 p-5 sm:p-6 lg:p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tight text-primary">Institution Fees</h1>
-          <p className="text-muted-foreground text-lg font-medium">Settle and monitor school fee obligations for your household.</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-primary">Institution Fees</h1>
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg font-medium">Settle and monitor school fee obligations for your household.</p>
         </div>
         
         {children.length > 0 && (
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
               <Users className="size-5 text-primary" />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 flex-1 md:flex-none">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Select Child</label>
               <Select value={selectedChildId} onValueChange={setSelectedChildId}>
-                <SelectTrigger className="w-[240px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold rounded-xl h-11">
+                <SelectTrigger className="w-full md:w-[240px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold rounded-xl h-11">
                   <SelectValue placeholder="Select Child" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -352,7 +352,7 @@ export default function ParentFinancePage() {
                 <h2 className="text-2xl font-bold">Transaction History</h2>
               </div>
               <Card className="border-none shadow-2xl overflow-hidden bg-card/50 backdrop-blur-xl rounded-2xl">
-                <Table>
+                <Table className="min-w-[650px]">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead className="font-bold py-4 pl-6">Reference</TableHead>

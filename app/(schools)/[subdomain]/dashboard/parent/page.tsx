@@ -83,7 +83,7 @@ export default function ParentDashboardPage() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
       {/* 1. Hero Summary Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border/80 rounded-3xl p-8 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border/80 rounded-3xl p-5 sm:p-6 lg:p-8 shadow-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="rounded-full px-3 py-1 bg-primary/5 text-primary border-primary/20 font-bold text-xs uppercase tracking-wider">
@@ -95,16 +95,16 @@ export default function ParentDashboardPage() {
               </Badge>
             )}
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground uppercase">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground uppercase">
             Family Overview
           </h1>
-          <p className="text-muted-foreground text-lg font-medium max-w-2xl">
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg font-medium max-w-2xl">
             Welcome back, {parentName}. Here is how your children are progressing this session.
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">
-            <Users className="size-8 text-primary" />
+          <div className="size-12 sm:size-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm shrink-0">
+            <Users className="size-6 sm:size-8 text-primary" />
           </div>
         </div>
       </div>
@@ -128,10 +128,10 @@ export default function ParentDashboardPage() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground uppercase">
                   My Children
                 </h2>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Individual academic profile, attendance, and performance summary
                 </p>
               </div>
@@ -140,7 +140,7 @@ export default function ParentDashboardPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {children.map((child) => (
                 <ChildOverviewCard
                   key={child.id}
@@ -154,35 +154,35 @@ export default function ParentDashboardPage() {
           {/* 3. Vertically Stacked: Financial Standing */}
           <section className="space-y-4">
             <div>
-              <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground uppercase">
                 Financial Standing
               </h2>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Current school fee status across your household
               </p>
             </div>
 
             <Card className="border border-border/80 shadow-md bg-card rounded-3xl overflow-hidden">
-              <div className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-                <div className="flex items-center gap-5">
-                  <div className="size-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/15">
-                    <CreditCard className="size-7 text-white" />
+              <div className="p-5 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+                <div className="flex items-center gap-4 sm:gap-5">
+                  <div className="size-12 sm:size-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/15 shrink-0">
+                    <CreditCard className="size-6 sm:size-7 text-white" />
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                  <div className="space-y-1 min-w-0">
+                    <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-slate-300">
                       Total Outstanding Balance
                     </span>
-                    <div className="text-4xl md:text-5xl font-black tracking-tight">
+                    <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight break-words">
                       {formatNGN(outstandingBalance)}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <Badge className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl ${outstandingBalance > 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
+                  <Badge className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl justify-center ${outstandingBalance > 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
                     {outstandingBalance > 0 ? "Payment Required" : "All Settled"}
                   </Badge>
-                  <Button asChild className="h-12 px-6 bg-white text-slate-900 hover:bg-slate-100 rounded-xl font-bold uppercase tracking-wider text-xs shadow-md">
+                  <Button asChild className="h-11 sm:h-12 px-5 sm:px-6 bg-white text-slate-900 hover:bg-slate-100 rounded-xl font-bold uppercase tracking-wider text-xs shadow-md">
                     <Link href="/dashboard/parent/finance">
                       {outstandingBalance > 0 ? "Pay Fees Now" : "View Fee History"}
                     </Link>
@@ -195,29 +195,29 @@ export default function ParentDashboardPage() {
           {/* 4. Vertically Stacked: Academic Performance Trends */}
           <section className="space-y-4">
             <div>
-              <h2 className="text-2xl font-black tracking-tight text-foreground uppercase">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground uppercase">
                 Academic Performance Trends
               </h2>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Average scores across all your children over recent terms
               </p>
             </div>
 
             <Card className="border border-border/80 shadow-md bg-card rounded-3xl overflow-hidden">
-              <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
+              <CardHeader className="p-4 sm:p-6 lg:p-8 pb-3 sm:pb-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-bold text-foreground uppercase tracking-tight">
+                  <CardTitle className="text-lg sm:text-xl font-bold text-foreground uppercase tracking-tight">
                     Performance Analytics
                   </CardTitle>
-                  <CardDescription className="text-sm font-medium text-muted-foreground">
+                  <CardDescription className="text-xs sm:text-sm font-medium text-muted-foreground">
                     Combined average grade trends
                   </CardDescription>
                 </div>
-                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/15">
-                  <TrendingUp className="size-5 text-primary" />
+                <div className="size-9 sm:size-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/15 shrink-0">
+                  <TrendingUp className="size-4 sm:size-5 text-primary" />
                 </div>
               </CardHeader>
-              <CardContent className="p-8 pt-4">
+              <CardContent className="p-4 sm:p-6 lg:p-8 pt-2 sm:pt-4">
                 <PerformanceChart data={performanceData} />
               </CardContent>
             </Card>
