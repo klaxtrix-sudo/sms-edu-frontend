@@ -166,7 +166,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen relative overflow-hidden">
+    <div className="flex min-h-[100dvh] relative overflow-hidden">
       {profile && !profile.onboarding_completed && !isProfileLoading && tenant?.subdomain && (
         <ProductTour userId={profile.id} subdomain={tenant.subdomain} />
       )}
@@ -186,10 +186,10 @@ export default function AdminLayout({
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
       />
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-hidden">
         <DashboardHeader onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto bg-background custom-scrollbar flex flex-col min-h-0">
-          <div className="flex-1 p-4 md:p-8 lg:p-12">
+          <div className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
             {isAccessDenied ? (
               <div className="max-w-md mx-auto my-12 p-8 glass-card border border-destructive/20 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
                 <div className="w-14 h-14 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">

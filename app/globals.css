@@ -81,7 +81,7 @@
     @apply bg-slate-900/50 backdrop-blur-md border border-white/10 rounded-[2rem] shadow-2xl;
   }
   .bento-inner {
-    @apply rounded-[2rem] p-8 h-full flex flex-col;
+    @apply rounded-2xl md:rounded-[2rem] p-4 sm:p-6 md:p-8 h-full flex flex-col;
   }
   .gradient-brand {
     @apply bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 text-white;
@@ -94,6 +94,16 @@
   }
   .animate-float {
     animation: float 6s ease-in-out infinite;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
   }
   .custom-scrollbar {
     scrollbar-width: thin;

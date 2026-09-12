@@ -87,10 +87,10 @@ export function Sidebar({ items, role, customRoleTitle, isOpen, onClose }: Sideb
 
   return (
     <aside className={cn(
-      "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border/60 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen",
+      "fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-card border-r border-border/60 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static h-[100dvh] lg:h-screen",
       isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
     )}>
-      <div className="p-6 border-b border-border/60">
+      <div className="p-5 sm:p-6 border-b border-border/60">
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl gradient-brand flex items-center justify-center shadow-lg shrink-0">
@@ -105,10 +105,10 @@ export function Sidebar({ items, role, customRoleTitle, isOpen, onClose }: Sideb
             <Button 
               variant="ghost" 
               size="icon" 
-              className="lg:hidden h-8 w-8 text-muted-foreground" 
+              className="lg:hidden h-9 w-9 text-muted-foreground" 
               onClick={onClose}
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -117,7 +117,7 @@ export function Sidebar({ items, role, customRoleTitle, isOpen, onClose }: Sideb
         </p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar touch-scroll">
         {(() => {
           const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
           const rootDomainHost = rootDomain.split(':')[0];
@@ -137,7 +137,7 @@ export function Sidebar({ items, role, customRoleTitle, isOpen, onClose }: Sideb
               onClick={onClose}
               id={`sidebar-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               className={cn(
-                "flex items-center justify-between gap-3 px-3 py-2 rounded-xl transition-all group font-medium text-sm",
+                "flex items-center justify-between gap-3 px-3.5 py-2.5 min-h-[44px] rounded-xl transition-all group font-medium text-sm",
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
                   : "hover:bg-accent/60 text-muted-foreground hover:text-foreground"
@@ -157,7 +157,7 @@ export function Sidebar({ items, role, customRoleTitle, isOpen, onClose }: Sideb
       <div className="p-4 border-t border-border/60 flex items-center justify-between gap-2">
         <button
           onClick={handleLogout}
-          className="flex flex-1 items-center gap-3 px-3 py-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors font-medium text-sm"
+          className="flex flex-1 items-center gap-3 px-3.5 py-2.5 min-h-[44px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors font-medium text-sm"
         >
           <LogOut className="size-4" />
           <span>Sign Out</span>

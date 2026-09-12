@@ -75,7 +75,7 @@ export default function StudentLayout({
   }
 
   return (
-    <div className="flex min-h-screen relative overflow-hidden">
+    <div className="flex min-h-[100dvh] relative overflow-hidden">
       {/* Mobile Sidebar Overlay/Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -85,10 +85,10 @@ export default function StudentLayout({
       )}
 
       <Sidebar items={studentNavItems} role="Student" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-hidden">
         <DashboardHeader onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto bg-background flex flex-col min-h-0">
-          <div className="flex-1 p-4 md:p-8 lg:p-12">
+          <div className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
             {children}
           </div>
           <footer className="py-4 text-center select-none">

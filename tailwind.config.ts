@@ -11,7 +11,11 @@ const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: '2rem',
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1.5rem',
+        lg: '2rem',
+      },
       screens: { '2xl': '1400px' },
     },
     extend: {
@@ -97,7 +101,7 @@ const config: Config = {
         'fade-in': 'fade-in 0.3s ease-out',
       },
       gridTemplateColumns: {
-        'bento': 'repeat(auto-fit, minmax(300px, 1fr))',
+        'bento': 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
         'executive': '2fr 1fr 1fr',
       },
     },

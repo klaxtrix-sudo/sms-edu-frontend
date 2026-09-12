@@ -53,16 +53,26 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   }, [holidays]);
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between px-4 md:px-8 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors">
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between px-3.5 sm:px-6 lg:px-8 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="lg:hidden" 
+          className="lg:hidden shrink-0 h-10 w-10 rounded-xl" 
           onClick={onMenuClick}
         >
           <Menu className="h-5 w-5" />
         </Button>
+        <div className="lg:hidden flex items-center gap-2 min-w-0">
+          <span className="font-heading font-extrabold text-sm tracking-tight truncate text-foreground max-w-[140px] sm:max-w-[200px]">
+            {schoolName}
+          </span>
+          {academicCycle?.currentWeek && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+              Wk {academicCycle.currentWeek}
+            </span>
+          )}
+        </div>
       </div>
 
       {academicCycle && (
