@@ -137,13 +137,16 @@ export function AddAdminModal({ isOpen, onClose, onSuccess, schoolId, subdomain 
   const handleSelectPreset = useCallback((presetId: string) => {
     setSelectedPreset(presetId);
     const preset = ROLE_PRESETS.find((p) => p.id === presetId);
-    if (preset && preset.id !== "custom") {
-      // Defer updating form title and multiple checkbox states to the next macro-task
-      // so Radix Select can cleanly finish its dropdown closing animation and unmount
-      setTimeout(() => {
+    if (preset) {
+      if (preset.id !== "custom") {
         form.setValue("customRoleTitle", preset.title, { shouldValidate: true });
         setSelectedPermissions([...preset.permissions]);
-      }, 0);
+      } else {
+        const currentTitle = form.getValues("customRoleTitle");
+        if (!currentTitle || ROLE_PRESETS.some((p) => p.id !== "custom" && p.title === currentTitle)) {
+          form.setValue("customRoleTitle", "Custom Administrator", { shouldValidate: true });
+        }
+      }
     }
   }, [form]);
 
