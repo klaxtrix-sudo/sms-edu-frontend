@@ -2,30 +2,25 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { 
-  BarChart3, 
   Users, 
   TrendingUp, 
-  AlertTriangle,
-  Search,
-  Filter,
-  Download,
-  Calendar,
-  Loader2,
-  ArrowUpRight,
-  TrendingDown,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  XCircle,
-  Sun,
-  Coffee,
-  GraduationCap,
-  Info,
-  ChevronDown,
-  ChevronUp,
-  CheckCheck,
-  FileSpreadsheet,
-  RotateCcw
+  Search, 
+  Download, 
+  Calendar, 
+  Loader2, 
+  ArrowUpRight, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle, 
+  XCircle, 
+  Sun, 
+  Coffee, 
+  GraduationCap, 
+  ChevronDown, 
+  ChevronUp, 
+  CheckCheck, 
+  RotateCcw,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +28,7 @@ import {
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle,
+  CardTitle, 
   CardDescription 
 } from "@/components/ui/card";
 import { 
@@ -57,8 +52,7 @@ import { useTenant } from "@/components/providers/tenant-provider";
 import { useAcademicSync } from "@/hooks/use-academic-sync";
 import { 
   getSchoolSessionStatus, 
-  getMatchingHoliday,
-  isInstructionalDay,
+  getMatchingHoliday, 
   type SchoolSessionStatus 
 } from "@/lib/utils/attendance-session";
 import { toast } from "sonner";
@@ -68,12 +62,11 @@ interface ClassItem {
   id: string;
   name: string;
   class_teacher_id?: string | null;
-  profiles?: { full_name?: string } | null;
+  teacherName?: string;
   totalStudents?: number;
   submittedCount?: number;
   isSubmitted?: boolean;
   isPartiallySubmitted?: boolean;
-  teacherName?: string;
 }
 
 interface AttendanceRecord {
@@ -96,7 +89,7 @@ interface AttendanceRecord {
   } | null;
 }
 
-// Format local date string YYYY-MM-DD safely without UTC drift
+// Format local date string YYYY-MM-DD safely without UTC timezone drift
 function getLocalDateString(d: Date = new Date()): string {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -119,7 +112,7 @@ function formatDisplayDate(dateStr: string): string {
 }
 
 export default function AdminAttendanceDashboard() {
-  const { supabase, tenant, academicCycle, holidays, isLoading: isTenantLoading } = useTenant();
+  const { supabase, academicCycle, holidays, isLoading: isTenantLoading } = useTenant();
 
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [classSubmissions, setClassSubmissions] = useState<ClassItem[]>([]);
@@ -139,8 +132,6 @@ export default function AdminAttendanceDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "present" | "absent" | "late" | "excused">("all");
   const [showMatrix, setShowMatrix] = useState(false);
-
-  const todayStr = useMemo(() => getLocalDateString(), []);
 
   // Compute school session status for selected date
   const matchingHoliday = useMemo(() => {
@@ -218,7 +209,7 @@ export default function AdminAttendanceDashboard() {
       const records: AttendanceRecord[] = (attnData || []) as any;
       setSummary(records);
 
-      // Step C: Calculate metrics strictly for the active scope (eliminating the 1000% bug)
+      // Step C: Calculate metrics strictly for the active scope
       const counts = records.reduce(
         (acc, curr) => {
           if (curr.status in acc) {
@@ -232,7 +223,6 @@ export default function AdminAttendanceDashboard() {
       const recorded = records.length;
       const presentTotal = counts.present + counts.late;
       
-      // Attendance percentage: if roll-call taken, based on recorded students; else 0
       const calculatedAvg = recorded > 0 
         ? Math.round((presentTotal / recorded) * 100) 
         : 0;
@@ -309,7 +299,7 @@ export default function AdminAttendanceDashboard() {
     fetchAttendanceData();
   });
 
-  // Filtered Summary (supports search across name, admission no, and classroom)
+  // Filtered Summary
   const filteredSummary = useMemo(() => {
     return summary.filter((a) => {
       const name = a.students?.profiles?.full_name?.toLowerCase() || "";
@@ -377,319 +367,289 @@ export default function AdminAttendanceDashboard() {
 
   if (isTenantLoading || (loading && classes.length === 0)) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="size-12 animate-spin text-primary" />
-        <p className="text-muted-foreground font-medium animate-pulse">Loading attendance dashboard...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 className="size-10 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm font-medium animate-pulse">Loading attendance dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      {/* 1. Header Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-card/40 p-6 sm:p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
+    <div className="space-y-5 animate-in fade-in duration-500">
+      {/* 1. Lean, Unboxed Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border/40">
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter text-primary">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
               Attendance
             </h1>
             {isInstructional ? (
-              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
-                <CheckCircle2 className="size-3.5" />
-                <span>Session Active</span>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-xs font-bold gap-1 px-2.5 py-0.5">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Session Active
               </Badge>
             ) : sessionStatus === "PUBLIC_HOLIDAY" ? (
-              <Badge className="bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30 text-xs font-bold gap-1 px-2.5 py-0.5">
                 <span>🎉</span>
-                <span>{matchingHoliday?.name || "Public Holiday"}</span>
+                {matchingHoliday?.name || "Public Holiday"}
               </Badge>
             ) : sessionStatus === "MID_TERM_BREAK" ? (
-              <Badge className="bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
+              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 text-xs font-bold gap-1 px-2.5 py-0.5">
                 <span>🎒</span>
-                <span>{matchingHoliday?.name || "Mid-Term Break"}</span>
+                {matchingHoliday?.name || "Mid-Term Break"}
               </Badge>
             ) : sessionStatus === "HOLIDAY_BREAK" ? (
-              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
-                <Sun className="size-3.5" />
-                <span>Holiday / Recess</span>
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs font-bold gap-1 px-2.5 py-0.5">
+                <Sun className="size-3" />
+                Holiday Recess
               </Badge>
             ) : (
-              <Badge className="bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
-                <Coffee className="size-3.5" />
-                <span>Weekend Recess</span>
+              <Badge variant="outline" className="bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30 text-xs font-bold gap-1 px-2.5 py-0.5">
+                <Coffee className="size-3" />
+                Weekend Recess
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base font-medium">
-            Institutional attendance monitoring, daily presence, and class roll-call oversight.
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+            Institutional attendance monitoring, daily presence, and roll-call oversight.
           </p>
         </div>
         
-        {/* Controls Container with Clean Baseline Alignment */}
-        <div className="flex flex-wrap items-end gap-3 sm:gap-4">
-          <div className="space-y-1.5 flex-1 sm:flex-none min-w-[140px]">
-            <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground ml-1">
-              Classroom
-            </label>
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="w-full sm:w-[190px] h-10 bg-background/50 border-none ring-1 ring-border shadow-inner font-bold rounded-xl">
-                <SelectValue placeholder="All Classes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="font-semibold">All Classes</SelectItem>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id} className="font-medium">
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Integrated, Single-Row Toolbar (Guarantees zero button wrapping) */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {/* Class Select */}
+          <Select value={selectedClass} onValueChange={setSelectedClass}>
+            <SelectTrigger className="h-9 w-[150px] sm:w-[170px] bg-background/60 border-border/80 text-xs font-bold rounded-xl shrink-0">
+              <SelectValue placeholder="All Classes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="font-semibold text-xs">All Classes</SelectItem>
+              {classes.map((c) => (
+                <SelectItem key={c.id} value={c.id} className="text-xs font-medium">
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Date Picker */}
+          <div className="relative shrink-0">
+            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <Input 
+              type="date" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)}
+              className="pl-8 h-9 w-[135px] sm:w-[150px] bg-background/60 border-border/80 text-xs font-bold rounded-xl"
+            />
           </div>
 
-          <div className="space-y-1.5 flex-1 sm:flex-none min-w-[140px]">
-            <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground ml-1">
-              Date
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input 
-                type="date" 
-                value={date} 
-                onChange={(e) => setDate(e.target.value)}
-                className="pl-9 w-full sm:w-[170px] h-10 bg-background/50 border-none ring-1 ring-border shadow-inner font-bold rounded-xl"
-              />
-            </div>
-          </div>
-
+          {/* Export CSV Button */}
           <Button 
             variant="outline" 
             size="sm" 
             onClick={exportAttendanceCSV}
-            className="h-10 px-3.5 rounded-xl border-border/80 font-bold text-xs gap-1.5 shadow-md shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+            className="h-9 px-3 text-xs font-bold rounded-xl gap-1.5 shrink-0 border-border/80 hover:bg-primary/10 hover:text-primary transition-all"
             title="Download attendance records as CSV"
           >
-            <Download className="size-4" />
+            <Download className="size-3.5" />
             <span className="hidden sm:inline">Export CSV</span>
           </Button>
 
+          {/* Refresh Button */}
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={fetchAttendanceData}
-            className="size-10 rounded-xl font-bold text-xs text-muted-foreground hover:text-foreground shrink-0 shadow-sm"
+            className="size-9 rounded-xl text-muted-foreground hover:text-foreground shrink-0"
             title="Refresh Attendance Data"
           >
-            <RotateCcw className="size-4" />
+            <RotateCcw className="size-3.5" />
           </Button>
         </div>
       </div>
 
-      {/* 2. Strict Academic Session Banner for Non-Instructional Days */}
-      {sessionStatus === "WEEKEND" && (
-        <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-500/10 border border-slate-500/20 text-slate-900 dark:text-slate-200 animate-in fade-in duration-300">
-          <Coffee className="size-5 shrink-0 mt-0.5 text-slate-600 dark:text-slate-400" />
-          <div className="space-y-1 text-sm">
-            <div className="font-bold flex items-center gap-2">
-              <span>Weekend Recess (Non-Instructional Day)</span>
-              <Badge variant="outline" className="bg-slate-500/20 text-slate-800 dark:text-slate-300 border-slate-500/30 text-[10px] uppercase font-black">
-                Viewing Mode
-              </Badge>
+      {/* 2. Instructional Roll Call Tracker (Only shown when session is active and relevant) */}
+      {isInstructional && totalClassesCount > 0 && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-card/40 border border-border/50 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="size-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black">
+              <CheckCheck className="size-3.5" />
             </div>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Today is a weekend. Daily roll-call is paused and resumes on the next scheduled school weekday. You can inspect historical logs by selecting an earlier date above.
-            </p>
+            <span className="font-bold text-foreground">
+              Class Submissions:
+            </span>
+            <span className="text-muted-foreground">
+              {submittedClassesCount} of {totalClassesCount} classrooms finalized
+            </span>
           </div>
-        </div>
-      )}
 
-      {sessionStatus === "HOLIDAY_BREAK" && (
-        <div className="flex items-start gap-4 p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 animate-in fade-in duration-300">
-          <Sun className="size-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-          <div className="space-y-1 text-sm">
-            <div className="font-bold flex items-center gap-2">
-              <span>Academic Term Recess / Holiday Break</span>
-              <Badge variant="outline" className="bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] uppercase font-black">
-                Viewing Mode
-              </Badge>
-            </div>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              The school is currently on holiday recess. Standard attendance recording is paused to preserve accurate term statistics.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {sessionStatus === "PUBLIC_HOLIDAY" && (
-        <div className="flex items-start gap-4 p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-900 dark:text-purple-200 animate-in fade-in duration-300">
-          <span className="text-xl shrink-0 mt-0.5">🎉</span>
-          <div className="space-y-1 text-sm">
-            <div className="font-bold flex items-center gap-2">
-              <span>Public Holiday: {matchingHoliday?.name || "Official Holiday"}</span>
-              <Badge variant="outline" className="bg-purple-500/20 text-purple-800 dark:text-purple-300 border-purple-500/30 text-[10px] uppercase font-black">
-                Viewing Mode
-              </Badge>
-            </div>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              {matchingHoliday?.description || "School is closed in observance of this holiday."} Regular sessions will resume on the next instructional day.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {sessionStatus === "MID_TERM_BREAK" && (
-        <div className="flex items-start gap-4 p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-900 dark:text-indigo-200 animate-in fade-in duration-300">
-          <span className="text-xl shrink-0 mt-0.5">🎒</span>
-          <div className="space-y-1 text-sm">
-            <div className="font-bold flex items-center gap-2">
-              <span>Mid-Term Recess: {matchingHoliday?.name || "School Break"}</span>
-              <Badge variant="outline" className="bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border-indigo-500/30 text-[10px] uppercase font-black">
-                Viewing Mode
-              </Badge>
-            </div>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Classes are suspended for mid-term break. Daily roll-call resumes when the term reconvenes.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Class Roll Call Submission Matrix (Admin Operational Oversight) */}
-      <Card className="border border-border/60 bg-card/40 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden">
-        <div 
-          onClick={() => setShowMatrix(!showMatrix)}
-          className="flex items-center justify-between p-4 sm:p-5 cursor-pointer hover:bg-accent/20 transition-colors select-none"
-        >
-          <div className="flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black">
-              <CheckCheck className="size-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-sm sm:text-base">Daily Roll Call Submission Matrix</span>
-                <Badge variant="secondary" className="font-bold text-[10px] px-2 py-0.5">
-                  {submittedClassesCount} / {totalClassesCount} Finalized
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                {isInstructional 
-                  ? `${totalClassesCount - submittedClassesCount} classrooms pending teacher roll call submission`
-                  : "Attendance submission paused for non-instructional session"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+          <button 
+            type="button"
+            onClick={() => setShowMatrix(!showMatrix)}
+            className="text-primary font-bold text-xs hover:underline flex items-center gap-1"
+          >
             <span>{showMatrix ? "Hide Matrix" : "View Breakdown"}</span>
-            {showMatrix ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+            {showMatrix ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+          </button>
+        </div>
+      )}
+
+      {/* Collapsible Submission Breakdown */}
+      {isInstructional && showMatrix && (
+        <div className="p-3.5 rounded-2xl bg-card/30 border border-border/40 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-xs animate-in fade-in">
+          {classSubmissions.map((c) => {
+            const isSelected = selectedClass === c.id;
+            return (
+              <button 
+                type="button"
+                key={c.id}
+                onClick={() => setSelectedClass(isSelected ? "all" : c.id)}
+                className={cn(
+                  "p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1",
+                  isSelected && "ring-2 ring-primary border-primary bg-primary/10",
+                  c.isSubmitted 
+                    ? "bg-emerald-500/5 border-emerald-500/20 text-foreground" 
+                    : c.isPartiallySubmitted
+                    ? "bg-amber-500/5 border-amber-500/20 text-foreground"
+                    : "bg-muted/30 border-border/50 text-muted-foreground"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground text-xs">{c.name}</span>
+                  <span className={cn(
+                    "text-[10px] font-black",
+                    c.isSubmitted ? "text-emerald-600" : c.isPartiallySubmitted ? "text-amber-600" : "text-muted-foreground"
+                  )}>
+                    {c.submittedCount}/{c.totalStudents}
+                  </span>
+                </div>
+                <span className="text-[10px] text-muted-foreground truncate">{c.teacherName}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 3. Lean, Uniform Stats Strip (5 Compact Tiles) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* Daily Average Tile */}
+        <div className="p-3.5 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-md flex flex-col justify-between">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+            Daily Average
+          </span>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <span className="text-2xl font-black tracking-tight text-foreground">
+              {isInstructional ? `${stats.avgAttendance}%` : "—"}
+            </span>
+            {isInstructional && stats.avgAttendance > 0 && (
+              <span className="text-[11px] font-bold text-emerald-500 flex items-center">
+                <ArrowUpRight className="size-3" />
+              </span>
+            )}
           </div>
+          <span className="text-[10px] text-muted-foreground font-medium mt-1">
+            {isInstructional 
+              ? `${stats.presentCount + stats.lateCount} of ${stats.recordedCount || totalEnrolledCount} marked`
+              : "Session paused"}
+          </span>
         </div>
 
-        {showMatrix && (
-          <div className="p-4 sm:p-5 pt-0 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {classSubmissions.map((c) => {
-              const isSelected = selectedClass === c.id;
-              return (
-                <div 
-                  key={c.id}
-                  onClick={() => setSelectedClass(isSelected ? "all" : c.id)}
-                  className={cn(
-                    "p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-xs",
-                    isSelected && "ring-2 ring-primary border-primary bg-primary/5",
-                    c.isSubmitted 
-                      ? "bg-emerald-500/5 border-emerald-500/20 text-foreground hover:bg-emerald-500/10" 
-                      : c.isPartiallySubmitted
-                      ? "bg-amber-500/5 border-amber-500/20 text-foreground hover:bg-amber-500/10"
-                      : "bg-muted/40 border-border/60 text-muted-foreground hover:bg-muted/70"
-                  )}
-                >
-                  <div className="flex items-center justify-between font-bold">
-                    <span className="text-sm font-black text-foreground">{c.name}</span>
-                    {c.isSubmitted ? (
-                      <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0">Completed</Badge>
-                    ) : c.isPartiallySubmitted ? (
-                      <Badge className="bg-amber-500 text-white text-[9px] px-1.5 py-0">Partial</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-border">Pending</Badge>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground flex items-center justify-between">
-                    <span>Teacher: {c.teacherName}</span>
-                    <span className="font-bold">{c.submittedCount}/{c.totalStudents}</span>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Present Tile */}
+        <div className="p-3.5 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-md flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Present</span>
+            <CheckCircle2 className="size-3.5 text-emerald-500" />
           </div>
-        )}
-      </Card>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.presentCount}</span>
+            {stats.recordedCount > 0 && (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {Math.round((stats.presentCount / stats.recordedCount) * 100)}%
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-muted-foreground font-medium mt-1">On-time attendees</span>
+        </div>
 
-      {/* 4. 5-Metric KPI Summary Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard 
-          title="Daily Average" 
-          value={isInstructional ? `${stats.avgAttendance}%` : "—"} 
-          subText={isInstructional 
-            ? `${stats.presentCount + stats.lateCount} of ${stats.recordedCount || totalEnrolledCount} present`
-            : "Session Paused"}
-          isInstructional={isInstructional}
-          status={stats.avgAttendance >= 80 ? "good" : stats.avgAttendance >= 60 ? "warning" : "low"}
-        />
-        <MetricCard 
-          title="Total Present" 
-          value={stats.presentCount} 
-          icon={CheckCircle2} 
-          status="present" 
-          total={stats.recordedCount || totalEnrolledCount}
-        />
-        <MetricCard 
-          title="Missing / Absent" 
-          value={stats.absentCount} 
-          icon={AlertTriangle} 
-          status="absent" 
-          total={stats.recordedCount || totalEnrolledCount}
-        />
-        <MetricCard 
-          title="Late Arrivals" 
-          value={stats.lateCount} 
-          icon={Clock} 
-          status="late" 
-          total={stats.recordedCount || totalEnrolledCount}
-        />
-        <MetricCard 
-          title="Excused Leaves" 
-          value={stats.excusedCount} 
-          icon={AlertCircle} 
-          status="excused" 
-          total={stats.recordedCount || totalEnrolledCount}
-        />
+        {/* Absent Tile */}
+        <div className="p-3.5 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-md flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Absent</span>
+            <XCircle className="size-3.5 text-rose-500" />
+          </div>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <span className="text-2xl font-black text-rose-600 dark:text-rose-400">{stats.absentCount}</span>
+            {stats.recordedCount > 0 && (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {Math.round((stats.absentCount / stats.recordedCount) * 100)}%
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-muted-foreground font-medium mt-1">Unexcused missing</span>
+        </div>
+
+        {/* Late Tile */}
+        <div className="p-3.5 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-md flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Late Arrivals</span>
+            <Clock className="size-3.5 text-amber-500" />
+          </div>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{stats.lateCount}</span>
+            {stats.recordedCount > 0 && (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {Math.round((stats.lateCount / stats.recordedCount) * 100)}%
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-muted-foreground font-medium mt-1">Arrived after bell</span>
+        </div>
+
+        {/* Excused Tile */}
+        <div className="p-3.5 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-md flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Excused</span>
+            <AlertCircle className="size-3.5 text-blue-500" />
+          </div>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{stats.excusedCount}</span>
+            {stats.recordedCount > 0 && (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {Math.round((stats.excusedCount / stats.recordedCount) * 100)}%
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-muted-foreground font-medium mt-1">Authorized leaves</span>
+        </div>
       </div>
 
-      {/* 5. Main Daily Roll Call Card */}
-      <Card className="border-none shadow-3xl bg-card/60 backdrop-blur-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
-        <CardHeader className="p-4 sm:p-6 lg:p-8 border-b border-border/50">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* 4. Main Daily Roll Call Card (Brought immediately into view) */}
+      <Card className="border border-border/60 shadow-xl bg-card/40 backdrop-blur-xl rounded-2xl overflow-hidden">
+        <CardHeader className="p-4 sm:p-5 border-b border-border/40">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight">
+              <CardTitle className="text-lg sm:text-xl font-black tracking-tight">
                 Daily Roll Call
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base font-medium opacity-80 mt-1">
-                Roster for {formatDisplayDate(date)} • {totalEnrolledCount} student{totalEnrolledCount === 1 ? "" : "s"} enrolled • {stats.recordedCount} marked
+              <CardDescription className="text-xs font-medium opacity-80 mt-0.5">
+                Roster for {formatDisplayDate(date)} • {totalEnrolledCount} enrolled • {stats.recordedCount} marked
               </CardDescription>
             </div>
 
-            {/* Search & Status Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            {/* Filter Group: Search and Segmented Status Control */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative w-full sm:w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                 <Input 
-                  placeholder="Search name, class or ID..." 
-                  className="pl-10 h-10 bg-background/50 border-none ring-1 ring-border focus-visible:ring-primary rounded-xl shadow-inner font-medium text-xs sm:text-sm"
+                  placeholder="Search student or class..." 
+                  className="pl-8 h-8 bg-background/50 border-border/80 rounded-xl text-xs"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
-              {/* Status Filter Chips */}
-              <div className="flex items-center gap-1 bg-background/40 p-1 rounded-xl ring-1 ring-border shadow-sm text-xs font-bold">
+              {/* Segmented Status Pill Control */}
+              <div className="flex items-center gap-0.5 bg-background/50 p-0.5 rounded-xl border border-border/70 text-[11px] font-bold">
                 <button
                   type="button"
                   onClick={() => setStatusFilter("all")}
@@ -698,7 +658,7 @@ export default function AdminAttendanceDashboard() {
                     statusFilter === "all" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  All ({summary.length})
+                  All {summary.length > 0 && `(${summary.length})`}
                 </button>
                 <button
                   type="button"
@@ -708,7 +668,7 @@ export default function AdminAttendanceDashboard() {
                     statusFilter === "present" ? "bg-emerald-600 text-white shadow-sm" : "text-muted-foreground hover:text-emerald-600"
                   )}
                 >
-                  Present ({stats.presentCount})
+                  Present {stats.presentCount > 0 && `(${stats.presentCount})`}
                 </button>
                 <button
                   type="button"
@@ -718,7 +678,7 @@ export default function AdminAttendanceDashboard() {
                     statusFilter === "absent" ? "bg-rose-600 text-white shadow-sm" : "text-muted-foreground hover:text-rose-600"
                   )}
                 >
-                  Absent ({stats.absentCount})
+                  Absent {stats.absentCount > 0 && `(${stats.absentCount})`}
                 </button>
                 <button
                   type="button"
@@ -728,7 +688,7 @@ export default function AdminAttendanceDashboard() {
                     statusFilter === "late" ? "bg-amber-600 text-white shadow-sm" : "text-muted-foreground hover:text-amber-600"
                   )}
                 >
-                  Late ({stats.lateCount})
+                  Late {stats.lateCount > 0 && `(${stats.lateCount})`}
                 </button>
                 <button
                   type="button"
@@ -738,7 +698,7 @@ export default function AdminAttendanceDashboard() {
                     statusFilter === "excused" ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-blue-600"
                   )}
                 >
-                  Excused ({stats.excusedCount})
+                  Excused {stats.excusedCount > 0 && `(${stats.excusedCount})`}
                 </button>
               </div>
             </div>
@@ -747,64 +707,64 @@ export default function AdminAttendanceDashboard() {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 sm:py-32 gap-4">
-              <Loader2 className="size-12 sm:size-16 animate-spin text-primary opacity-30" />
-              <p className="text-muted-foreground font-bold text-base sm:text-lg animate-pulse">
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 className="size-8 animate-spin text-primary opacity-40" />
+              <p className="text-muted-foreground text-xs font-bold animate-pulse">
                 Syncing roll-call records...
               </p>
             </div>
           ) : (
-            <Table className="min-w-[680px]">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="py-4 pl-4 sm:pl-6 font-black uppercase tracking-widest text-xs">
-                    Student Profile
+            <Table className="min-w-[650px]">
+              <TableHeader className="bg-muted/20">
+                <TableRow className="hover:bg-transparent border-b border-border/40">
+                  <TableHead className="py-3 pl-4 sm:pl-6 font-bold text-xs uppercase tracking-wider">
+                    Student
                   </TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-xs">
+                  <TableHead className="font-bold text-xs uppercase tracking-wider">
                     Classroom
                   </TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-xs">
+                  <TableHead className="font-bold text-xs uppercase tracking-wider">
                     Status
                   </TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-xs">
+                  <TableHead className="font-bold text-xs uppercase tracking-wider">
                     Remarks
                   </TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-xs pr-4 sm:pr-6">
-                    Time Recorded
+                  <TableHead className="font-bold text-xs uppercase tracking-wider pr-4 sm:pr-6">
+                    Time
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredSummary.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-20 sm:py-28 text-center">
-                      <div className="max-w-md mx-auto flex flex-col items-center gap-3">
-                        <div className="size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+                    <TableCell colSpan={5} className="py-14 text-center">
+                      <div className="max-w-sm mx-auto flex flex-col items-center gap-2">
+                        <div className="size-10 rounded-xl bg-muted/60 flex items-center justify-center text-muted-foreground">
                           {sessionStatus === "WEEKEND" ? (
-                            <Coffee className="size-6 opacity-60" />
+                            <Coffee className="size-5 opacity-50" />
                           ) : sessionStatus !== "IN_SESSION_ACTIVE" ? (
-                            <Sun className="size-6 opacity-60" />
+                            <Sun className="size-5 opacity-50" />
                           ) : (
-                            <GraduationCap className="size-6 opacity-60" />
+                            <GraduationCap className="size-5 opacity-50" />
                           )}
                         </div>
-                        <h4 className="text-base font-bold text-foreground">
+                        <h4 className="text-sm font-bold text-foreground">
                           {sessionStatus === "WEEKEND"
-                            ? "No Attendance on Weekends"
+                            ? "Weekend Recess"
                             : sessionStatus !== "IN_SESSION_ACTIVE"
-                            ? "School is in Holiday / Recess"
+                            ? "School Recess"
                             : summary.length === 0
-                            ? "No Attendance Submitted for this Date"
-                            : "No Matching Students Found"}
+                            ? "No Attendance Submitted"
+                            : "No Matching Students"}
                         </h4>
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           {sessionStatus === "WEEKEND"
-                            ? "Regular school roll call is only taken on active weekdays (Monday through Friday)."
+                            ? "Daily roll call resumes on Monday. Select an earlier school weekday to view records."
                             : sessionStatus !== "IN_SESSION_ACTIVE"
-                            ? "Classes are suspended for school recess. Select a regular term day to view attendance records."
+                            ? "Regular sessions are paused for scheduled break."
                             : summary.length === 0
-                            ? "Class teachers have not yet submitted daily roll call logs for this date. Check the Submission Matrix above."
-                            : "No students match your active search and status filter criteria."}
+                            ? "Class teachers have not yet submitted roll call for this date."
+                            : "No students match your current search or status filters."}
                         </p>
                       </div>
                     </TableCell>
@@ -817,47 +777,47 @@ export default function AdminAttendanceDashboard() {
                     const initial = studentName.charAt(0).toUpperCase();
 
                     return (
-                      <TableRow key={a.id} className="hover:bg-accent/30 transition-all group border-b border-border/20">
-                        <TableCell className="py-3.5 pl-4 sm:pl-6">
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <Avatar className="size-10 rounded-2xl shadow-sm ring-1 ring-border/50">
+                      <TableRow key={a.id} className="hover:bg-accent/20 transition-all group border-b border-border/20">
+                        <TableCell className="py-2.5 pl-4 sm:pl-6">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-8 rounded-xl ring-1 ring-border/50">
                               <AvatarImage src={avatarUrl} alt={studentName} />
-                              <AvatarFallback className="bg-primary/10 text-primary font-black text-sm rounded-2xl">
+                              <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs rounded-xl">
                                 {initial}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-black text-sm sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                              <div className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
                                 {studentName}
                               </div>
-                              <div className="text-[11px] text-muted-foreground font-bold tracking-wider uppercase opacity-80">
+                              <div className="text-[10px] text-muted-foreground font-mono">
                                 {admissionNo}
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="rounded-lg px-2.5 py-0.5 bg-background/50 font-bold border-none ring-1 ring-border shadow-sm text-xs">
+                          <Badge variant="outline" className="rounded-md px-2 py-0.5 bg-background/50 font-medium text-[11px] border-border/60">
                             {a.classes?.name || "Unassigned"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge 
                             className={cn(
-                              "capitalize rounded-full px-3 py-0.5 font-black tracking-tight text-[10px] shadow-sm",
-                              a.status === 'present' && "bg-emerald-500 hover:bg-emerald-600 text-white",
-                              a.status === 'absent' && "bg-rose-500 hover:bg-rose-600 text-white",
-                              a.status === 'late' && "bg-amber-500 hover:bg-amber-600 text-white",
-                              a.status === 'excused' && "bg-blue-500 hover:bg-blue-600 text-white"
+                              "capitalize rounded-full px-2.5 py-0 font-bold text-[10px] shadow-none",
+                              a.status === 'present' && "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+                              a.status === 'absent' && "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
+                              a.status === 'late' && "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+                              a.status === 'excused' && "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30"
                             )}
                           >
                             {a.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-[220px] truncate italic text-xs text-muted-foreground font-medium">
+                        <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
                           {a.remarks || "—"}
                         </TableCell>
-                        <TableCell className="text-xs font-bold text-muted-foreground pr-4 sm:pr-6 whitespace-nowrap">
+                        <TableCell className="text-xs text-muted-foreground font-mono pr-4 sm:pr-6 whitespace-nowrap">
                           {a.created_at ? new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}
                         </TableCell>
                       </TableRow>
@@ -870,101 +830,5 @@ export default function AdminAttendanceDashboard() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function StatCard({ 
-  title, 
-  value, 
-  subText, 
-  isInstructional, 
-  status 
-}: { 
-  title: string; 
-  value: string; 
-  subText: string; 
-  isInstructional: boolean; 
-  status: "good" | "warning" | "low";
-}) {
-  return (
-    <Card className="border-none shadow-2xl bg-primary text-primary-foreground overflow-hidden relative group rounded-2xl sm:rounded-3xl">
-      <div className="absolute -top-4 -right-4 size-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-      <CardHeader className="pb-1.5 p-4 sm:p-5">
-        <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] opacity-80 text-primary-foreground">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5 pt-0">
-        <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-primary-foreground flex items-end gap-2">
-          {value}
-          {isInstructional && (
-            status === "good" ? (
-              <ArrowUpRight className="size-6 sm:size-7 text-emerald-300" />
-            ) : (
-              <TrendingDown className="size-6 sm:size-7 text-rose-300" />
-            )
-          )}
-        </div>
-        <p className="text-[11px] mt-2 opacity-90 font-bold tracking-tight bg-white/15 w-fit px-2.5 py-0.5 rounded-full backdrop-blur-sm">
-          {subText}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function MetricCard({ 
-  title, 
-  value, 
-  icon: Icon, 
-  status, 
-  total 
-}: { 
-  title: string; 
-  value: number; 
-  icon: React.ComponentType<{ className?: string }>; 
-  status: "present" | "absent" | "late" | "excused"; 
-  total: number;
-}) {
-  const colors = {
-    present: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
-    absent: "text-rose-600 bg-rose-500/10 border-rose-500/20",
-    late: "text-amber-600 bg-amber-500/10 border-amber-500/20",
-    excused: "text-blue-600 bg-blue-500/10 border-blue-500/20"
-  };
-
-  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-
-  return (
-    <Card className={cn("border-none shadow-xl bg-card/50 backdrop-blur-xl hover:translate-y-[-4px] transition-all duration-300 rounded-2xl sm:rounded-3xl", colors[status])}>
-      <CardHeader className="flex flex-row items-center justify-between pb-1 p-4 sm:p-5">
-        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-          {title}
-        </CardTitle>
-        <div className={cn("p-2 rounded-xl shadow-inner", colors[status])}>
-          <Icon className="size-4 sm:size-5" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5 pt-0">
-        <div className="flex items-baseline justify-between">
-          <span className="text-2xl sm:text-3xl lg:text-4xl font-black tabular-nums">{value}</span>
-          {total > 0 && (
-            <span className="text-xs font-bold opacity-75">{percentage}%</span>
-          )}
-        </div>
-        <div className="mt-3 w-full bg-muted/60 h-1.5 rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "h-full rounded-full transition-all duration-500",
-              status === "present" && "bg-emerald-500",
-              status === "absent" && "bg-rose-500",
-              status === "late" && "bg-amber-500",
-              status === "excused" && "bg-blue-500"
-            )}
-            style={{ width: `${Math.min(100, percentage)}%` }}
-          />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
