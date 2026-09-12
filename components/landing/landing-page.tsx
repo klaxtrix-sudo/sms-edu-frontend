@@ -113,7 +113,7 @@ export function LandingHero() {
                     <div className="text-[7px] text-slate-400 mt-0.5">Everything is on track. 1,284 students and 87 teachers are active across 6 class levels today.</div>
                   </div>
                   <div className="shrink-0 border border-slate-100 rounded-xl px-3 py-2 text-right shadow-sm bg-slate-50">
-                    <div className="text-[6px] text-blue-500 font-bold uppercase tracking-widest mb-0.5">Today's Pulse</div>
+                    <div className="text-[6px] text-blue-500 font-bold uppercase tracking-widest mb-0.5">Today's Date</div>
                     <div className="text-[8px] font-bold text-slate-700">Friday, March 27, 2026</div>
                   </div>
                 </div>

@@ -93,7 +93,7 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
         
         <div className="relative z-10 glass-panel rounded-2xl p-6 border-white/10 flex flex-col items-center justify-center w-full md:min-w-[200px] hover:scale-105 transition-transform duration-500 bg-white/5">
           <Calendar className="size-8 text-primary mb-2" />
-          <span className="text-sm font-bold text-primary uppercase tracking-tighter">Today's Pulse</span>
+          <span className="text-sm font-bold text-primary uppercase tracking-tighter">Today's Date</span>
           <span className="text-base md:text-lg font-bold text-center">{today}</span>
         </div>
 
