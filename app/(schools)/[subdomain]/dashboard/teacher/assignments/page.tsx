@@ -113,27 +113,27 @@ export default function TeacherAssignmentsPage() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-primary">Homework Hub</h1>
-          <p className="text-muted-foreground mt-1 text-lg">Create assignments and evaluate student submissions.</p>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-primary">Homework Hub</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-lg">Create assignments and evaluate student submissions.</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <CreateAssignmentModal onSuccess={fetchAssignments} />
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 p-4 rounded-2xl border border-border/50">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-muted/30 p-3 sm:p-4 rounded-2xl border border-border/50">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {classes.map(c => (
             <Button 
               key={c.id}
               variant={selectedClass === c.id ? "default" : "ghost"}
               size="sm"
               onClick={() => setSelectedClass(c.id)}
-              className={cn("rounded-xl font-bold transition-all", selectedClass === c.id && "shadow-lg scale-105")}
+              className={cn("rounded-xl font-bold text-xs transition-all", selectedClass === c.id && "shadow-md scale-105")}
             >
               {c.name}
             </Button>
@@ -142,17 +142,17 @@ export default function TeacherAssignmentsPage() {
             variant={selectedClass === "all" ? "default" : "ghost"} 
             size="sm"
             onClick={() => setSelectedClass("all")}
-            className={cn("rounded-xl font-bold", selectedClass === "all" && "shadow-lg scale-105")}
+            className={cn("rounded-xl font-bold text-xs", selectedClass === "all" && "shadow-md scale-105")}
           >
             All Classes
           </Button>
         </div>
         
-        <div className="relative">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input 
             placeholder="Search tasks..." 
-            className="pl-10 w-64 bg-background/50 border-none ring-1 ring-border rounded-xl"
+            className="pl-10 w-full bg-background/50 border-none ring-1 ring-border rounded-xl text-xs sm:text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -165,16 +165,16 @@ export default function TeacherAssignmentsPage() {
           <p className="text-muted-foreground font-bold animate-pulse">Syncing Assignments...</p>
         </div>
       ) : filteredAssignments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 text-center bg-card/40 rounded-3xl border-2 border-dashed border-border/50">
-          <div className="size-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-            <BookOpen className="size-10 text-primary opacity-40" />
+        <div className="flex flex-col items-center justify-center py-20 sm:py-32 text-center bg-card/40 rounded-3xl border-2 border-dashed border-border/50 p-6">
+          <div className="size-16 sm:size-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+            <BookOpen className="size-8 sm:size-10 text-primary opacity-40" />
           </div>
-          <h3 className="text-2xl font-black tracking-tight">No assignments yet</h3>
-          <p className="text-muted-foreground mt-2 max-w-xs mx-auto font-medium">Your course list is currently empty. Start by creating a new assignment!</p>
-          <Button className="mt-8 rounded-2xl font-bold px-8 h-12 shadow-xl shadow-primary/20" onClick={() => fetchAssignments()}>Refresh Hub</Button>
+          <h3 className="text-xl sm:text-2xl font-black tracking-tight">No assignments yet</h3>
+          <p className="text-muted-foreground mt-2 max-w-xs mx-auto font-medium text-xs sm:text-sm">Your course list is currently empty. Start by creating a new assignment!</p>
+          <Button className="mt-6 sm:mt-8 rounded-2xl font-bold px-6 sm:px-8 h-11 sm:h-12 shadow-xl shadow-primary/20" onClick={() => fetchAssignments()}>Refresh Hub</Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredAssignments.map((a) => (
             <AssignmentCard key={a._id} assignment={a} />
           ))}
@@ -189,15 +189,15 @@ function AssignmentCard({ assignment }: { assignment: any }) {
 
   return (
     <Link href={`/dashboard/teacher/assignments/${assignment._id}`} className="block group">
-      <Card className="border-none shadow-xl bg-card/60 backdrop-blur-xl hover:translate-y-[-4px] transition-all duration-300 relative overflow-hidden h-full">
+      <Card className="border-none shadow-lg bg-card/60 backdrop-blur-xl hover:translate-y-[-3px] transition-all duration-300 relative overflow-hidden h-full">
         <div className={cn(
           "absolute top-0 left-0 w-1 h-full",
           assignment.status === 'published' ? "bg-primary" : "bg-muted-foreground/30"
         )} />
         
-        <CardHeader className="p-6">
-          <div className="flex items-start justify-between gap-2 mb-4">
-            <Badge variant={assignment.status === 'published' ? 'default' : 'outline'} className="rounded-full px-3 py-0.5 font-bold uppercase tracking-wider text-[10px]">
+        <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
+          <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4">
+            <Badge variant={assignment.status === 'published' ? 'default' : 'outline'} className="rounded-full px-2.5 sm:px-3 py-0.5 font-bold uppercase tracking-wider text-[10px]">
               {assignment.status}
             </Badge>
             <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -205,46 +205,46 @@ function AssignmentCard({ assignment }: { assignment: any }) {
               Graded 0/0
             </div>
           </div>
-          <CardTitle className="text-xl font-black group-hover:text-primary transition-colors leading-tight">
+          <CardTitle className="text-lg sm:text-xl font-black group-hover:text-primary transition-colors leading-tight">
             {assignment.title}
           </CardTitle>
-          <CardDescription className="line-clamp-2 text-sm mt-2 font-medium">
+          <CardDescription className="line-clamp-2 text-xs sm:text-sm mt-1.5 sm:mt-2 font-medium">
             {assignment.description}
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="p-6 pt-0 space-y-4">
-          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground bg-muted/30 p-3 rounded-2xl">
+        <CardContent className="p-4 sm:p-6 pt-0 space-y-3 sm:space-y-4">
+          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground bg-muted/30 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl">
             <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-primary/60" />
-              Created {new Date(assignment.createdAt).toLocaleDateString()}
+              <Calendar className="size-3.5 sm:size-4 text-primary/60" />
+              <span>Created {new Date(assignment.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
 
           <div className={cn(
-            "flex items-center gap-2 p-3 rounded-2xl text-xs font-black uppercase tracking-widest",
+            "flex items-center gap-2 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl text-xs font-black uppercase tracking-widest",
             isPastDue ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
           )}>
-            <Clock className="size-4" />
-            Due {new Date(assignment.dueDate).toLocaleDateString(undefined, {
+            <Clock className="size-3.5 sm:size-4" />
+            <span className="truncate">Due {new Date(assignment.dueDate).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
-            })}
+            })}</span>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-border/30">
+          <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border/30">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="size-4 text-primary" />
+              <div className="size-7 sm:size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <FileText className="size-3.5 sm:size-4 text-primary" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 {assignment.attachments?.length || 0} Assets
               </span>
             </div>
-            <div className="size-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-              <ChevronRight className="size-4" />
+            <div className="size-7 sm:size-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+              <ChevronRight className="size-3.5 sm:size-4" />
             </div>
           </div>
         </CardContent>
