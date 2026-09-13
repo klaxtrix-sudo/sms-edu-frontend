@@ -11,8 +11,10 @@ import {
   archiveTeacher,
   unarchiveTeacher,
   resendTeacherCredentials,
-  deletePendingTeacher
+  deletePendingTeacher,
+  getClasses
 } from '@/app/actions/admin-actions';
+import { EditTeacherModal } from "@/components/admin/edit-teacher-modal";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -54,7 +56,8 @@ import {
   UserX,
   Trash2,
   Copy,
-  Sparkles
+  Sparkles,
+  Edit2
 } from 'lucide-react';
 import { TeacherProfileModal } from "@/components/admin/teacher-profile-modal";
 import { toast } from 'sonner';
@@ -89,6 +92,11 @@ export default function TeachersPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
 
+  // Edit Teacher Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<any>(null);
+  const [classes, setClasses] = useState<any[]>([]);
+
   // Form State
   const [formData, setFormData] = useState({
     firstName: '',
@@ -109,9 +117,22 @@ export default function TeachersPage() {
     setIsLoading(false);
   };
 
+  const fetchClasses = async () => {
+    if (!tenant?.id || !subdomain) return;
+    try {
+      const res = await getClasses(tenant.id, subdomain as string);
+      if (res.success && res.data) {
+        setClasses(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load classes:", err);
+    }
+  };
+
   useEffect(() => {
     fetchTeachers();
-  }, [tenant?.id]);
+    fetchClasses();
+  }, [tenant?.id, subdomain]);
 
   const handleAddTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -635,6 +656,15 @@ export default function TeachersPage() {
                           >
                             <ExternalLink className="size-3.5" /> View Profile
                           </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="gap-2 text-xs font-medium cursor-pointer"
+                            onClick={() => {
+                              setEditingTeacher(teacher);
+                              setIsEditModalOpen(true);
+                            }}
+                          >
+                            <Edit2 className="size-3.5 text-primary" /> Edit Profile
+                          </DropdownMenuItem>
                           
                           {isPendingSetup ? (
                             <>
@@ -718,6 +748,27 @@ export default function TeachersPage() {
             setViewingTeacherProfile(null);
           }}
           teacher={viewingTeacherProfile}
+          onEdit={(t) => {
+            setIsProfileModalOpen(false);
+            setViewingTeacherProfile(null);
+            setEditingTeacher(t);
+            setIsEditModalOpen(true);
+          }}
+        />
+      )}
+
+      {editingTeacher && (
+        <EditTeacherModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingTeacher(null);
+          }}
+          teacher={editingTeacher}
+          classes={classes}
+          subdomain={subdomain as string}
+          schoolId={tenant?.id}
+          onSuccess={fetchTeachers}
         />
       )}
     </div>

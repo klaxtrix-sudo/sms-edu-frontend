@@ -15,6 +15,7 @@ export {
   archiveTeacher,
   unarchiveTeacher,
   updateTeacher,
+  type UpdateTeacherData,
   getTeachers,
   deletePendingTeacher,
   createTeacher,

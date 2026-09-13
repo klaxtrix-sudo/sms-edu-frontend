@@ -4,6 +4,7 @@ import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import crypto from "crypto";
+import { recordAuditLog } from "@/lib/services/audit-service";
 
 interface CreateUserData {
   email: string;
@@ -98,23 +99,129 @@ export async function unarchiveTeacher(userId: string, subdomain: string) {
   }
 }
 
-export async function updateTeacher(userId: string, data: any, subdomain: string) {
+export interface UpdateTeacherData {
+  fullName: string;
+  phone?: string;
+  email?: string;
+  formClassId?: string | null;
+}
+
+export async function updateTeacher(
+  userId: string, 
+  data: UpdateTeacherData, 
+  subdomain: string,
+  schoolId?: string
+) {
   if (!subdomain) return { error: 'Subdomain is required to update teacher.' };
+  if (!userId) return { error: 'Teacher ID is required.' };
+  if (!data.fullName?.trim()) return { error: 'Teacher full name is required.' };
+
   try {
-    const { tenantSupabase } = await requireActionAuth(subdomain, ['admin']);
-    const { error } = await (tenantSupabase as any)
+    const { tenantSupabase, user: caller } = await requireActionAuth(subdomain, ['admin'], 'teachers');
+    const callerSchoolId = schoolId || caller.user_metadata?.school_id;
+
+    // 1. Fetch current teacher profile
+    const { data: currentProfile, error: fetchErr } = await (tenantSupabase as any)
       .from('profiles')
-      .update({
-        full_name: data.fullName,
-        phone: data.phone,
-      })
+      .select('id, full_name, email, phone, school_id')
+      .eq('id', userId)
+      .single();
+
+    if (fetchErr || !currentProfile) {
+      return { error: 'Teacher profile not found.' };
+    }
+
+    const effectiveSchoolId = currentProfile.school_id || callerSchoolId;
+
+    // 2. Prepare Profile Update Payload
+    const updatePayload: Record<string, any> = {
+      full_name: data.fullName.trim(),
+      phone: data.phone?.trim() || null,
+    };
+
+    // If email is provided and changed, update Auth user and profile
+    const newEmail = data.email?.trim().toLowerCase();
+    const currentEmail = currentProfile.email?.trim().toLowerCase();
+    if (newEmail && newEmail !== currentEmail) {
+      updatePayload.email = newEmail;
+
+      const { error: authUpdateErr } = await tenantSupabase.auth.admin.updateUserById(userId, {
+        email: newEmail,
+        user_metadata: {
+          full_name: data.fullName.trim(),
+        },
+      });
+
+      if (authUpdateErr) {
+        console.warn('[updateTeacher] Auth update warning:', authUpdateErr.message);
+        if (authUpdateErr.message.includes('already registered') || authUpdateErr.message.includes('unique')) {
+          return { error: 'This email address is already in use by another user.' };
+        }
+      }
+    } else {
+      // Keep auth metadata in sync
+      await tenantSupabase.auth.admin.updateUserById(userId, {
+        user_metadata: {
+          full_name: data.fullName.trim(),
+        },
+      }).catch(() => {});
+    }
+
+    const { error: profileError } = await (tenantSupabase as any)
+      .from('profiles')
+      .update(updatePayload)
       .eq('id', userId);
 
-    if (error) return { error: error.message };
+    if (profileError) return { error: profileError.message };
+
+    // 3. Update Form Class Assignment if provided
+    if (data.formClassId !== undefined && effectiveSchoolId) {
+      // Clear this teacher from any class they currently lead
+      await (tenantSupabase as any)
+        .from('classes')
+        .update({ class_teacher_id: null })
+        .eq('school_id', effectiveSchoolId)
+        .eq('class_teacher_id', userId);
+
+      // If a class was selected, assign teacher
+      if (data.formClassId && data.formClassId !== 'none' && data.formClassId !== 'unassigned') {
+        await (tenantSupabase as any)
+          .from('classes')
+          .update({ class_teacher_id: userId })
+          .eq('school_id', effectiveSchoolId)
+          .eq('id', data.formClassId);
+      }
+    }
+
+    // 4. Audit Log
+    if (effectiveSchoolId) {
+      try {
+        await recordAuditLog(tenantSupabase, {
+          schoolId: effectiveSchoolId,
+          actorId: caller.id,
+          actorName: caller.user_metadata?.full_name || caller.email || 'Admin',
+          actorRole: 'admin',
+          action: 'UPDATE_TEACHER',
+          module: 'teachers',
+          targetId: userId,
+          targetName: data.fullName.trim(),
+          details: {
+            full_name: data.fullName.trim(),
+            email: updatePayload.email || currentProfile.email,
+            phone: data.phone?.trim() || null,
+            form_class_id: data.formClassId || null,
+          },
+        });
+      } catch (auditErr) {
+        console.warn('[updateTeacher] Audit logging error:', auditErr);
+      }
+    }
 
     revalidatePath('/dashboard/admin/users/teachers');
+    revalidatePath('/dashboard/admin/academics');
     return { success: true };
   } catch (e: any) {
+    console.error('[updateTeacher] Exception:', e);
     return { error: e.message || 'Failed to update teacher.' };
   }
 }

@@ -9,6 +9,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   User, 
   Mail, 
@@ -20,7 +21,8 @@ import {
   Building2,
   Loader2,
   Clock,
-  BookOpen
+  BookOpen,
+  Edit2
 } from "lucide-react";
 import { createTenantClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
@@ -30,9 +32,10 @@ interface TeacherProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   teacher: any;
+  onEdit?: (teacher: any) => void;
 }
 
-export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfileModalProps) {
+export function TeacherProfileModal({ isOpen, onClose, teacher, onEdit }: TeacherProfileModalProps) {
   const [assignedClasses, setAssignedClasses] = useState<any[]>([]);
   const [assignedSubjects, setAssignedSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,14 +95,30 @@ export function TeacherProfileModal({ isOpen, onClose, teacher }: TeacherProfile
         {/* Scrollable Content Container */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 space-y-10">
           <DialogHeader className="mb-8">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-                <User className="size-6 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                  <User className="size-6 text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-black tracking-tight text-foreground">Teacher Profile</DialogTitle>
+                  <DialogDescription className="font-medium text-muted-foreground">Comprehensive view of teacher records and access.</DialogDescription>
+                </div>
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">Teacher Profile</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground">Comprehensive view of teacher records and access.</DialogDescription>
-              </div>
+              {onEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    onEdit(teacher);
+                  }}
+                  className="rounded-xl border-border/80 text-xs font-bold gap-2 h-9 px-3 w-fit"
+                >
+                  <Edit2 className="size-3.5 text-primary" />
+                  Edit Profile
+                </Button>
+              )}
             </div>
           </DialogHeader>
 
