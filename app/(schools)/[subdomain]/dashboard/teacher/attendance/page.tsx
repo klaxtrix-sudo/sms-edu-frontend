@@ -54,6 +54,7 @@ import {
 } from "@/lib/utils/attendance-session";
 import { 
   AttendanceStudentRow, 
+  AttendanceStudentCard,
   type AttendanceStatus 
 } from "@/components/teacher/attendance-student-row";
 
@@ -318,10 +319,10 @@ export default function TeacherAttendancePage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* 1. Header Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-card/50 p-8 rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl backdrop-blur-xl border border-border/50 shadow-2xl">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-4xl font-black tracking-tighter text-primary">Student Attendance</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-primary">Student Attendance</h1>
             {isExistingRecord ? (
               <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 px-3 py-1">
                 <CheckCircle className="size-3.5" />
@@ -349,16 +350,16 @@ export default function TeacherAttendancePage() {
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
             Daily presence tracking and session logs for your assigned classes.
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="space-y-1.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
+          <div className="space-y-1.5 flex-1 sm:flex-initial">
             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Classroom</label>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="w-[200px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold">
+              <SelectTrigger className="w-full sm:w-[200px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold">
                 <SelectValue placeholder="Select Class" />
               </SelectTrigger>
               <SelectContent>
@@ -369,7 +370,7 @@ export default function TeacherAttendancePage() {
             </Select>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 flex-1 sm:flex-initial">
             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Session Date</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -378,7 +379,7 @@ export default function TeacherAttendancePage() {
                 value={date} 
                 max={todayStr}
                 onChange={(e) => setDate(e.target.value)}
-                className="pl-10 w-[180px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold"
+                className="pl-10 w-full sm:w-[180px] bg-background/50 border-none ring-1 ring-border shadow-inner font-bold"
               />
             </div>
           </div>
@@ -455,62 +456,66 @@ export default function TeacherAttendancePage() {
       )}
 
       {/* 3. 5-Metric KPI Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <StatCard label="Present" value={stats.present} icon={CheckCircle} color="emerald" />
         <StatCard label="Absent" value={stats.absent} icon={XCircle} color="rose" />
         <StatCard label="Late" value={stats.late} icon={Clock} color="amber" />
         <StatCard label="Excused" value={stats.excused} icon={AlertCircle} color="blue" />
-        <StatCard 
-          label="Attendance Rate" 
-          value={`${attendanceRate}%`} 
-          icon={Percent} 
-          color={attendanceRate >= 90 ? "emerald" : attendanceRate >= 75 ? "amber" : "rose"} 
-        />
+        <div className="col-span-2 sm:col-span-1">
+          <StatCard 
+            label="Attendance Rate" 
+            value={`${attendanceRate}%`} 
+            icon={Percent} 
+            color={attendanceRate >= 90 ? "emerald" : attendanceRate >= 75 ? "amber" : "rose"} 
+          />
+        </div>
       </div>
 
-      {/* 4. Roster Table Card */}
-      <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-xl overflow-hidden rounded-3xl">
-        <CardHeader className="border-b border-border/50 bg-muted/30 p-6 md:p-8">
+      {/* 4. Roster Card */}
+      <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-xl overflow-hidden rounded-2xl sm:rounded-3xl">
+        <CardHeader className="border-b border-border/50 bg-muted/30 p-4 sm:p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl font-black">Class Roster</CardTitle>
-              <CardDescription className="text-base">
+              <CardTitle className="text-xl sm:text-2xl font-black">Class Roster</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Mark attendance for each student in {selectedClassName}. Total enrolled: {totalStudents}.
               </CardDescription>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full md:w-auto">
               {/* Batch Action Toolbar */}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!isInstructional || students.length === 0}
-                onClick={handleMarkAllPresent}
-                className="h-9 px-3 rounded-xl border-border/80 font-bold text-xs gap-1.5 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30"
-                title="Mark all enrolled students as present"
-              >
-                <CheckCheck className="size-3.5" />
-                <span>Mark All Present</span>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={students.length === 0}
-                onClick={fetchStudents}
-                className="h-9 px-3 rounded-xl font-bold text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-                title="Reload saved attendance"
-              >
-                <RotateCcw className="size-3.5" />
-                <span className="hidden sm:inline">Reset</span>
-              </Button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!isInstructional || students.length === 0}
+                  onClick={handleMarkAllPresent}
+                  className="flex-1 sm:flex-initial h-9 px-3 rounded-xl border-border/80 font-bold text-xs gap-1.5 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30"
+                  title="Mark all enrolled students as present"
+                >
+                  <CheckCheck className="size-3.5" />
+                  <span>Mark All Present</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={students.length === 0}
+                  onClick={fetchStudents}
+                  className="h-9 px-3 rounded-xl font-bold text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                  title="Reload saved attendance"
+                >
+                  <RotateCcw className="size-3.5" />
+                  <span className="hidden sm:inline">Reset</span>
+                </Button>
+              </div>
 
               {/* Search Filter */}
               <div className="relative w-full sm:w-60">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search name or ID..." 
-                  className="pl-10 h-9 bg-background/50 border-none ring-1 ring-border shadow-inner text-xs"
+                  className="pl-10 h-9 bg-background/50 border-none ring-1 ring-border shadow-inner text-xs w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -519,54 +524,83 @@ export default function TeacherAttendancePage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-muted/50 border-b border-border/50">
-              <TableRow>
-                <TableHead className="py-4 pl-6 md:pl-8 font-black text-xs md:text-sm">Student Information</TableHead>
-                <TableHead className="py-4 font-black text-xs md:text-sm text-center">Status Assignment</TableHead>
-                <TableHead className="py-4 pr-6 md:pr-8 font-black text-xs md:text-sm">Notes / Remarks</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rosterLoading ? (
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader className="bg-muted/50 border-b border-border/50">
                 <TableRow>
-                  <TableCell colSpan={3} className="py-20">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="size-10 animate-spin text-primary/40" />
-                      <p className="text-muted-foreground font-medium">Syncing roster...</p>
-                    </div>
-                  </TableCell>
+                  <TableHead className="py-4 pl-6 md:pl-8 font-black text-xs md:text-sm">Student Information</TableHead>
+                  <TableHead className="py-4 font-black text-xs md:text-sm text-center">Status Assignment</TableHead>
+                  <TableHead className="py-4 pr-6 md:pr-8 font-black text-xs md:text-sm">Notes / Remarks</TableHead>
                 </TableRow>
-              ) : filteredStudents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="py-20 text-center text-muted-foreground italic">
-                    {students.length === 0 ? "No students discovered in this classroom." : "No matching students found."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredStudents.map((s) => (
-                  <AttendanceStudentRow
-                    key={s.id}
-                    student={s}
-                    status={attendance[s.id]?.status || "present"}
-                    remarks={attendance[s.id]?.remarks || ""}
-                    disabled={!isInstructional}
-                    onStatusChange={handleStatusChange}
-                    onRemarksChange={handleRemarksChange}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {rosterLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-20">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="size-10 animate-spin text-primary/40" />
+                        <p className="text-muted-foreground font-medium">Syncing roster...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredStudents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-20 text-center text-muted-foreground italic">
+                      {students.length === 0 ? "No students discovered in this classroom." : "No matching students found."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredStudents.map((s) => (
+                    <AttendanceStudentRow
+                      key={s.id}
+                      student={s}
+                      status={attendance[s.id]?.status || "present"}
+                      remarks={attendance[s.id]?.remarks || ""}
+                      disabled={!isInstructional}
+                      onStatusChange={handleStatusChange}
+                      onRemarksChange={handleRemarksChange}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="block md:hidden p-3.5 sm:p-4 space-y-3">
+            {rosterLoading ? (
+              <div className="py-16 flex flex-col items-center gap-3">
+                <Loader2 className="size-8 animate-spin text-primary/40" />
+                <p className="text-muted-foreground font-medium text-xs">Syncing roster...</p>
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground italic text-xs">
+                {students.length === 0 ? "No students discovered in this classroom." : "No matching students found."}
+              </div>
+            ) : (
+              filteredStudents.map((s) => (
+                <AttendanceStudentCard
+                  key={s.id}
+                  student={s}
+                  status={attendance[s.id]?.status || "present"}
+                  remarks={attendance[s.id]?.remarks || ""}
+                  disabled={!isInstructional}
+                  onStatusChange={handleStatusChange}
+                  onRemarksChange={handleRemarksChange}
+                />
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* 5. Submit Action */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 pb-12">
-        <div className="text-xs text-muted-foreground font-medium">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2 pb-12">
+        <div className="text-xs text-muted-foreground font-medium text-center sm:text-left">
           {!isInstructional ? (
-            <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
-              <Info className="size-4" />
+            <span className="flex items-center justify-center sm:justify-start gap-1.5 text-amber-700 dark:text-amber-400">
+              <Info className="size-4 shrink-0" />
               Submission disabled: Selected date is outside active school sessions.
             </span>
           ) : isExistingRecord ? (
@@ -581,7 +615,7 @@ export default function TeacherAttendancePage() {
           onClick={handleSubmit} 
           disabled={submitting || students.length === 0 || !isInstructional}
           className={cn(
-            "h-14 px-10 rounded-2xl font-black text-base md:text-lg shadow-xl transition-all",
+            "w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-base md:text-lg shadow-xl transition-all",
             isInstructional && "hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
           )}
         >
@@ -622,12 +656,12 @@ function StatCard({
   };
 
   return (
-    <div className={cn("p-6 rounded-3xl border flex items-center justify-between backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02]", colors[color])}>
+    <div className={cn("p-4 sm:p-5 rounded-2xl sm:rounded-3xl border flex items-center justify-between backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02]", colors[color])}>
       <div>
-        <div className="text-3xl font-black leading-none">{value}</div>
-        <div className="text-xs font-bold uppercase tracking-widest mt-1 opacity-75">{label}</div>
+        <div className="text-2xl sm:text-3xl font-black leading-none">{value}</div>
+        <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-1 opacity-75">{label}</div>
       </div>
-      <Icon className="size-8 opacity-40 shrink-0" />
+      <Icon className="size-6 sm:size-8 opacity-40 shrink-0" />
     </div>
   );
 }
