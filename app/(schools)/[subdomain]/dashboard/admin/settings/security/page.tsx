@@ -60,6 +60,31 @@ function formatTimeAgo(dateStr: string): string {
   }
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  UPDATE_SECURITY_SETTINGS: "Updated Security Settings",
+  ADMIN_INVITE: "Invited Staff Member",
+  ADMIN_PERMISSION_UPDATE: "Updated Permissions",
+  ADMIN_INVITATION_RESEND: "Resent Staff Invitation",
+  ADMIN_DELETE: "Removed Administrator",
+  BATCH_INVITATION_REMINDERS_SENT: "Sent Invitation Reminders",
+  FEE_STRUCTURE_CREATE: "Created Fee Item",
+  FEE_STRUCTURE_CREATE_BATCH: "Created Fee Schedule",
+  FEE_STRUCTURE_UPDATE: "Updated Fee Item",
+  FEE_STRUCTURE_DELETE: "Deleted Fee Item",
+  FEE_PAYMENT_RECORD: "Recorded Payment",
+  PAYMENT_REVERSE: "Reversed Payment",
+};
+
+function formatActionName(action: string): string {
+  if (!action) return "Activity";
+  if (ACTION_LABELS[action]) return ACTION_LABELS[action];
+  return action
+    .toLowerCase()
+    .split("_")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export default function SecuritySettings() {
   const params = useParams();
   const subdomain = params.subdomain as string;
@@ -369,8 +394,8 @@ export default function SecuritySettings() {
                   <History className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-foreground">Recent Security Activity</h4>
-                  <p className="text-[10px] text-muted-foreground">Live event stream from institutional audit log</p>
+                  <h4 className="text-sm font-bold text-foreground">Recent Activity Log</h4>
+                  <p className="text-[10px] text-muted-foreground">Live record of recent changes and updates</p>
                 </div>
               </div>
               {loadingLogs && <Loader2 className="size-3.5 text-muted-foreground animate-spin" />}
@@ -380,14 +405,14 @@ export default function SecuritySettings() {
               {loadingLogs ? (
                 <div className="py-6 flex flex-col items-center justify-center gap-2">
                   <Loader2 className="size-5 text-primary animate-spin" />
-                  <span className="text-xs text-muted-foreground">Loading audit records...</span>
+                  <span className="text-xs text-muted-foreground">Loading activity records...</span>
                 </div>
               ) : recentLogs.length > 0 ? (
                 recentLogs.map((log) => (
                   <div key={log.id} className="flex flex-col gap-1 p-2.5 rounded-xl bg-muted/20 border border-border/50">
                     <div className="flex justify-between items-start gap-2">
                       <span className="text-xs font-bold text-foreground leading-tight">
-                        {log.action.replace(/_/g, ' ')}
+                        {formatActionName(log.action)}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-mono shrink-0">
                         {formatTimeAgo(log.created_at)}
@@ -396,10 +421,10 @@ export default function SecuritySettings() {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <UserCheck className="w-3 h-3 text-emerald-500 shrink-0" />
                       <span className="text-[10px] text-muted-foreground truncate">
-                        By {log.actor_name || 'System'}
+                        By {log.actor_name || 'System Automation'}
                       </span>
                       {log.module && (
-                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 ml-auto border-border text-muted-foreground uppercase">
+                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 ml-auto border-border text-muted-foreground capitalize">
                           {log.module}
                         </Badge>
                       )}
@@ -409,14 +434,14 @@ export default function SecuritySettings() {
               ) : (
                 <div className="py-6 text-center text-xs text-muted-foreground space-y-1">
                   <CheckCircle2 className="size-6 text-muted-foreground/50 mx-auto" />
-                  <p>No security activity logged yet.</p>
+                  <p>No activity recorded yet.</p>
                 </div>
               )}
             </div>
 
             <Link href="/dashboard/admin/settings/audit-logs" className="w-full block pt-1">
               <Button variant="ghost" className="w-full text-xs font-bold text-muted-foreground group hover:text-primary py-4 rounded-xl">
-                View Full Audit Trail <ArrowRight className="w-3.5 h-3.5 ml-1.5 transition-transform group-hover:translate-x-1" />
+                View All Activity Records <ArrowRight className="w-3.5 h-3.5 ml-1.5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
           </div>

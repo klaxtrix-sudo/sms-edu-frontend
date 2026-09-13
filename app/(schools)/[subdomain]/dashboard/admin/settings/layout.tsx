@@ -41,7 +41,7 @@ const settingsLinks = [
   },
   {
     title: 'Audit Trail',
-    description: 'Activity & governance logs',
+    description: 'Staff actions & change history',
     href: '/dashboard/admin/settings/audit-logs',
     icon: History,
   },
