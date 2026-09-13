@@ -222,10 +222,10 @@ export default function TeacherExamsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         {/* Modern Navigational Tab Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
-          <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
+          <TabsList className="grid grid-cols-2 w-full sm:w-auto sm:inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
             <TabsTrigger
               value="papers"
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -235,11 +235,11 @@ export default function TeacherExamsPage() {
               )}>
                 <FileText className="size-3.5 sm:size-4" />
               </div>
-              <span>Assigned Exams</span>
+              <span className="truncate">Assigned Exams</span>
               <Badge
                 variant="secondary"
                 className={cn(
-                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  "ml-0.5 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[11px] font-mono font-bold rounded-full transition-colors border shrink-0",
                   activeTab === "papers"
                     ? "bg-primary/15 text-primary border-primary/25"
                     : "bg-muted text-muted-foreground border-border/40"
@@ -251,7 +251,7 @@ export default function TeacherExamsPage() {
 
             <TabsTrigger
               value="timetable"
-              className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+              className="relative flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
@@ -261,11 +261,11 @@ export default function TeacherExamsPage() {
               )}>
                 <CalendarRange className="size-3.5 sm:size-4" />
               </div>
-              <span>School Exam Timetable</span>
+              <span className="truncate">Timetable</span>
               <Badge
                 variant="secondary"
                 className={cn(
-                  "ml-0.5 px-2 py-0.5 text-[11px] font-mono font-bold rounded-full transition-colors border",
+                  "ml-0.5 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[11px] font-mono font-bold rounded-full transition-colors border shrink-0",
                   activeTab === "timetable"
                     ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
                     : "bg-muted text-muted-foreground border-border/40"
@@ -334,44 +334,44 @@ export default function TeacherExamsPage() {
                     {exam.workflowStatus === 'changes_requested' ? (
                       <Button 
                         size="sm"
-                        className="w-full bg-rose-600 hover:bg-rose-700 text-white gap-1.5 shadow-sm"
+                        className="w-full min-h-[44px] sm:min-h-0 sm:h-9 bg-rose-600 hover:bg-rose-700 text-white gap-1.5 shadow-sm text-xs sm:text-sm font-semibold"
                         onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
                       >
-                        <RotateCcw className="h-3.5 w-3.5" /> Revise Questions
+                        <RotateCcw className="h-4 w-4" /> Revise Questions
                       </Button>
                     ) : exam.workflowStatus === 'pending_questions' ? (
                       <Button 
                         size="sm"
-                        className="w-full bg-primary hover:bg-primary/90 text-white gap-1.5 shadow-sm"
+                        className="w-full min-h-[44px] sm:min-h-0 sm:h-9 bg-primary hover:bg-primary/90 text-white gap-1.5 shadow-sm text-xs sm:text-sm font-semibold"
                         onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
                       >
-                        <Edit className="h-3.5 w-3.5" /> Set Questions
+                        <Edit className="h-4 w-4" /> Set Questions
                       </Button>
                     ) : exam.workflowStatus === 'ready_for_review' ? (
                       <Button 
                         size="sm"
                         variant="outline"
-                        className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 gap-1.5"
+                        className="w-full min-h-[44px] sm:min-h-0 sm:h-9 text-blue-600 border-blue-200 hover:bg-blue-50 gap-1.5 text-xs sm:text-sm font-semibold"
                         onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
                       >
-                        <Eye className="h-3.5 w-3.5" /> View Submitted Qs
+                        <Eye className="h-4 w-4" /> View Submitted Qs
                       </Button>
                     ) : exam.workflowStatus === 'approved' ? (
                       <Button 
                         size="sm"
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm"
+                        className="w-full min-h-[44px] sm:min-h-0 sm:h-9 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm text-xs sm:text-sm font-semibold"
                         onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
                       >
-                        <Sparkles className="h-3.5 w-3.5" /> Approved — Go to Studio
+                        <Sparkles className="h-4 w-4" /> Approved — Go to Studio
                       </Button>
                     ) : (
                       <Button 
                         size="sm"
                         variant="outline"
-                        className="w-full gap-1.5"
+                        className="w-full min-h-[44px] sm:min-h-0 sm:h-9 gap-1.5 text-xs sm:text-sm font-semibold"
                         onClick={() => router.push(`/dashboard/teacher/exams/${exam._id}/questions`)}
                       >
-                        <Play className="h-3.5 w-3.5 text-primary fill-primary" /> Question Studio
+                        <Play className="h-4 w-4 text-primary fill-primary" /> Question Studio
                       </Button>
                     )}
                   </div>
@@ -392,8 +392,8 @@ export default function TeacherExamsPage() {
         </TabsContent>
 
         <TabsContent value="timetable" className="space-y-6">
-          <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-6">
-            <h3 className="text-lg font-bold">Scheduled Exam Schedule</h3>
+          <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-bold">Scheduled Exam Schedule</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Below are the timetabled rooms and time slots assigned for students by administration.</p>
           </Card>
 
@@ -403,44 +403,92 @@ export default function TeacherExamsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead>Exam Paper</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time Window</TableHead>
-                    <TableHead>Venue / Room</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Desktop Tabular View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead>Exam Paper</TableHead>
+                        <TableHead>Class</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Time Window</TableHead>
+                        <TableHead>Venue / Room</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {timetableSlots.map((slot) => (
+                        <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
+                          <TableCell className="font-semibold text-zinc-900 dark:text-zinc-100">{slot.exam_title}</TableCell>
+                          <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
+                          <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {new Date(slot.exam_date).toLocaleDateString(undefined, {
+                              year: 'numeric', month: 'short', day: 'numeric'
+                            })}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs text-primary font-bold">
+                            {slot.start_time.slice(0,5)} - {slot.end_time.slice(0,5)}
+                          </TableCell>
+                          <TableCell>
+                            {slot.room ? (
+                              <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
+                                <MapPin className="size-3" /> {slot.room}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-zinc-400 italic">Unassigned</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card List View */}
+                <div className="block md:hidden divide-y divide-border/60">
                   {timetableSlots.map((slot) => (
-                    <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
-                      <TableCell className="font-semibold text-zinc-900">{slot.exam_title}</TableCell>
-                      <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
-                      <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {new Date(slot.exam_date).toLocaleDateString(undefined, {
-                          year: 'numeric', month: 'short', day: 'numeric'
-                        })}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-primary font-bold">
-                        {slot.start_time.slice(0,5)} - {slot.end_time.slice(0,5)}
-                      </TableCell>
-                      <TableCell>
+                    <div key={slot.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <h4 className="font-semibold text-foreground text-sm sm:text-base leading-tight">
+                            {slot.exam_title}
+                          </h4>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="outline" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20">
+                              {subjectsMap[slot.subject_id] || slot.subject_id}
+                            </Badge>
+                            <Badge variant="secondary" className="text-[11px] font-medium">
+                              {classesMap[slot.class_id] || slot.class_id}
+                            </Badge>
+                          </div>
+                        </div>
                         {slot.room ? (
-                          <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
+                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">
                             <MapPin className="size-3" /> {slot.room}
                           </span>
                         ) : (
-                          <span className="text-xs text-zinc-400 italic">Unassigned</span>
+                          <span className="text-xs text-muted-foreground italic shrink-0">Unassigned</span>
                         )}
-                      </TableCell>
-                    </TableRow>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border/40 font-mono">
+                        <span className="flex items-center gap-1.5">
+                          <CalendarRange className="size-3.5 text-muted-foreground" />
+                          {new Date(slot.exam_date).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-primary font-bold">
+                          <Clock className="size-3.5" />
+                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                        </span>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </>
             )}
 
             {timetableSlots.length === 0 && !loadingTimetable && (
