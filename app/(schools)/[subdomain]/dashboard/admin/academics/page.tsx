@@ -101,6 +101,25 @@ export default function AcademicsPage() {
     }
   }, []);
 
+  // Sync active tab with URL query parameter (e.g. ?tab=subjects or ?tab=classes)
+  useEffect(() => {
+    const syncTabFromUrl = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab");
+        if (tab === "subjects" || tab === "classes") {
+          setActiveTab(tab);
+        }
+      } catch {
+        // Ignore in non-browser environments
+      }
+    };
+
+    syncTabFromUrl();
+    window.addEventListener("popstate", syncTabFromUrl);
+    return () => window.removeEventListener("popstate", syncTabFromUrl);
+  }, []);
+
   const handleViewModeChange = (mode: "table" | "cards") => {
     setViewMode(mode);
     try {
@@ -278,7 +297,21 @@ export default function AcademicsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(val) => { 
+          setActiveTab(val); 
+          setSearchQuery(""); 
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.set("tab", val);
+            window.history.replaceState({}, "", url.toString());
+          } catch {
+            // Ignore
+          }
+        }} 
+        className="w-full"
+      >
         {/* Navigation & Controls Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <TabsList className="flex items-center overflow-x-auto no-scrollbar max-w-full p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md shrink-0">

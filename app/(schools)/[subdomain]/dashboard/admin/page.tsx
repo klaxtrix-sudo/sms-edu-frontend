@@ -8,7 +8,8 @@ import {
   Plus, 
   TrendingUp, 
   ClipboardCheck,
-  Megaphone
+  Megaphone,
+  ArrowUpRight
 } from "lucide-react";
 import { PerformanceChart } from '@/components/dashboard/performance-chart';
 import { Button } from '@/components/ui/button';
@@ -95,10 +96,38 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
   }
 
   const stats = [
-    { label: "Teachers", value: String(teachersCount.count ?? 0), icon: Users, color: "from-blue-500 to-indigo-600", href: "/dashboard/admin/users/teachers" },
-    { label: "Students", value: String(studentsCount.count ?? 0), icon: GraduationCap, color: "from-emerald-500 to-teal-600", href: "/dashboard/admin/users/students" },
-    { label: "Classes", value: String(classesCount.count ?? 0), icon: School, color: "from-amber-500 to-orange-600", href: "/dashboard/admin/academics" },
-    { label: "Subjects", value: String(subjectsCount.count ?? 0), icon: BookOpen, color: "from-purple-500 to-violet-600", href: "/dashboard/admin/academics" },
+    { 
+      label: "Teachers", 
+      value: String(teachersCount.count ?? 0), 
+      icon: Users, 
+      color: "from-blue-500 to-indigo-600", 
+      href: "/dashboard/admin/users/teachers",
+      subtext: "Faculty & staff roster"
+    },
+    { 
+      label: "Students", 
+      value: String(studentsCount.count ?? 0), 
+      icon: GraduationCap, 
+      color: "from-emerald-500 to-teal-600", 
+      href: "/dashboard/admin/users/students",
+      subtext: "Enrolled student directory"
+    },
+    { 
+      label: "Classes", 
+      value: String(classesCount.count ?? 0), 
+      icon: School, 
+      color: "from-amber-500 to-orange-600", 
+      href: "/dashboard/admin/academics?tab=classes",
+      subtext: "Classrooms & curricula"
+    },
+    { 
+      label: "Subjects", 
+      value: String(subjectsCount.count ?? 0), 
+      icon: BookOpen, 
+      color: "from-purple-500 to-violet-600", 
+      href: "/dashboard/admin/academics?tab=subjects",
+      subtext: "Courses & departments"
+    },
   ];
 
   return (
@@ -164,14 +193,20 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
             <Link 
               key={stat.label} 
               href={stat.href}
-              className="rounded-2xl p-5 border border-border/50 bg-card/40 backdrop-blur-xl group hover:border-primary/40 hover:translate-y-[-2px] transition-all shadow-md overflow-hidden block"
+              className="rounded-2xl p-5 border border-border/50 bg-card/40 backdrop-blur-xl group hover:border-primary/50 hover:bg-card/70 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden block relative cursor-pointer"
             >
-              <div className={`size-10 rounded-xl bg-gradient-to-br ${stat.color} p-2.5 mb-3 shadow-md group-hover:scale-105 transition-transform`}>
-                <stat.icon className="size-full text-white" />
+              <div className="flex items-start justify-between mb-3">
+                <div className={`size-10 rounded-xl bg-gradient-to-br ${stat.color} p-2.5 shadow-md group-hover:scale-110 transition-transform`}>
+                  <stat.icon className="size-full text-white" />
+                </div>
+                <div className="size-7 rounded-lg bg-muted/60 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors">
+                  <ArrowUpRight className="size-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
               </div>
               <div className="space-y-0.5">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-foreground transition-colors">{stat.label}</span>
                 <div className="text-2xl sm:text-3xl font-black text-foreground">{stat.value}</div>
+                <p className="text-[11px] text-muted-foreground/80 group-hover:text-muted-foreground font-medium transition-colors pt-0.5">{stat.subtext}</p>
               </div>
             </Link>
           ))}
