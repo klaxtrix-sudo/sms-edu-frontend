@@ -1,6 +1,9 @@
 "use server";
 
 import { getBackendUrl } from "@/lib/utils";
+import { requireActionAuth } from "@/lib/supabase/action-auth";
+import { recordAuditLog } from "@/lib/services/audit-service";
+import { revalidatePath } from "next/cache";
 
 const INTERNAL_SECRET = process.env.INTERNAL_AUTH_SECRET;
 
@@ -92,3 +95,61 @@ export async function completeSchoolSetup(
     return { success: false, error: error.message };
   }
 }
+
+export interface SecuritySettingsPayload {
+  require_password_change?: boolean;
+  enhanced_password_policy?: boolean;
+  session_timeout_minutes?: number;
+  parent_contact_privacy?: boolean;
+  student_portal_access?: boolean;
+  lock_past_term_results?: boolean;
+}
+
+/**
+ * Updates the school's security and access policies, records an audit log,
+ * and revalidates the security settings view.
+ */
+export async function updateSecuritySettings(
+  subdomain: string,
+  schoolId: string,
+  settings: SecuritySettingsPayload
+) {
+  if (!subdomain) return { error: "Subdomain is required." };
+  if (!schoolId) return { error: "School ID is required." };
+
+  try {
+    const { tenantSupabase, user: caller } = await requireActionAuth(
+      subdomain,
+      ["admin"],
+      "settings"
+    );
+
+    const res = await updateSchoolData(subdomain, schoolId, {
+      security_settings: settings,
+    });
+
+    if (!res.success) {
+      throw new Error(res.error || "Failed to update security settings in database.");
+    }
+
+    // Record institutional audit event
+    await recordAuditLog(tenantSupabase, {
+      schoolId,
+      actorId: caller.id,
+      actorName: caller.user_metadata?.full_name || "School Administrator",
+      actorRole: caller.user_metadata?.role || "admin",
+      action: "UPDATE_SECURITY_SETTINGS",
+      module: "settings",
+      targetId: schoolId,
+      targetName: "Security Policies",
+      details: settings,
+    });
+
+    revalidatePath("/dashboard/admin/settings/security");
+    return { success: true };
+  } catch (error: any) {
+    console.error("[tenant-actions] updateSecuritySettings error:", error.message);
+    return { error: error.message || "Failed to update security settings." };
+  }
+}
+
