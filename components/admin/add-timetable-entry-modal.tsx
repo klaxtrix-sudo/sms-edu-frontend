@@ -6,10 +6,13 @@ import {
   Calendar, 
   Clock, 
   BookOpen, 
-  MapPin,
-  Loader2,
-  User
+  MapPin, 
+  Loader2, 
+  User,
+  AlertCircle,
+  ArrowUpRight
 } from "lucide-react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -60,6 +63,14 @@ const formSchema = z.object({
   teacher_id: z.string().optional(),
 });
 
+interface ClassSubjectAssignment {
+  subject_id: string;
+  teacher_id: string | null;
+  subject_name: string;
+  subject_code?: string;
+  teacher_name?: string | null;
+}
+
 interface AddTimetableEntryModalProps {
   onSuccess?: () => void;
   defaultClassId?: string;
@@ -68,10 +79,11 @@ interface AddTimetableEntryModalProps {
 export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetableEntryModalProps) {
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classSubjects, setClassSubjects] = useState<ClassSubjectAssignment[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loading, setLoading] = useState(false);
   const [teacherName, setTeacherName] = useState<string>("");
-  const [teacherLoading, setTeacherLoading] = useState(false);
   const supabase = createTenantClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -90,68 +102,112 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
   const watchClassId = form.watch("class_id");
   const watchSubjectId = form.watch("subject_id");
 
-  useEffect(() => {
-    if (open) {
-      fetchData();
-      if (defaultClassId) form.setValue("class_id", defaultClassId);
+  // Fetch all classes for the class selector
+  const fetchClasses = useCallback(async () => {
+    setLoadingClasses(true);
+    try {
+      const { data } = await supabase.from("classes").select("*").order("name");
+      setClasses(data || []);
+    } catch {
+      toast.error("Failed to load classes");
+    } finally {
+      setLoadingClasses(false);
     }
-  }, [open, defaultClassId]);
+  }, [supabase]);
 
-  // Auto-load teacher when class + subject are both selected
-  const lookupTeacher = useCallback(async (classId: string, subjectId: string) => {
-    if (!classId || !subjectId) {
+  // Dynamically load curriculum subjects configured for the selected classroom
+  const loadClassSubjects = useCallback(async (classId: string) => {
+    if (!classId) {
+      setClassSubjects([]);
       setTeacherName("");
       form.setValue("teacher_id", "");
+      form.setValue("subject_id", "");
       return;
     }
-    setTeacherLoading(true);
-    try {
-      const { data: assignment } = await supabase
-        .from("class_subject_teachers")
-        .select("teacher_id")
-        .eq("class_id", classId)
-        .eq("subject_id", subjectId)
-        .maybeSingle();
 
-      if (assignment?.teacher_id) {
-        form.setValue("teacher_id", assignment.teacher_id);
-        // Fetch teacher name
-        const { data: teacher } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", assignment.teacher_id)
-          .single();
-        setTeacherName(teacher?.full_name || "Unknown Teacher");
+    setLoadingSubjects(true);
+    try {
+      const { data: assignments, error } = await (supabase as any)
+        .from("class_subject_teachers")
+        .select(`
+          subject_id,
+          teacher_id,
+          subjects:subject_id ( id, name, code ),
+          teacher:teacher_id ( id, full_name, email )
+        `)
+        .eq("class_id", classId);
+
+      if (error) throw error;
+
+      if (assignments && assignments.length > 0) {
+        const parsed: ClassSubjectAssignment[] = assignments
+          .filter((a: any) => a.subjects?.id || a.subject_id)
+          .map((a: any) => ({
+            subject_id: a.subject_id,
+            teacher_id: a.teacher_id || null,
+            subject_name: a.subjects?.name || "Subject",
+            subject_code: a.subjects?.code || "",
+            teacher_name: a.teacher?.full_name || a.teacher?.email || null,
+          }))
+          .sort((a: ClassSubjectAssignment, b: ClassSubjectAssignment) => a.subject_name.localeCompare(b.subject_name));
+
+        setClassSubjects(parsed);
+
+        // Check if currently selected subject exists in the newly loaded curriculum
+        const currentSubj = form.getValues("subject_id");
+        const found = parsed.find((p) => p.subject_id === currentSubj);
+        if (found) {
+          if (found.teacher_id) {
+            form.setValue("teacher_id", found.teacher_id);
+            setTeacherName(found.teacher_name || "Assigned Teacher");
+          } else {
+            form.setValue("teacher_id", "");
+            setTeacherName("Not assigned");
+          }
+        } else if (currentSubj) {
+          form.setValue("subject_id", "");
+          form.setValue("teacher_id", "");
+          setTeacherName("");
+        }
       } else {
+        setClassSubjects([]);
+        form.setValue("subject_id", "");
         form.setValue("teacher_id", "");
-        setTeacherName("Not assigned");
+        setTeacherName("");
       }
-    } catch {
+    } catch (err) {
+      console.error("Failed to load class curriculum:", err);
+      setClassSubjects([]);
+      form.setValue("subject_id", "");
       form.setValue("teacher_id", "");
-      setTeacherName("Lookup failed");
+      setTeacherName("");
     } finally {
-      setTeacherLoading(false);
+      setLoadingSubjects(false);
     }
   }, [supabase, form]);
 
   useEffect(() => {
     if (open) {
-      lookupTeacher(watchClassId, watchSubjectId);
+      fetchClasses();
+      const initialClass = defaultClassId || form.getValues("class_id");
+      if (initialClass) {
+        form.setValue("class_id", initialClass);
+        loadClassSubjects(initialClass);
+      }
+    } else {
+      form.reset({
+        class_id: defaultClassId || "",
+        subject_id: "",
+        day_of_week: "1",
+        start_time: "08:00",
+        end_time: "09:00",
+        room: "",
+        teacher_id: "",
+      });
+      setClassSubjects([]);
+      setTeacherName("");
     }
-  }, [watchClassId, watchSubjectId, open]);
-
-  const fetchData = async () => {
-    try {
-      const [{ data: classData }, { data: subjectData }] = await Promise.all([
-        supabase.from("classes").select("*"),
-        supabase.from("subjects").select("*"),
-      ]);
-      setClasses(classData || []);
-      setSubjects(subjectData || []);
-    } catch (error) {
-      toast.error("Failed to load scheduling options");
-    }
-  };
+  }, [open, defaultClassId, fetchClasses, loadClassSubjects, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
@@ -196,25 +252,31 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
           <Plus className="mr-2 size-4" /> Add Period
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-none shadow-2xl backdrop-blur-xl bg-card/90">
+      <DialogContent className="sm:max-w-[480px] rounded-[2rem] border border-border/80 shadow-2xl backdrop-blur-xl bg-card/95">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-black tracking-tighter text-primary">Schedule Period</DialogTitle>
-          <DialogDescription className="text-base font-medium">Assign a subject to a specific time slot and room.</DialogDescription>
+          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight text-primary">Schedule Period</DialogTitle>
+          <DialogDescription className="text-sm font-medium text-muted-foreground">Assign a subject to a specific time slot and room.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="class_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Classroom</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Classroom</FormLabel>
+                    <Select 
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        loadClassSubjects(val);
+                      }} 
+                      value={field.value}
+                    >
                       <FormControl>
-                        <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
-                          <SelectValue placeholder="Pick Class" />
+                        <SelectTrigger className="bg-background/60 border-none ring-1 ring-border rounded-xl font-bold">
+                          <SelectValue placeholder={loadingClasses ? "Loading..." : "Pick Class"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -233,16 +295,49 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
                 name="subject_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Subject</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Subject</FormLabel>
+                    <Select 
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        const assigned = classSubjects.find((s) => s.subject_id === val);
+                        if (assigned?.teacher_id) {
+                          form.setValue("teacher_id", assigned.teacher_id);
+                          setTeacherName(assigned.teacher_name || "Assigned Teacher");
+                        } else {
+                          form.setValue("teacher_id", "");
+                          setTeacherName("Not assigned");
+                        }
+                      }} 
+                      value={field.value}
+                      disabled={!watchClassId || loadingSubjects || classSubjects.length === 0}
+                    >
                       <FormControl>
-                        <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
-                          <SelectValue placeholder="Pick Subject" />
+                        <SelectTrigger className="bg-background/60 border-none ring-1 ring-border rounded-xl font-bold disabled:opacity-50">
+                          <SelectValue 
+                            placeholder={
+                              !watchClassId
+                                ? "Select class first"
+                                : loadingSubjects
+                                ? "Loading curriculum..."
+                                : classSubjects.length === 0
+                                ? "No subjects configured"
+                                : "Pick Subject"
+                            } 
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {subjects.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        {classSubjects.map((s) => (
+                          <SelectItem key={s.subject_id} value={s.subject_id}>
+                            <div className="flex items-center justify-between gap-2 w-full">
+                              <span>{s.subject_name}</span>
+                              {s.subject_code && (
+                                <span className="text-[10px] text-muted-foreground font-mono uppercase">
+                                  ({s.subject_code})
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -252,16 +347,35 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Prompt when classroom has no curriculum subjects configured */}
+            {watchClassId && !loadingSubjects && classSubjects.length === 0 && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2.5 animate-in fade-in duration-300">
+                <AlertCircle className="size-4 shrink-0 mt-0.5 text-amber-500" />
+                <div className="space-y-1">
+                  <p className="font-bold">No curriculum subjects configured</p>
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    This classroom does not have any subjects assigned to its curriculum yet. Configure subjects and allocate subject teachers under{" "}
+                    <Link 
+                      href="/dashboard/admin/academics" 
+                      className="underline font-bold text-primary hover:text-primary/80 inline-flex items-center gap-0.5"
+                    >
+                      Classes & Subjects <ArrowUpRight className="size-3" />
+                    </Link>.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="day_of_week"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Day of the Week</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Day of the Week</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-background/50 border-none ring-1 ring-border rounded-xl font-bold">
+                        <SelectTrigger className="bg-background/60 border-none ring-1 ring-border rounded-xl font-bold">
                           <SelectValue placeholder="Select Day" />
                         </SelectTrigger>
                       </FormControl>
@@ -281,19 +395,19 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
                 name="teacher_id"
                 render={() => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Teacher</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Assigned Teacher</FormLabel>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                       <Input
                         readOnly
                         value={
-                          teacherLoading
+                          loadingSubjects
                             ? "Loading..."
                             : (!watchClassId || !watchSubjectId)
                             ? ""
                             : teacherName
                         }
-                        placeholder="Select class & subject"
+                        placeholder={!watchClassId ? "Select class first" : !watchSubjectId ? "Pick subject" : "Teacher"}
                         className="pl-10 bg-muted/50 border-none ring-1 ring-border rounded-xl font-bold cursor-default text-sm"
                       />
                     </div>
@@ -303,15 +417,15 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="start_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Starts At</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Starts At</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} className="bg-background/50 border-none ring-1 ring-border rounded-xl font-black" />
+                      <Input type="time" {...field} className="bg-background/60 border-none ring-1 ring-border rounded-xl font-black" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -323,9 +437,9 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
                 name="end_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Ends At</FormLabel>
+                    <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Ends At</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} className="bg-background/50 border-none ring-1 ring-border rounded-xl font-black" />
+                      <Input type="time" {...field} className="bg-background/60 border-none ring-1 ring-border rounded-xl font-black" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -338,11 +452,11 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
               name="room"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-70">Room / Facility (Optional)</FormLabel>
+                  <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Room / Facility (Optional)</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                      <Input placeholder="e.g. Science Lab 1" {...field} className="pl-10 bg-background/50 border-none ring-1 ring-border rounded-xl" />
+                      <Input placeholder="e.g. Science Lab 1" {...field} className="pl-10 bg-background/60 border-none ring-1 ring-border rounded-xl font-medium" />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -350,11 +464,11 @@ export function AddTimetableEntryModal({ onSuccess, defaultClassId }: AddTimetab
               )}
             />
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-3">
               <Button 
                 type="submit" 
-                className="w-full h-12 rounded-2xl font-black text-lg shadow-xl shadow-primary/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                disabled={loading}
+                className="w-full h-11 rounded-2xl font-black text-base shadow-xl shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                disabled={loading || !watchSubjectId}
               >
                 {loading ? <Loader2 className="mr-2 size-5 animate-spin" /> : <Calendar className="mr-2 size-5" />}
                 Add to Timetable

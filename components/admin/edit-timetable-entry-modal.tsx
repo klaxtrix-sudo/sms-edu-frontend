@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
   Calendar, 
   Clock, 
-  MapPin,
-  Loader2,
-  User,
-  Edit3
+  MapPin, 
+  Loader2, 
+  User, 
+  Edit3,
+  AlertCircle,
+  ArrowUpRight
 } from "lucide-react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,9 +20,9 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger,
-  DialogDescription,
-  DialogFooter
+  DialogTrigger, 
+  DialogDescription, 
+  DialogFooter 
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -59,6 +62,14 @@ const formSchema = z.object({
   teacher_id: z.string().optional(),
 });
 
+interface ClassSubjectAssignment {
+  subject_id: string;
+  teacher_id: string | null;
+  subject_name: string;
+  subject_code?: string;
+  teacher_name?: string | null;
+}
+
 interface EditTimetableEntryModalProps {
   entry: any;
   onSuccess?: () => void;
@@ -67,12 +78,12 @@ interface EditTimetableEntryModalProps {
 export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntryModalProps) {
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classSubjects, setClassSubjects] = useState<ClassSubjectAssignment[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loading, setLoading] = useState(false);
   const [teacherName, setTeacherName] = useState<string>("");
-  const [teacherLoading, setTeacherLoading] = useState(false);
   const supabase = createTenantClient();
-  const skipNextLookup = useRef(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -90,67 +101,107 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
   const watchClassId = form.watch("class_id");
   const watchSubjectId = form.watch("subject_id");
 
-  const lookupTeacher = async (classId: string, subjectId: string) => {
-    if (!classId || !subjectId) {
+  // Fetch all classes for the class selector
+  const fetchClasses = useCallback(async () => {
+    setLoadingClasses(true);
+    try {
+      const { data } = await supabase.from("classes").select("*").order("name");
+      setClasses(data || []);
+    } catch {
+      toast.error("Failed to load classes");
+    } finally {
+      setLoadingClasses(false);
+    }
+  }, [supabase]);
+
+  // Dynamically load curriculum subjects configured for the selected classroom
+  const loadClassSubjects = useCallback(async (classId: string, preservedSubjectId?: string) => {
+    if (!classId) {
+      setClassSubjects([]);
       setTeacherName("");
       form.setValue("teacher_id", "");
+      form.setValue("subject_id", "");
       return;
     }
-    setTeacherLoading(true);
+
+    setLoadingSubjects(true);
     try {
-      const { data: assignment } = await supabase
+      const { data: assignments, error } = await (supabase as any)
         .from("class_subject_teachers")
-        .select("teacher_id")
-        .eq("class_id", classId)
-        .eq("subject_id", subjectId)
-        .maybeSingle();
+        .select(`
+          subject_id,
+          teacher_id,
+          subjects:subject_id ( id, name, code ),
+          teacher:teacher_id ( id, full_name, email )
+        `)
+        .eq("class_id", classId);
 
-      if (assignment?.teacher_id) {
-        form.setValue("teacher_id", assignment.teacher_id);
-        const { data: teacher } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", assignment.teacher_id)
-          .single();
-        setTeacherName(teacher?.full_name || "Unknown Teacher");
-        return;
+      if (error) throw error;
+
+      let parsed: ClassSubjectAssignment[] = [];
+      if (assignments && assignments.length > 0) {
+        parsed = assignments
+          .filter((a: any) => a.subjects?.id || a.subject_id)
+          .map((a: any) => ({
+            subject_id: a.subject_id,
+            teacher_id: a.teacher_id || null,
+            subject_name: a.subjects?.name || "Subject",
+            subject_code: a.subjects?.code || "",
+            teacher_name: a.teacher?.full_name || a.teacher?.email || null,
+          }))
+          .sort((a: ClassSubjectAssignment, b: ClassSubjectAssignment) => a.subject_name.localeCompare(b.subject_name));
       }
 
-      // If not found in class_subject_teachers but matches the entry's original class & subject, restore original teacher
-      if (entry && classId === entry.class_id && subjectId === entry.subject_id && entry.teacher_id) {
-        form.setValue("teacher_id", entry.teacher_id);
-        setTeacherName(entry.profiles?.full_name || "Assigned Teacher");
-        return;
+      // Defensive fallback: if the entry's original subject is not in the class curriculum, keep it selectable
+      const targetSubjId = preservedSubjectId || form.getValues("subject_id");
+      if (targetSubjId && !parsed.some((p) => p.subject_id === targetSubjId)) {
+        if (entry && entry.subject_id === targetSubjId && entry.class_id === classId) {
+          parsed.unshift({
+            subject_id: entry.subject_id,
+            teacher_id: entry.teacher_id || null,
+            subject_name: entry.subjects?.name || "Assigned Subject",
+            subject_code: entry.subjects?.code || "",
+            teacher_name: entry.profiles?.full_name || null,
+          });
+        }
       }
 
+      setClassSubjects(parsed);
+
+      // Re-evaluate teacher assignment for target subject
+      const found = parsed.find((p) => p.subject_id === targetSubjId);
+      if (found) {
+        if (found.teacher_id) {
+          form.setValue("teacher_id", found.teacher_id);
+          setTeacherName(found.teacher_name || "Assigned Teacher");
+        } else if (entry && entry.teacher_id && entry.subject_id === targetSubjId) {
+          form.setValue("teacher_id", entry.teacher_id);
+          setTeacherName(entry.profiles?.full_name || "Assigned Teacher");
+        } else {
+          form.setValue("teacher_id", "");
+          setTeacherName("Not assigned");
+        }
+      } else if (targetSubjId && (!entry || classId !== entry.class_id)) {
+        // User changed class away from original and old subject doesn't exist in new class
+        form.setValue("subject_id", "");
+        form.setValue("teacher_id", "");
+        setTeacherName("");
+      }
+    } catch (err) {
+      console.error("Failed to load class curriculum:", err);
+      setClassSubjects([]);
+      form.setValue("subject_id", "");
       form.setValue("teacher_id", "");
-      setTeacherName("Not assigned");
-    } catch {
-      form.setValue("teacher_id", "");
-      setTeacherName("Lookup failed");
+      setTeacherName("");
     } finally {
-      setTeacherLoading(false);
+      setLoadingSubjects(false);
     }
-  };
+  }, [supabase, form, entry]);
 
-  const fetchData = async () => {
-    try {
-      const [{ data: classData }, { data: subjectData }] = await Promise.all([
-        supabase.from("classes").select("*"),
-        supabase.from("subjects").select("*"),
-      ]);
-      setClasses(classData || []);
-      setSubjects(subjectData || []);
-    } catch (error) {
-      toast.error("Failed to load scheduling options");
-    }
-  };
-
-  // On modal open: populate form from entry data and set teacher name directly (no network call)
+  // On modal open: populate form from entry data
   useEffect(() => {
     if (open && entry) {
-      skipNextLookup.current = true;
-      fetchData();
+      fetchClasses();
       form.reset({
         class_id: entry.class_id || "",
         subject_id: entry.subject_id || "",
@@ -161,21 +212,11 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
         teacher_id: entry.teacher_id || "",
       });
       setTeacherName(entry.profiles?.full_name || (entry.teacher_id ? "Assigned Teacher" : "Not assigned"));
-      setTeacherLoading(false);
+      if (entry.class_id) {
+        loadClassSubjects(entry.class_id, entry.subject_id);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, entry]);
-
-  // On class/subject change: lookup teacher (skip the initial change triggered by form.reset)
-  useEffect(() => {
-    if (!open || !watchClassId || !watchSubjectId) return;
-    if (skipNextLookup.current) {
-      skipNextLookup.current = false;
-      return;
-    }
-    lookupTeacher(watchClassId, watchSubjectId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchClassId, watchSubjectId, open]);
+  }, [open, entry, fetchClasses, loadClassSubjects, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
@@ -216,9 +257,9 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
           <Edit3 className="size-3.5" />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-none shadow-2xl backdrop-blur-xl bg-card/95">
+      <DialogContent className="sm:max-w-[480px] rounded-[2rem] border border-border/80 shadow-2xl backdrop-blur-xl bg-card/95">
         <DialogHeader>
-          <DialogTitle className="text-2xl md:text-3xl font-black tracking-tight text-primary">
+          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight text-primary">
             Edit Period
           </DialogTitle>
           <DialogDescription className="text-sm font-medium text-muted-foreground">
@@ -237,10 +278,16 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
                     <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">
                       Classroom
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        loadClassSubjects(val);
+                      }} 
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="bg-background/60 border-none ring-1 ring-border rounded-xl font-bold">
-                          <SelectValue placeholder="Select Class" />
+                          <SelectValue placeholder={loadingClasses ? "Loading..." : "Select Class"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -264,16 +311,47 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
                     <FormLabel className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">
                       Subject
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        const assigned = classSubjects.find((s) => s.subject_id === val);
+                        if (assigned?.teacher_id) {
+                          form.setValue("teacher_id", assigned.teacher_id);
+                          setTeacherName(assigned.teacher_name || "Assigned Teacher");
+                        } else {
+                          form.setValue("teacher_id", "");
+                          setTeacherName("Not assigned");
+                        }
+                      }} 
+                      value={field.value}
+                      disabled={!watchClassId || loadingSubjects || classSubjects.length === 0}
+                    >
                       <FormControl>
-                        <SelectTrigger className="bg-background/60 border-none ring-1 ring-border rounded-xl font-bold">
-                          <SelectValue placeholder="Select Subject" />
+                        <SelectTrigger className="bg-background/60 border-none ring-1 ring-border rounded-xl font-bold disabled:opacity-50">
+                          <SelectValue 
+                            placeholder={
+                              !watchClassId
+                                ? "Select class first"
+                                : loadingSubjects
+                                ? "Loading curriculum..."
+                                : classSubjects.length === 0
+                                ? "No subjects configured"
+                                : "Select Subject"
+                            } 
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {subjects.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.name}
+                        {classSubjects.map((s) => (
+                          <SelectItem key={s.subject_id} value={s.subject_id}>
+                            <div className="flex items-center justify-between gap-2 w-full">
+                              <span>{s.subject_name}</span>
+                              {s.subject_code && (
+                                <span className="text-[10px] text-muted-foreground font-mono uppercase">
+                                  ({s.subject_code})
+                                </span>
+                              )}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -283,6 +361,25 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
                 )}
               />
             </div>
+
+            {/* Prompt when classroom has no curriculum subjects configured */}
+            {watchClassId && !loadingSubjects && classSubjects.length === 0 && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2.5 animate-in fade-in duration-300">
+                <AlertCircle className="size-4 shrink-0 mt-0.5 text-amber-500" />
+                <div className="space-y-1">
+                  <p className="font-bold">No curriculum subjects configured</p>
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    This classroom does not have any subjects assigned to its curriculum yet. Configure subjects and allocate subject teachers under{" "}
+                    <Link 
+                      href="/dashboard/admin/academics" 
+                      className="underline font-bold text-primary hover:text-primary/80 inline-flex items-center gap-0.5"
+                    >
+                      Classes & Subjects <ArrowUpRight className="size-3" />
+                    </Link>.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
@@ -325,13 +422,13 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
                       <Input
                         readOnly
                         value={
-                          teacherLoading
+                          loadingSubjects
                             ? "Loading..."
                             : (!watchClassId || !watchSubjectId)
                             ? ""
                             : teacherName
                         }
-                        placeholder="Select class & subject"
+                        placeholder={!watchClassId ? "Select class first" : !watchSubjectId ? "Pick subject" : "Teacher"}
                         className="pl-10 bg-muted/50 border-none ring-1 ring-border rounded-xl font-bold cursor-default text-sm"
                       />
                     </div>
@@ -410,7 +507,7 @@ export function EditTimetableEntryModal({ entry, onSuccess }: EditTimetableEntry
               <Button
                 type="submit"
                 className="w-full h-11 rounded-2xl font-black text-base shadow-xl shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
-                disabled={loading}
+                disabled={loading || !watchSubjectId}
               >
                 {loading ? (
                   <Loader2 className="mr-2 size-5 animate-spin" />
