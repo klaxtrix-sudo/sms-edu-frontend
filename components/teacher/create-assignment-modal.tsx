@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { 
   Plus, 
   Calendar, 
-  BookOpen, 
-  FileText,
   Loader2,
-  Paperclip,
   Target
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -136,16 +133,16 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
           <Plus className="mr-2 size-5" /> Create Assignment
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl">
-        <DialogHeader className="p-8 pb-0 space-y-2">
-          <DialogTitle className="text-4xl font-black tracking-tighter text-primary">New Assignment</DialogTitle>
-          <DialogDescription className="text-base font-medium">Add the tasks, set a deadline, and send to your class.</DialogDescription>
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] p-0 overflow-hidden rounded-3xl sm:rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl max-h-[94vh] flex flex-col">
+        <DialogHeader className="p-5 sm:p-8 pb-0 space-y-1.5 sm:space-y-2">
+          <DialogTitle className="text-2xl sm:text-4xl font-black tracking-tighter text-primary">New Assignment</DialogTitle>
+          <DialogDescription className="text-xs sm:text-base font-medium">Add the tasks, set a deadline, and send to your class.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-            <div className="max-h-[55vh] overflow-y-auto px-8 py-4 space-y-6 custom-scrollbar">
-              <div className="grid grid-cols-2 gap-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <div className="overflow-y-auto px-5 sm:px-8 py-4 space-y-4 sm:space-y-6 custom-scrollbar flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <FormField
                   control={form.control}
                   name="classId"
@@ -216,7 +213,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                     <FormControl>
                       <Textarea 
                         placeholder="Describe what students need to do..." 
-                        className="min-h-[120px] bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
+                        className="min-h-[110px] bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
                         {...field} 
                       />
                     </FormControl>
@@ -225,7 +222,7 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <FormField
                   control={form.control}
                   name="dueDate"
@@ -267,13 +264,13 @@ export function CreateAssignmentModal({ onSuccess }: { onSuccess: () => void }) 
               </div>
             </div>
 
-            <DialogFooter className="p-8 bg-muted/20 border-t border-border/10">
+            <DialogFooter className="p-5 sm:p-8 bg-muted/20 border-t border-border/10">
               <Button 
                 type="submit" 
-                className="w-full h-14 rounded-2xl font-black text-xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-white"
+                className="w-full h-12 sm:h-14 rounded-2xl font-black text-base sm:text-xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-white"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="mr-3 size-6 animate-spin" /> : <Plus className="mr-3 size-6" />}
+                {loading ? <Loader2 className="mr-3 size-5 sm:size-6 animate-spin" /> : <Plus className="mr-3 size-5 sm:size-6" />}
                 Publish Assignment
               </Button>
             </DialogFooter>

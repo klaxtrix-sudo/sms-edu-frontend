@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { cn, getBackendUrl } from "@/lib/utils";
+import { getBackendUrl } from "@/lib/utils";
 
 const formSchema = z.object({
   grade: z.number().min(0, "Grade cannot be negative"),
@@ -96,20 +96,20 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl overflow-hidden">
+      <DialogContent className="max-w-[95vw] sm:max-w-[550px] p-5 sm:p-6 rounded-3xl sm:rounded-[2.5rem] border-none shadow-3xl bg-card/95 backdrop-blur-2xl overflow-y-auto max-h-[92vh]">
         <div className="absolute top-0 left-0 w-full h-2 bg-primary" />
-        <DialogHeader className="pt-6">
-          <DialogTitle className="text-3xl font-black tracking-tighter text-primary">Grade Submission</DialogTitle>
-          <DialogDescription className="text-base font-medium">Review the student's work and leave feedback.</DialogDescription>
+        <DialogHeader className="pt-4 sm:pt-6 space-y-1 sm:space-y-2">
+          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tighter text-primary">Grade Submission</DialogTitle>
+          <DialogDescription className="text-xs sm:text-base font-medium">Review the student's work and leave feedback.</DialogDescription>
         </DialogHeader>
 
-        <div className="bg-muted/30 p-6 rounded-3xl border border-border/50 space-y-4 max-h-[300px] overflow-y-auto mt-4">
+        <div className="bg-muted/30 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-border/50 space-y-3 sm:space-y-4 max-h-[240px] overflow-y-auto mt-2 sm:mt-4">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-60 mb-2">
                 <FileText className="size-3" /> Student Response
             </div>
             <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed italic">"{submission.content || "No written answer."}"</p>
             {submission.attachments?.length > 0 && (
-                <div className="pt-4 border-t border-border/30">
+                <div className="pt-3 border-t border-border/30">
                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Attachments</span>
                      <div className="flex flex-wrap gap-2">
                         {submission.attachments.map((url: string, idx: number) => (
@@ -128,7 +128,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 pt-4 sm:pt-6">
             <FormField
               control={form.control}
               name="grade"
@@ -165,7 +165,7 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
                        <MessageSquare className="absolute left-4 top-4 size-4 text-primary opacity-50" />
                        <Textarea 
                         placeholder="Leave feedback to help the student improve..." 
-                        className="min-h-[100px] pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4"
+                        className="min-h-[100px] pl-12 bg-background/50 border-none ring-1 ring-border rounded-2xl font-medium shadow-inner resize-none pt-4" 
                         {...field} 
                        />
                     </div>
@@ -175,13 +175,13 @@ export function GradeSubmissionModal({ submission, isOpen, onClose, onSuccess, m
               )}
             />
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-2 sm:pt-4">
               <Button 
                 type="submit" 
-                className="w-full h-14 rounded-2xl font-black text-xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-white"
+                className="w-full h-12 sm:h-14 rounded-2xl font-black text-base sm:text-xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-white"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="mr-3 size-6 animate-spin" /> : <CheckCircle2 className="mr-3 size-6" />}
+                {loading ? <Loader2 className="mr-3 size-5 sm:size-6 animate-spin" /> : <CheckCircle2 className="mr-3 size-5 sm:size-6" />}
                 Save Grade
               </Button>
             </DialogFooter>
