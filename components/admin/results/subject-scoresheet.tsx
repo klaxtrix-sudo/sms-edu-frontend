@@ -679,17 +679,17 @@ export function SubjectScoresheet({
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Import from Online Exam (CBT) */}
           <Button
             variant="outline"
             size="sm"
             onClick={openCbtModal}
             disabled={isLocked}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50"
+            className="h-10 sm:h-9 px-3 text-xs font-semibold rounded-xl border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50 justify-center"
           >
-            <Laptop className="size-3.5 mr-1.5" />
-            Sync from CBT
+            <Laptop className="size-3.5 mr-1.5 shrink-0" />
+            <span className="truncate">Sync from CBT</span>
           </Button>
 
           {/* Download CSV Template */}
@@ -697,10 +697,10 @@ export function SubjectScoresheet({
             variant="outline"
             size="sm"
             onClick={downloadCsvTemplate}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
+            className="h-10 sm:h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted justify-center"
           >
-            <Download className="size-3.5 mr-1.5" />
-            Template
+            <Download className="size-3.5 mr-1.5 shrink-0" />
+            <span className="truncate">Template</span>
           </Button>
 
           {/* Upload CSV */}
@@ -709,10 +709,10 @@ export function SubjectScoresheet({
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLocked}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted disabled:opacity-50"
+            className="h-10 sm:h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted disabled:opacity-50 justify-center"
           >
-            <Upload className="size-3.5 mr-1.5" />
-            Upload CSV
+            <Upload className="size-3.5 mr-1.5 shrink-0" />
+            <span className="truncate">Upload CSV</span>
           </Button>
           <input 
             type="file" 
@@ -728,10 +728,10 @@ export function SubjectScoresheet({
             size="sm"
             onClick={openConfigModal}
             disabled={isLocked}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted disabled:opacity-50"
+            className="h-10 sm:h-9 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted disabled:opacity-50 justify-center"
           >
-            <Settings className="size-3.5 mr-1.5" />
-            Weights
+            <Settings className="size-3.5 mr-1.5 shrink-0" />
+            <span className="truncate">Weights</span>
           </Button>
 
           {/* Save Button */}
@@ -739,18 +739,18 @@ export function SubjectScoresheet({
             onClick={onSave}
             disabled={isLocked || saving || loading || students.length === 0}
             className={cn(
-              "h-9 px-4 text-xs font-bold rounded-xl shadow-md",
+              "col-span-2 sm:col-span-auto h-11 sm:h-9 px-4 text-xs font-bold rounded-xl shadow-md w-full sm:w-auto justify-center",
               isLocked 
                 ? "bg-muted text-muted-foreground border border-border cursor-not-allowed" 
                 : "bg-primary hover:bg-primary/90 shadow-primary/20"
             )}
           >
             {saving ? (
-              <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+              <Loader2 className="size-3.5 mr-1.5 animate-spin shrink-0" />
             ) : isLocked ? (
-              <Lock className="size-3.5 mr-1.5 text-amber-500" />
+              <Lock className="size-3.5 mr-1.5 text-amber-500 shrink-0" />
             ) : (
-              <Save className="size-3.5 mr-1.5" />
+              <Save className="size-3.5 mr-1.5 shrink-0" />
             )}
             {isLocked ? "Cycle Locked" : "Save Results"}
           </Button>
@@ -839,7 +839,8 @@ export function SubjectScoresheet({
         </div>
       ) : (
         <div className="border border-border/80 rounded-xl overflow-hidden bg-card shadow-xs">
-          <div className="overflow-x-auto">
+          {/* Desktop Tabular View */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow className="hover:bg-transparent">
@@ -979,6 +980,135 @@ export function SubjectScoresheet({
                 })}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile Student Score Cards View */}
+          <div className="block md:hidden divide-y divide-border/60">
+            {filteredStudents.map((student, sIdx) => {
+              const entry = results[student.id] || { scores: {}, isEntered: false };
+
+              let studentTotal = 0;
+              let hasAnyPoints = false;
+              let allAbsent = true;
+              let allExempt = true;
+
+              metrics.forEach(m => {
+                const key = m.id || m.name;
+                const val = entry.scores[key];
+                if (val !== null && val !== undefined && val !== "") {
+                  hasAnyPoints = true;
+                  if (val === "ABS") {
+                    allExempt = false;
+                  } else if (val === "EX") {
+                    allAbsent = false;
+                  } else if (!isNaN(Number(val))) {
+                    studentTotal += Number(val);
+                    allAbsent = false;
+                    allExempt = false;
+                  }
+                }
+              });
+
+              const isEntered = entry.isEntered && hasAnyPoints;
+              const grade = isEntered ? (allAbsent ? "ABS" : allExempt ? "EX" : scoreToGrade(studentTotal)) : "—";
+              const remark = isEntered ? (allAbsent ? "Absent" : allExempt ? "Exempt" : gradeRemark(grade)) : "Unrecorded";
+              const isPassing = isEntered && !allAbsent && !allExempt && studentTotal >= 40;
+
+              return (
+                <div key={student.id} className="p-4 space-y-3 bg-card hover:bg-muted/10 transition-colors">
+                  {/* Card Header: Student Info & Current Grade/Total */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <h4 className="font-bold text-sm text-foreground leading-tight truncate">
+                        {student.profiles?.full_name || "Unnamed Student"}
+                      </h4>
+                      <p className="font-mono text-xs text-muted-foreground">
+                        {student.admission_no}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground block">Total</span>
+                        <span className="font-black text-sm text-foreground">
+                          {isEntered ? `${studentTotal}/100` : "—"}
+                        </span>
+                      </div>
+                      {isEntered ? (
+                        <span className={cn(
+                          "size-8 rounded-xl inline-flex items-center justify-center font-black text-xs border shadow-xs",
+                          isPassing 
+                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" 
+                            : "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                        )}>
+                          {grade}
+                        </span>
+                      ) : (
+                        <span className="size-8 rounded-xl inline-flex items-center justify-center text-muted-foreground text-xs border border-dashed border-border/70">
+                          —
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Metrics Input Grid */}
+                  <div className={cn(
+                    "grid gap-2 pt-1",
+                    metrics.length <= 2 ? "grid-cols-2" : metrics.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"
+                  )}>
+                    {metrics.map((m, mIdx) => {
+                      const key = m.id || m.name;
+                      const scoreVal = entry.scores[key] !== null && entry.scores[key] !== undefined ? entry.scores[key] : "";
+                      const isOverweight = scoreVal !== "" && typeof scoreVal === "number" && scoreVal > m.weight;
+                      const isSpecialCode = scoreVal === "ABS" || scoreVal === "EX";
+
+                      return (
+                        <div key={m.id || mIdx} className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-semibold text-muted-foreground truncate" title={m.name}>
+                              {m.name}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-mono">/{m.weight}</span>
+                          </div>
+                          <Input
+                            id={`cell-mobile-${sIdx}-${mIdx}`}
+                            type="text"
+                            inputMode="decimal"
+                            value={scoreVal}
+                            placeholder="—"
+                            disabled={isLocked || saving}
+                            onChange={(e) => handleScoreChange(student.id, key, e.target.value, m.weight)}
+                            className={cn(
+                              "w-full text-center h-10 text-xs font-mono font-bold rounded-lg transition-all",
+                              isOverweight 
+                                ? "border-rose-500 bg-rose-500/10 text-rose-500 focus-visible:ring-rose-500" 
+                                : isSpecialCode
+                                ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono"
+                                : "bg-background/90 dark:bg-card border-border/90 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/30",
+                              isLocked && "opacity-70 cursor-not-allowed bg-muted/40"
+                            )}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Card Footer: Remark */}
+                  {isEntered && (
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                      <span className="text-[11px] text-muted-foreground">Remark:</span>
+                      <span className={cn(
+                        "font-bold flex items-center gap-1 text-[11px]",
+                        isPassing ? "text-emerald-500" : "text-rose-500"
+                      )}>
+                        {isPassing ? <CheckCircle2 className="size-3" /> : <AlertCircle className="size-3" />}
+                        {remark}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

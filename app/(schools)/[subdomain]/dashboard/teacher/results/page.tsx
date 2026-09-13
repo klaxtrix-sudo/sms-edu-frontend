@@ -208,10 +208,10 @@ export default function TeacherResultsPage() {
         </div>
 
         {/* Filters & Assignment Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
           {/* Academic Session Selector */}
           <Select value={academicYear} onValueChange={setAcademicYear}>
-            <SelectTrigger className="h-9 w-[125px] text-xs font-semibold rounded-xl bg-card border-border/80">
+            <SelectTrigger className="h-10 sm:h-9 w-full sm:w-[130px] text-xs font-semibold rounded-xl bg-card border-border/80">
               <span className="flex items-center gap-1.5 truncate">
                 <Calendar className="size-3.5 shrink-0 text-muted-foreground" />
                 <SelectValue placeholder="Session" />
@@ -228,7 +228,7 @@ export default function TeacherResultsPage() {
 
           {/* Term Selector */}
           <Select value={currentTerm.toString()} onValueChange={(val) => setCurrentTerm(parseInt(val))}>
-            <SelectTrigger className="h-9 w-[110px] text-xs font-semibold rounded-xl bg-card border-border/80">
+            <SelectTrigger className="h-10 sm:h-9 w-full sm:w-[115px] text-xs font-semibold rounded-xl bg-card border-border/80">
               <span className="flex items-center gap-1.5 truncate">
                 <SelectValue placeholder="Term" />
               </span>
@@ -246,7 +246,7 @@ export default function TeacherResultsPage() {
             onValueChange={handleClassChange}
             disabled={loading || assignedClasses.length === 0}
           >
-            <SelectTrigger className="h-9 w-[155px] text-xs font-semibold rounded-xl bg-card border-border/80">
+            <SelectTrigger className="h-10 sm:h-9 w-full sm:w-[155px] text-xs font-semibold rounded-xl bg-card border-border/80">
               <span className="flex items-center gap-1.5 truncate">
                 <GraduationCap className="size-3.5 shrink-0 text-muted-foreground" />
                 <SelectValue placeholder={loading ? "Loading..." : assignedClasses.length === 0 ? "No classes" : "Select Class"} />
@@ -267,7 +267,7 @@ export default function TeacherResultsPage() {
             onValueChange={setSelectedSubjectId}
             disabled={!selectedClassId || availableSubjects.length === 0}
           >
-            <SelectTrigger className="h-9 w-[165px] text-xs font-semibold rounded-xl bg-card border-border/80">
+            <SelectTrigger className="h-10 sm:h-9 w-full sm:w-[165px] text-xs font-semibold rounded-xl bg-card border-border/80">
               <span className="flex items-center gap-1.5 truncate">
                 <BookOpen className="size-3.5 shrink-0 text-muted-foreground" />
                 <SelectValue placeholder={!selectedClassId ? "Pick Class first" : availableSubjects.length === 0 ? "No subjects" : "Select Subject"} />
@@ -285,12 +285,12 @@ export default function TeacherResultsPage() {
           {/* Refresh Action */}
           <Button
             variant="outline"
-            size="icon"
             onClick={fetchInitialData}
-            className="size-9 rounded-xl border-border hover:bg-muted"
+            className="col-span-2 sm:col-span-1 h-10 sm:h-9 w-full sm:w-9 sm:size-9 rounded-xl border-border hover:bg-muted flex items-center justify-center gap-1.5"
             title="Refresh Assignments"
           >
             <RefreshCw className={cn("size-3.5", loading ? "animate-spin" : "")} />
+            <span className="sm:hidden text-xs font-semibold">Refresh Assignments</span>
           </Button>
         </div>
       </div>
