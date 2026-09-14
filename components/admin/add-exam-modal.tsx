@@ -37,7 +37,10 @@ import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Sparkles, RefreshCw, UserCheck, ShieldCheck } from "lucide-react";
-import { getBackendUrl } from "@/lib/utils";
+import { getBackendUrl, cn } from "@/lib/utils";
+import { useParams } from "next/navigation";
+import { useTenant } from "@/components/providers/tenant-provider";
+import { getResultMetrics } from "@/app/actions/academic-actions";
 
 function generateRandomPin(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
@@ -85,6 +88,18 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
   const [loadingClassData, setLoadingClassData] = useState(false);
   const [autoDetectedTeacherName, setAutoDetectedTeacherName] = useState<string | null>(null);
   
+  const params = useParams();
+  const { tenant } = useTenant();
+  const subdomain = (params?.subdomain as string) || tenant?.subdomain || "";
+  const [schoolId, setSchoolId] = useState<string>(tenant?.id || "");
+  const [detectedMetric, setDetectedMetric] = useState<{
+    weight: number;
+    metricName: string;
+    isCustom: boolean;
+    subjectName?: string;
+  } | null>(null);
+  const [loadingMetric, setLoadingMetric] = useState(false);
+
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [allSchoolSubjects, setAllSchoolSubjects] = useState<{ id: string; name: string }[]>([]);
   const [classAssignments, setClassAssignments] = useState<ClassSubjectTeacherAssignment[]>([]);
@@ -114,6 +129,14 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
 
   const selectedClassId = form.watch("classId");
   const selectedSubjectId = form.watch("subjectId");
+  const selectedAcademicYear = form.watch("academicYear");
+  const selectedTerm = form.watch("term");
+
+  useEffect(() => {
+    if (tenant?.id && !schoolId) {
+      setSchoolId(tenant.id);
+    }
+  }, [tenant?.id, schoolId]);
 
   // Cascading Enhancement 1: When Class changes, fetch class curriculum subjects
   useEffect(() => {
@@ -209,6 +232,88 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
     }
   }, [selectedSubjectId, classAssignments, userRole, form]);
 
+  // Cascading Enhancement 3: Dynamic Assessment Metric Resolution (Subject Custom Metric > School Default Metric)
+  useEffect(() => {
+    if (!open || !schoolId || !subdomain) return;
+
+    let isCancelled = false;
+
+    async function detectExamMetric() {
+      setLoadingMetric(true);
+      try {
+        const targetClass = selectedClassId || null;
+        const targetSubject = selectedSubjectId || null;
+
+        const res = await getResultMetrics(
+          targetClass,
+          targetSubject,
+          schoolId,
+          subdomain,
+          selectedAcademicYear || undefined,
+          selectedTerm ? Number(selectedTerm) : undefined
+        );
+
+        if (isCancelled) return;
+
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          // Find metric matching "exam" (or last metric in sequence)
+          const examMetric = res.data.find((m: any) =>
+            m.name && m.name.trim().toLowerCase().includes("exam")
+          ) || res.data[res.data.length - 1];
+
+          if (examMetric && typeof examMetric.weight === "number") {
+            const matchedSubjectName = targetSubject
+              ? (availableSubjects.find(s => s.id === targetSubject)?.name ||
+                 allSchoolSubjects.find(s => s.id === targetSubject)?.name ||
+                 classAssignments.find(a => a.subject_id === targetSubject)?.subject_name)
+              : undefined;
+
+            setDetectedMetric({
+              weight: examMetric.weight,
+              metricName: examMetric.name,
+              isCustom: !!res.isCustom,
+              subjectName: matchedSubjectName,
+            });
+
+            // Automatically pre-fill totalMarks if field is untouched/not user-dirtied
+            const isFieldDirty = form.getFieldState("totalMarks").isDirty;
+            if (!isFieldDirty) {
+              form.setValue("totalMarks", examMetric.weight, { shouldValidate: true });
+            }
+            return;
+          }
+        }
+
+        if (!isCancelled) {
+          setDetectedMetric(null);
+        }
+      } catch (err) {
+        console.error("[Metric Detection Error]:", err);
+        if (!isCancelled) setDetectedMetric(null);
+      } finally {
+        if (!isCancelled) setLoadingMetric(false);
+      }
+    }
+
+    detectExamMetric();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    open,
+    schoolId,
+    subdomain,
+    selectedClassId,
+    selectedSubjectId,
+    selectedAcademicYear,
+    selectedTerm,
+    availableSubjects,
+    allSchoolSubjects,
+    classAssignments,
+    form
+  ]);
+
   // Initial metadata fetch
   useEffect(() => {
     async function fetchData() {
@@ -222,6 +327,7 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
         .single() as any;
 
       if (!profile?.school_id) return;
+      setSchoolId(profile.school_id);
       setUserRole(profile.role);
 
       // Fetch School Active Session & Term
@@ -621,16 +727,84 @@ export function AddExamModal({ open, onOpenChange, onSuccess }: AddExamModalProp
               <FormField
                 control={form.control}
                 name="totalMarks"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold">Total Marks *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} max={500} {...field} />
-                    </FormControl>
-                    <FormDescription className="text-xs">Max obtainable score</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const currentVal = Number(field.value) || 0;
+                  const isDifferent = detectedMetric && currentVal !== detectedMetric.weight;
+
+                  return (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="font-semibold">Total Marks *</FormLabel>
+                        {loadingMetric ? (
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground animate-pulse">
+                            <Loader2 className="h-3 w-3 animate-spin" /> Detecting metric...
+                          </span>
+                        ) : detectedMetric ? (
+                          <Badge 
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] font-medium px-2 py-0.5 rounded-full border flex items-center gap-1",
+                              detectedMetric.isCustom 
+                                ? "bg-purple-500/10 text-purple-400 border-purple-500/30" 
+                                : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                            )}
+                          >
+                            <Sparkles className="h-2.5 w-2.5" />
+                            {detectedMetric.isCustom ? "Subject Metric" : "School Metric"}: {detectedMetric.weight} marks
+                          </Badge>
+                        ) : null}
+                      </div>
+
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type="number" 
+                            min={1} 
+                            max={500} 
+                            {...field}
+                            className={cn(detectedMetric && isDifferent ? "pr-24" : "")} 
+                          />
+                          {detectedMetric && isDifferent && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                form.setValue("totalMarks", detectedMetric.weight, { shouldDirty: false, shouldValidate: true });
+                              }}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 px-2 text-[11px] text-zinc-400 hover:text-white bg-zinc-800/60 hover:bg-zinc-800 rounded-md"
+                              title={`Reset to detected metric weight (${detectedMetric.weight})`}
+                            >
+                              Reset to {detectedMetric.weight}
+                            </Button>
+                          )}
+                        </div>
+                      </FormControl>
+
+                      {detectedMetric ? (
+                        <div className="space-y-1">
+                          <FormDescription className="text-xs text-zinc-400">
+                            {detectedMetric.isCustom
+                              ? `⚡ Auto-detected from ${detectedMetric.subjectName || "Subject"} custom assessment metric (${detectedMetric.weight} marks allocated).`
+                              : `⚡ Auto-detected from school-wide default assessment metric (${detectedMetric.weight} marks allocated).`}
+                          </FormDescription>
+
+                          {isDifferent && (
+                            <div className="text-[11px] leading-relaxed text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 flex items-start gap-1.5 mt-1.5">
+                              <span className="shrink-0 text-xs">ℹ️</span>
+                              <span>
+                                Paper score ({currentVal} marks) will be automatically scaled to the <strong>{detectedMetric.weight}%</strong> {detectedMetric.metricName} weight when syncing to the terminal broadsheet.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <FormDescription className="text-xs">Max obtainable score for this exam paper</FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Duration & Access PIN */}
