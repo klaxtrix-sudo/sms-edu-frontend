@@ -734,12 +734,12 @@ export function SubjectScoresheet({
             <span className="truncate">Weights</span>
           </Button>
 
-          {/* Save Button */}
+          {/* Save Button (sm+ desktop/tablet toolbar) */}
           <Button
             onClick={onSave}
             disabled={isLocked || saving || loading || students.length === 0}
             className={cn(
-              "col-span-2 sm:col-span-auto h-11 sm:h-9 px-4 text-xs font-bold rounded-xl shadow-md w-full sm:w-auto justify-center",
+              "hidden sm:inline-flex h-9 px-4 text-xs font-bold rounded-xl shadow-md w-auto justify-center",
               isLocked 
                 ? "bg-muted text-muted-foreground border border-border cursor-not-allowed" 
                 : "bg-primary hover:bg-primary/90 shadow-primary/20"
@@ -1109,6 +1109,38 @@ export function SubjectScoresheet({
                 </div>
               );
             })}
+            {filteredStudents.length === 0 && (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                No students found matching &quot;{searchQuery}&quot;
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Bottom Save Action Bar */}
+          <div className="p-4 bg-muted/20 border-t border-border/70 flex flex-col gap-2.5 md:hidden">
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+              <span>Roster: <strong className="text-foreground">{gradedCount} of {students.length} graded</strong></span>
+              <span>Class Avg: <strong className="text-foreground">{gradedCount > 0 ? `${classAvg}%` : "—"}</strong></span>
+            </div>
+            <Button
+              onClick={onSave}
+              disabled={isLocked || saving || loading || students.length === 0}
+              className={cn(
+                "w-full h-11 px-4 text-xs font-bold rounded-xl shadow-md justify-center transition-all",
+                isLocked 
+                  ? "bg-muted text-muted-foreground border border-border cursor-not-allowed" 
+                  : "bg-primary hover:bg-primary/90 shadow-primary/20"
+              )}
+            >
+              {saving ? (
+                <Loader2 className="size-3.5 mr-1.5 animate-spin shrink-0" />
+              ) : isLocked ? (
+                <Lock className="size-3.5 mr-1.5 text-amber-500 shrink-0" />
+              ) : (
+                <Save className="size-3.5 mr-1.5 shrink-0" />
+              )}
+              {isLocked ? "Cycle Locked" : "Save Results"}
+            </Button>
           </div>
         </div>
       )}
