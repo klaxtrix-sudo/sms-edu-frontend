@@ -13,7 +13,10 @@ import {
   Edit,
   RotateCcw,
   Eye,
-  Sparkles
+  EyeOff,
+  Sparkles,
+  Key,
+  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +49,8 @@ interface Exam {
   classId: string;
   subjectId: string;
   durationMins: number;
+  totalMarks?: number;
+  studentPin?: string;
   status: 'draft' | 'published' | 'ended';
   workflowStatus?: 'draft' | 'pending_questions' | 'ready_for_review' | 'changes_requested' | 'approved' | 'published' | 'ended';
   academicYear?: string;
@@ -76,6 +81,11 @@ export default function TeacherExamsPage() {
   const [loadingTimetable, setLoadingTimetable] = useState(false);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("papers");
+  const [revealedPins, setRevealedPins] = useState<Record<string, boolean>>({});
+
+  const toggleRevealPin = (examId: string) => {
+    setRevealedPins(prev => ({ ...prev, [examId]: !prev[examId] }));
+  };
   
   // Mapping lookups
   const [classesMap, setClassesMap] = useState<Record<string, string>>({});
@@ -340,10 +350,48 @@ export default function TeacherExamsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-zinc-700">
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-foreground/80">
                       <Clock className="h-4 w-4 text-primary" />
                       <span>{exam.durationMins} Mins • {exam.questionCount} Questions</span>
+                    </div>
+
+                    {/* Student Access PIN Quick-Access Bar */}
+                    <div className="flex items-center justify-between bg-accent/25 dark:bg-card/70 border border-border/60 px-3 py-2 rounded-lg text-xs">
+                      <div className="flex items-center gap-2 font-mono">
+                        <Key className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        <span className="text-muted-foreground text-[11px] font-medium font-sans">Access PIN:</span>
+                        <span className="font-bold tracking-widest text-sm text-foreground">
+                          {exam.studentPin ? (revealedPins[exam._id] ? exam.studentPin : "••••") : "Not Set"}
+                        </span>
+                      </div>
+                      {exam.studentPin && (
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => toggleRevealPin(exam._id)}
+                            title={revealedPins[exam._id] ? "Hide PIN" : "Reveal PIN"}
+                          >
+                            {revealedPins[exam._id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5 text-muted-foreground" />}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              navigator.clipboard.writeText(exam.studentPin || "");
+                              toast.success(`Exam PIN (${exam.studentPin}) copied!`);
+                            }}
+                            title="Copy PIN"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -433,78 +481,114 @@ export default function TeacherExamsPage() {
                         <TableHead>Date</TableHead>
                         <TableHead>Time Window</TableHead>
                         <TableHead>Venue / Room</TableHead>
+                        <TableHead>Access PIN</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {timetableSlots.map((slot) => (
-                        <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
-                          <TableCell className="font-semibold text-zinc-900 dark:text-zinc-100">{slot.exam_title}</TableCell>
-                          <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
-                          <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {new Date(slot.exam_date).toLocaleDateString(undefined, {
-                              year: 'numeric', month: 'short', day: 'numeric'
-                            })}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-primary font-bold">
-                            {slot.start_time.slice(0,5)} - {slot.end_time.slice(0,5)}
-                          </TableCell>
-                          <TableCell>
-                            {slot.room ? (
-                              <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
-                                <MapPin className="size-3" /> {slot.room}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-zinc-400 italic">Unassigned</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {timetableSlots.map((slot) => {
+                        const matchedExam = exams.find(e => e._id === slot.exam_id);
+                        return (
+                          <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
+                            <TableCell className="font-semibold text-zinc-900 dark:text-zinc-100">{slot.exam_title}</TableCell>
+                            <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
+                            <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {new Date(slot.exam_date).toLocaleDateString(undefined, {
+                                year: 'numeric', month: 'short', day: 'numeric'
+                              })}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs text-primary font-bold">
+                              {slot.start_time.slice(0,5)} - {slot.end_time.slice(0,5)}
+                            </TableCell>
+                            <TableCell>
+                              {slot.room ? (
+                                <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
+                                  <MapPin className="size-3" /> {slot.room}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-zinc-400 italic">Unassigned</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {matchedExam?.studentPin ? (
+                                <Badge 
+                                  variant="outline" 
+                                  className="font-mono font-bold text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 flex items-center gap-1 w-fit cursor-pointer hover:bg-amber-500/20 transition-colors"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(matchedExam.studentPin || "");
+                                    toast.success(`Exam PIN (${matchedExam.studentPin}) copied!`);
+                                  }}
+                                  title="Click to copy PIN"
+                                >
+                                  <Key className="size-3 text-amber-500" />
+                                  {matchedExam.studentPin}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
 
                 {/* Mobile Card List View */}
                 <div className="block md:hidden divide-y divide-border/60">
-                  {timetableSlots.map((slot) => (
-                    <div key={slot.id} className="p-4 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <h4 className="font-semibold text-foreground text-sm sm:text-base leading-tight">
-                            {slot.exam_title}
-                          </h4>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <Badge variant="outline" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20">
-                              {subjectsMap[slot.subject_id] || slot.subject_id}
-                            </Badge>
-                            <Badge variant="secondary" className="text-[11px] font-medium">
-                              {classesMap[slot.class_id] || slot.class_id}
-                            </Badge>
+                  {timetableSlots.map((slot) => {
+                    const matchedExam = exams.find(e => e._id === slot.exam_id);
+                    return (
+                      <div key={slot.id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            <h4 className="font-semibold text-foreground text-sm sm:text-base leading-tight">
+                              {slot.exam_title}
+                            </h4>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Badge variant="outline" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20">
+                                {subjectsMap[slot.subject_id] || slot.subject_id}
+                              </Badge>
+                              <Badge variant="secondary" className="text-[11px] font-medium">
+                                {classesMap[slot.class_id] || slot.class_id}
+                              </Badge>
+                              {matchedExam?.studentPin && (
+                                <span 
+                                  className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 cursor-pointer"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(matchedExam.studentPin || "");
+                                    toast.success(`Exam PIN (${matchedExam.studentPin}) copied!`);
+                                  }}
+                                >
+                                  <Key className="size-2.5 text-amber-500" /> {matchedExam.studentPin}
+                                </span>
+                              )}
+                            </div>
                           </div>
+                          {slot.room ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">
+                              <MapPin className="size-3" /> {slot.room}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic shrink-0">Unassigned</span>
+                          )}
                         </div>
-                        {slot.room ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">
-                            <MapPin className="size-3" /> {slot.room}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic shrink-0">Unassigned</span>
-                        )}
-                      </div>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border/40 font-mono">
-                        <span className="flex items-center gap-1.5">
-                          <CalendarRange className="size-3.5 text-muted-foreground" />
-                          {new Date(slot.exam_date).toLocaleDateString(undefined, {
-                            year: 'numeric', month: 'short', day: 'numeric'
-                          })}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-primary font-bold">
-                          <Clock className="size-3.5" />
-                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                        </span>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border/40 font-mono">
+                          <span className="flex items-center gap-1.5">
+                            <CalendarRange className="size-3.5 text-muted-foreground" />
+                            {new Date(slot.exam_date).toLocaleDateString(undefined, {
+                              year: 'numeric', month: 'short', day: 'numeric'
+                            })}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-primary font-bold">
+                            <Clock className="size-3.5" />
+                            {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}

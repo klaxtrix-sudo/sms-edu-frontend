@@ -17,7 +17,11 @@ import {
   CalendarRange,
   FileText,
   FileCheck,
-  Sparkles
+  Sparkles,
+  Key,
+  Copy,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +62,8 @@ interface Exam {
   classId: string;
   subjectId: string;
   durationMins: number;
+  totalMarks?: number;
+  studentPin?: string;
   status: 'draft' | 'published' | 'ended';
   workflowStatus?: 'draft' | 'pending_questions' | 'ready_for_review' | 'changes_requested' | 'approved' | 'published' | 'ended';
   academicYear?: string;
@@ -93,6 +99,11 @@ export default function ExamsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("papers");
+  const [revealedPins, setRevealedPins] = useState<Record<string, boolean>>({});
+
+  const toggleRevealPin = (examId: string) => {
+    setRevealedPins(prev => ({ ...prev, [examId]: !prev[examId] }));
+  };
   
   // Mapping lookups for classes/subjects
   const [classesMap, setClassesMap] = useState<Record<string, string>>({});
@@ -342,6 +353,17 @@ export default function ExamsPage() {
                         >
                           <Play className="mr-2 h-4 w-4" /> Question Studio
                         </DropdownMenuItem>
+                        {exam.studentPin && (
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => {
+                              navigator.clipboard.writeText(exam.studentPin || "");
+                              toast.success(`Exam PIN (${exam.studentPin}) copied!`);
+                            }}
+                          >
+                            <Key className="mr-2 h-4 w-4 text-amber-500" /> Copy Access PIN
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           className="cursor-pointer"
                           onClick={() => {
@@ -378,6 +400,44 @@ export default function ExamsPage() {
                   <div className="flex items-center gap-2 bg-accent/30 p-2 rounded-lg text-xs font-semibold text-foreground/80">
                     <Clock className="h-4 w-4 text-primary" />
                     <span>{exam.durationMins} Mins • {exam.questionCount} Questions</span>
+                  </div>
+
+                  {/* Student Access PIN Quick-Access Bar */}
+                  <div className="flex items-center justify-between bg-accent/25 dark:bg-card/70 border border-border/60 px-3 py-2 rounded-lg text-xs">
+                    <div className="flex items-center gap-2 font-mono">
+                      <Key className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground text-[11px] font-medium font-sans">Access PIN:</span>
+                      <span className="font-bold tracking-widest text-sm text-foreground">
+                        {exam.studentPin ? (revealedPins[exam._id] ? exam.studentPin : "••••") : "Not Set"}
+                      </span>
+                    </div>
+                    {exam.studentPin && (
+                      <div className="flex items-center gap-0.5">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => toggleRevealPin(exam._id)}
+                          title={revealedPins[exam._id] ? "Hide PIN" : "Reveal PIN"}
+                        >
+                          {revealedPins[exam._id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5 text-muted-foreground" />}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            navigator.clipboard.writeText(exam.studentPin || "");
+                            toast.success(`Exam PIN (${exam.studentPin}) copied!`);
+                          }}
+                          title="Copy PIN"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Direct Action Button based on Workflow */}
@@ -444,33 +504,54 @@ export default function ExamsPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Time Window</TableHead>
                     <TableHead>Venue / Room</TableHead>
+                    <TableHead>Access PIN</TableHead>
                     <TableHead className="w-[100px] text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {timetableSlots.map((slot) => (
-                    <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
-                      <TableCell className="font-semibold text-foreground">{slot.exam_title}</TableCell>
-                      <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
-                      <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {new Date(slot.exam_date).toLocaleDateString(undefined, {
-                          year: 'numeric', month: 'short', day: 'numeric'
-                        })}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-primary font-bold">
-                        {slot.start_time.slice(0,5)} - {slot.end_time.slice(0,5)}
-                      </TableCell>
-                      <TableCell>
-                        {slot.room ? (
-                          <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
-                            <MapPin className="size-3" /> {slot.room}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">Unassigned</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
+                  {timetableSlots.map((slot) => {
+                    const matchedExam = exams.find(e => e._id === slot.exam_id);
+                    return (
+                      <TableRow key={slot.id} className="hover:bg-accent/30 transition-colors">
+                        <TableCell className="font-semibold text-foreground">{slot.exam_title}</TableCell>
+                        <TableCell className="font-medium">{classesMap[slot.class_id] || slot.class_id}</TableCell>
+                        <TableCell>{subjectsMap[slot.subject_id] || slot.subject_id}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {new Date(slot.exam_date).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                          })}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-primary font-bold">
+                          {slot.start_time.slice(0,5)} - {slot.end_time.slice(0,5)}
+                        </TableCell>
+                        <TableCell>
+                          {slot.room ? (
+                            <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
+                              <MapPin className="size-3" /> {slot.room}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {matchedExam?.studentPin ? (
+                            <Badge 
+                              variant="outline" 
+                              className="font-mono font-bold text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 flex items-center gap-1 w-fit cursor-pointer hover:bg-amber-500/20 transition-colors"
+                              onClick={() => {
+                                navigator.clipboard.writeText(matchedExam.studentPin || "");
+                                toast.success(`Exam PIN (${matchedExam.studentPin}) copied!`);
+                              }}
+                              title="Click to copy PIN"
+                            >
+                              <Key className="size-3 text-amber-500" />
+                              {matchedExam.studentPin}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -480,8 +561,9 @@ export default function ExamsPage() {
                           <Trash className="size-4" />
                         </Button>
                       </TableCell>
-                    </TableRow>
-                  ))}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

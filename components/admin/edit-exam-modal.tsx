@@ -33,9 +33,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { PasswordInput } from "@/components/ui/password-input";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Loader2, UserCheck, ShieldCheck, Edit3, Sparkles } from "lucide-react";
+import { Loader2, UserCheck, ShieldCheck, Edit3, Sparkles, RefreshCw } from "lucide-react";
 import { getBackendUrl, cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { useTenant } from "@/components/providers/tenant-provider";
@@ -44,7 +45,7 @@ import { getResultMetrics } from "@/app/actions/academic-actions";
 const examSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
-  academicYear: z.string().min(1, "Please select an academic session"),
+  academicYear: z.string().min(1, "Academic year is required"),
   term: z.coerce.number().int().min(1).max(3),
   classId: z.string().min(1, "Please select a class"),
   subjectId: z.string().min(1, "Please select a subject"),
@@ -52,6 +53,7 @@ const examSchema = z.object({
   durationMins: z.coerce.number().int().min(5).max(180),
   totalMarks: z.coerce.number().int().min(1),
   questionCount: z.coerce.number().int().min(1),
+  studentPin: z.string().min(4, "PIN must be at least 4 characters").max(8, "PIN must be at most 8 characters").optional(),
   randomiseQuestions: z.boolean().default(true),
   randomiseOptions: z.boolean().default(true),
 });
@@ -146,6 +148,7 @@ export function EditExamModal({ open, onOpenChange, onSuccess, exam }: EditExamM
         durationMins: exam.durationMins || 60,
         totalMarks: exam.totalMarks || 100,
         questionCount: exam.questionCount || 50,
+        studentPin: exam.studentPin || "",
         randomiseQuestions: exam.randomiseQuestions ?? true,
         randomiseOptions: exam.randomiseOptions ?? true,
       });
@@ -750,12 +753,50 @@ export function EditExamModal({ open, onOpenChange, onSuccess, exam }: EditExamM
                 control={form.control}
                 name="durationMins"
                 render={({ field }) => (
-                  <FormItem className="col-span-1 md:col-span-2">
+                  <FormItem>
                     <FormLabel className="font-semibold">Duration (Minutes) *</FormLabel>
                     <FormControl>
                       <Input type="number" min={5} max={180} {...field} />
                     </FormControl>
                     <p className="text-[11px] text-muted-foreground">CBT countdown clock</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Student Access PIN */}
+              <FormField
+                control={form.control}
+                name="studentPin"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="font-semibold">Student Access PIN *</FormLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-primary gap-1"
+                        onClick={() => {
+                          const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+                          form.setValue("studentPin", newPin, { shouldValidate: true, shouldDirty: true });
+                          toast.info(`Generated new PIN: ${newPin}`);
+                        }}
+                      >
+                        <RefreshCw className="h-3 w-3" /> Regenerate
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <PasswordInput
+                        placeholder="e.g. 1234"
+                        maxLength={8}
+                        className="font-mono tracking-widest bg-background"
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-[11px] text-muted-foreground">
+                      PIN required to unlock the exam in the CBT room.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
