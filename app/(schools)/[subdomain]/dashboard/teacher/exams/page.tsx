@@ -155,6 +155,21 @@ export default function TeacherExamsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      const [{ data: directAssignments }, { data: timetableAssignments }] = await Promise.all([
+        supabase
+          .from("class_subject_teachers")
+          .select("class_id, subject_id")
+          .eq("teacher_id", session.user.id),
+        supabase
+          .from("timetables")
+          .select("class_id, subject_id")
+          .eq("teacher_id", session.user.id),
+      ]);
+
+      const allAssignments: { class_id: string; subject_id: string }[] = [];
+      if (directAssignments) allAssignments.push(...directAssignments);
+      if (timetableAssignments) allAssignments.push(...timetableAssignments);
+
       const response = await fetch(`${getBackendUrl()}/exam-timetables`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -162,7 +177,10 @@ export default function TeacherExamsPage() {
       });
       const result = await response.json();
       if (result.success) {
-        setTimetableSlots(result.data || []);
+        const teacherSlots = (result.data || []).filter((slot: any) =>
+          allAssignments.some(a => a.class_id === slot.class_id && a.subject_id === slot.subject_id)
+        );
+        setTimetableSlots(teacherSlots);
       }
     } catch (error) {
       console.error("Failed to fetch timetable slots:", error);
