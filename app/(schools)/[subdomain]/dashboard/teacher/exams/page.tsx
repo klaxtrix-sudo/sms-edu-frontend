@@ -263,7 +263,8 @@ export default function TeacherExamsPage() {
               )}>
                 <FileText className="size-3.5 sm:size-4" />
               </div>
-              <span className="truncate">Assigned Exams</span>
+              <span className="truncate sm:hidden">Exams</span>
+              <span className="truncate hidden sm:inline">Assigned Exams</span>
               <Badge
                 variant="secondary"
                 className={cn(
@@ -457,13 +458,20 @@ export default function TeacherExamsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="timetable" className="space-y-6">
-          <Card className="border-none shadow-sm bg-card/40 backdrop-blur-sm p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-bold">Scheduled Exam Schedule</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Below are the timetabled rooms and time slots assigned for students by administration.</p>
-          </Card>
+        <TabsContent value="timetable" className="space-y-4">
+          <Card className="border border-border/70 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm rounded-2xl">
+            <div className="p-4 sm:p-5 border-b border-border/70 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-foreground">Exam Timetable & Venues</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Scheduled exam dates, venues, and student PINs assigned by administration.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit text-xs font-mono font-bold bg-background text-muted-foreground border-border/70">
+                {timetableSlots.length} Session{timetableSlots.length === 1 ? '' : 's'}
+              </Badge>
+            </div>
 
-          <Card className="border-none shadow-sm overflow-hidden bg-card/40 backdrop-blur-sm">
             {loadingTimetable ? (
               <div className="py-20 flex justify-center items-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -473,7 +481,7 @@ export default function TeacherExamsPage() {
                 {/* Desktop Tabular View */}
                 <div className="hidden md:block">
                   <Table>
-                    <TableHeader className="bg-muted/50">
+                    <TableHeader className="bg-muted/40">
                       <TableRow>
                         <TableHead>Exam Paper</TableHead>
                         <TableHead>Class</TableHead>
@@ -502,8 +510,8 @@ export default function TeacherExamsPage() {
                             </TableCell>
                             <TableCell>
                               {slot.room ? (
-                                <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
-                                  <MapPin className="size-3" /> {slot.room}
+                                <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 w-fit">
+                                  <MapPin className="size-3 shrink-0" /> {slot.room}
                                 </span>
                               ) : (
                                 <span className="text-xs text-zinc-400 italic">Unassigned</span>
@@ -540,50 +548,58 @@ export default function TeacherExamsPage() {
                     const matchedExam = exams.find(e => e._id === slot.exam_id);
                     return (
                       <div key={slot.id} className="p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="space-y-1">
-                            <h4 className="font-semibold text-foreground text-sm sm:text-base leading-tight">
-                              {slot.exam_title}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <Badge variant="outline" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20">
-                                {subjectsMap[slot.subject_id] || slot.subject_id}
-                              </Badge>
-                              <Badge variant="secondary" className="text-[11px] font-medium">
-                                {classesMap[slot.class_id] || slot.class_id}
-                              </Badge>
-                              {matchedExam?.studentPin && (
-                                <span 
-                                  className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 cursor-pointer"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(matchedExam.studentPin || "");
-                                    toast.success(`Exam PIN (${matchedExam.studentPin}) copied!`);
-                                  }}
-                                >
-                                  <Key className="size-2.5 text-amber-500" /> {matchedExam.studentPin}
-                                </span>
-                              )}
-                            </div>
+                        <div className="space-y-1.5">
+                          <h4 className="font-semibold text-foreground text-sm sm:text-base leading-snug">
+                            {slot.exam_title}
+                          </h4>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="outline" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20">
+                              {subjectsMap[slot.subject_id] || slot.subject_id}
+                            </Badge>
+                            <Badge variant="secondary" className="text-[11px] font-medium">
+                              {classesMap[slot.class_id] || slot.class_id}
+                            </Badge>
+                            {matchedExam?.studentPin && (
+                              <span 
+                                className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 cursor-pointer"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(matchedExam.studentPin || "");
+                                  toast.success(`Exam PIN (${matchedExam.studentPin}) copied!`);
+                                }}
+                                title="Tap to copy PIN"
+                              >
+                                <Key className="size-2.5 text-amber-500" /> {matchedExam.studentPin}
+                              </span>
+                            )}
                           </div>
+                        </div>
+
+                        {/* Venue Row */}
+                        <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/40 border border-border/50 text-xs">
+                          <MapPin className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="text-muted-foreground font-medium shrink-0">Venue:</span>
                           {slot.room ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">
-                              <MapPin className="size-3" /> {slot.room}
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                              {slot.room}
                             </span>
                           ) : (
-                            <span className="text-xs text-muted-foreground italic shrink-0">Unassigned</span>
+                            <span className="text-muted-foreground italic">Virtual / Unassigned</span>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border/40 font-mono">
+                        {/* Date & Time Row */}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/40 font-mono">
                           <span className="flex items-center gap-1.5">
-                            <CalendarRange className="size-3.5 text-muted-foreground" />
-                            {new Date(slot.exam_date).toLocaleDateString(undefined, {
-                              year: 'numeric', month: 'short', day: 'numeric'
-                            })}
+                            <CalendarRange className="size-3.5 text-muted-foreground shrink-0" />
+                            <span>
+                              {new Date(slot.exam_date).toLocaleDateString(undefined, {
+                                year: 'numeric', month: 'short', day: 'numeric'
+                              })}
+                            </span>
                           </span>
                           <span className="flex items-center gap-1.5 text-primary font-bold">
-                            <Clock className="size-3.5" />
-                            {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                            <Clock className="size-3.5 shrink-0" />
+                            <span>{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</span>
                           </span>
                         </div>
                       </div>
