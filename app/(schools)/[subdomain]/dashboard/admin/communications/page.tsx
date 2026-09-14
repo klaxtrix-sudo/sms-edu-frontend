@@ -958,83 +958,85 @@ export default function AdminCommunicationsPage() {
         <div className="xl:col-span-5 space-y-6">
           <Card className="border border-border/80 shadow-sm bg-card rounded-xl overflow-hidden min-h-[600px]">
             <CardHeader className="p-4 border-b border-border/60 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-                    <TabsList className="inline-flex h-auto p-1.5 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl gap-1.5 shadow-sm backdrop-blur-md">
-                      <TabsTrigger
-                        value="preview"
-                        className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
-                      >
-                        <div className={cn(
-                          "p-1 rounded-lg transition-colors",
-                          activeTab === "preview"
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-primary/10 text-primary"
-                        )}>
-                          <Eye className="size-3.5" />
-                        </div>
-                        <span>Live Preview</span>
-                      </TabsTrigger>
-
-                      <TabsTrigger
-                        value="history"
-                        className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
-                      >
-                        <div className={cn(
-                          "p-1 rounded-lg transition-colors",
-                          activeTab === "history"
-                            ? "bg-indigo-600 text-white shadow-sm"
-                            : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
-                        )}>
-                          <History className="size-3.5" />
-                        </div>
-                        <span>Post History</span>
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "ml-0.5 px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-colors border",
-                            activeTab === "history"
-                              ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
-                              : "bg-muted text-muted-foreground border-border/40"
-                          )}
-                        >
-                          {history.length}
-                        </Badge>
-                      </TabsTrigger>
-                    </TabsList>
-
-                    {activeTab === "preview" && (
-                      <div className="flex items-center bg-muted/60 dark:bg-card/80 border border-border/80 rounded-2xl p-1 shadow-sm backdrop-blur-md">
-                        <button
-                          type="button"
-                          onClick={() => setPreviewMode("noticeboard")}
-                          className={cn(
-                            "px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all",
-                            previewMode === "noticeboard"
-                              ? "bg-background text-foreground shadow-sm border border-border/60"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          Noticeboard
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPreviewMode("sms")}
-                          className={cn(
-                            "px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all",
-                            previewMode === "sms"
-                              ? "bg-background text-foreground shadow-sm border border-border/60"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          Smartphone
-                        </button>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <div className="flex flex-col gap-2.5 w-full">
+                  {/* Primary Navigation: Live Preview vs Post History */}
+                  <TabsList className="grid grid-cols-2 w-full p-1 bg-muted/60 dark:bg-card/80 border border-border/80 rounded-xl gap-1 shadow-sm backdrop-blur-md">
+                    <TabsTrigger
+                      value="preview"
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-bold text-xs transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+                    >
+                      <div className={cn(
+                        "p-1 rounded-md transition-colors",
+                        activeTab === "preview"
+                          ? "bg-primary text-primary-foreground shadow-xs"
+                          : "bg-primary/10 text-primary"
+                      )}>
+                        <Eye className="size-3.5" />
                       </div>
-                    )}
-                  </div>
-                </Tabs>
-              </div>
+                      <span>Live Preview</span>
+                    </TabsTrigger>
+
+                    <TabsTrigger
+                      value="history"
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-bold text-xs transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 text-muted-foreground hover:text-foreground"
+                    >
+                      <div className={cn(
+                        "p-1 rounded-md transition-colors",
+                        activeTab === "history"
+                          ? "bg-indigo-600 text-white shadow-xs"
+                          : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400"
+                      )}>
+                        <History className="size-3.5" />
+                      </div>
+                      <span>Post History</span>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "ml-1 px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-colors border",
+                          activeTab === "history"
+                            ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
+                            : "bg-muted text-muted-foreground border-border/40"
+                        )}
+                      >
+                        {history.length}
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Device / Simulator Sub-tabs (Visible during Live Preview) */}
+                  {activeTab === "preview" && (
+                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-background/80 dark:bg-card/80 border border-border/80 rounded-xl shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode("noticeboard")}
+                        className={cn(
+                          "flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-bold rounded-lg transition-all duration-150",
+                          previewMode === "noticeboard"
+                            ? "bg-primary text-primary-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                        )}
+                      >
+                        <Megaphone className="size-3.5" />
+                        <span>Noticeboard</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode("sms")}
+                        className={cn(
+                          "flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-bold rounded-lg transition-all duration-150",
+                          previewMode === "sms"
+                            ? "bg-primary text-primary-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                        )}
+                      >
+                        <Smartphone className="size-3.5" />
+                        <span>Smartphone</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </Tabs>
             </CardHeader>
 
             <CardContent className="p-6">
@@ -1070,10 +1072,10 @@ export default function AdminCommunicationsPage() {
                         </div>
 
                         <div>
-                          <h3 className="text-base font-bold text-foreground">
+                          <h3 className="text-base font-bold text-foreground break-words">
                             {title || "Announcement Title Preview"}
                           </h3>
-                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed whitespace-pre-wrap break-words">
                             {message || "The message you draft in the editor will render here in real-time as seen by students, parents, and faculty."}
                           </p>
                         </div>
@@ -1124,7 +1126,7 @@ export default function AdminCommunicationsPage() {
 
                         {/* Message Bubble */}
                         <div className="space-y-1 my-6 min-h-[140px] flex flex-col justify-end">
-                          <div className="bg-primary/90 text-primary-foreground p-3 rounded-2xl rounded-tr-xs text-xs shadow-md leading-relaxed">
+                          <div className="bg-primary/90 text-primary-foreground p-3 rounded-2xl rounded-tr-sm text-xs shadow-md leading-relaxed break-words">
                             <span className="font-bold">{title ? `${title}: ` : ""}</span>
                             <span>{message || "Official announcement preview will appear formatted here as delivered to recipient mobile numbers..."}</span>
                           </div>
