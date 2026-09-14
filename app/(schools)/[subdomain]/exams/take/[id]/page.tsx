@@ -14,7 +14,8 @@ import {
   Wifi, 
   WifiOff, 
   Timer, 
-  Lock
+  Lock,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +82,7 @@ export default function TakeExamPage() {
   // Connectivity state
   const [isOnline, setIsOnline] = useState(true);
   const [pendingSync, setPendingSync] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Submit confirmation dialog state
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
@@ -288,7 +290,7 @@ export default function TakeExamPage() {
     if (!session || !attemptId) return;
 
     try {
-      setPendingSync(true);
+      setIsSyncing(true);
       const res = await fetch(`${getBackendUrl()}/attempts/${attemptId}/save-answers`, {
         method: "PATCH",
         headers: {
@@ -299,16 +301,22 @@ export default function TakeExamPage() {
           answers: [{ questionId, selected: optionIdx }]
         })
       });
-      if (!res.ok) throw new Error("Offline status");
-      setPendingSync(false);
+      if (!res.ok) {
+        setPendingSync(true);
+      } else {
+        setPendingSync(false);
+      }
     } catch (_) {
       // Keep online flag false and allow local storage backup to handle it
       setPendingSync(true);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
   const triggerManualSync = async () => {
-    if (!session || !attemptId || !isOnline) return;
+    if (!session || !attemptId || !isOnline || isSyncing) return;
+    setIsSyncing(true);
     try {
       const payloadAnswers = Object.entries(answers).map(([qId, sIdx]) => ({
         questionId: qId,
@@ -326,9 +334,15 @@ export default function TakeExamPage() {
       if (res.ok) {
         setPendingSync(false);
         toast.success("Progress successfully synced to server!");
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Failed to sync progress");
       }
-    } catch (e) {
-      toast.error("Failed to sync progress. Keep writing, it is saved locally.");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to sync progress. Keep writing, it is saved locally.");
+      setPendingSync(true);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -607,14 +621,18 @@ export default function TakeExamPage() {
               <Badge variant="destructive" className="bg-red-500/10 text-red-400 border border-red-500/20 flex gap-1.5 items-center font-bold px-3 py-1 rounded-full">
                 <WifiOff className="size-3.5" /> Offline - Backup Saved
               </Badge>
+            ) : isSyncing ? (
+              <Badge className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/25 flex gap-1.5 items-center font-bold px-3 py-1 rounded-full">
+                <Loader2 className="size-3.5 animate-spin text-yellow-400" /> Syncing...
+              </Badge>
             ) : pendingSync ? (
               <Button 
                 onClick={triggerManualSync}
                 variant="outline" 
                 size="sm"
-                className="border-yellow-500/20 text-yellow-500 bg-yellow-500/5 hover:bg-yellow-500/10 flex gap-1.5 items-center font-bold px-3 rounded-full h-8"
+                className="border-yellow-500/30 text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 flex gap-1.5 items-center font-bold px-3 rounded-full h-8 transition-colors"
               >
-                <Loader2 className="size-3.5 animate-spin" /> Unsynced: Tap to Sync
+                <RefreshCw className="size-3.5" /> Unsynced: Tap to Sync
               </Button>
             ) : (
               <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex gap-1.5 items-center font-bold px-3 py-1 rounded-full">
@@ -788,13 +806,23 @@ export default function TakeExamPage() {
                     <ChevronLeft className="mr-2 size-4" /> Previous
                   </Button>
 
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11"
-                    disabled={currentIdx === questions.length - 1}
-                    onClick={() => setCurrentIdx(prev => prev + 1)}
-                  >
-                    Next <ChevronRight className="ml-2 size-4" />
-                  </Button>
+                  {currentIdx === questions.length - 1 ? (
+                    <Button
+                      onClick={() => handleSubmit(true)}
+                      disabled={submitting}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-11 px-6 font-bold shadow-lg shadow-emerald-700/20 flex items-center gap-2"
+                    >
+                      {submitting ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle className="size-4" />}
+                      Submit Examination
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11"
+                      onClick={() => setCurrentIdx(prev => prev + 1)}
+                    >
+                      Next <ChevronRight className="ml-2 size-4" />
+                    </Button>
+                  )}
                 </div>
 
               </div>
@@ -805,6 +833,38 @@ export default function TakeExamPage() {
             )}
           </main>
         </div>
+
+        {/* Submit Confirmation Dialog (rendered inside containerRef for HTML5 fullscreen support) */}
+        {showSubmitDialog && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            <Card className="w-full max-w-md border-white/10 bg-zinc-950/95 backdrop-blur-xl rounded-3xl p-6 shadow-2xl">
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-xl font-black text-white">Confirm Submission</CardTitle>
+                <CardDescription className="text-zinc-400">
+                  {unansweredCount > 0
+                    ? `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? 's' : ''}. Are you sure you want to submit?`
+                    : 'Are you sure you want to submit your exam? This action cannot be undone.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <Button
+                  onClick={confirmSubmit}
+                  disabled={submitting}
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-white font-bold"
+                >
+                  {submitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Yes, Submit Exam'}
+                </Button>
+                <Button
+                  onClick={() => setShowSubmitDialog(false)}
+                  variant="ghost"
+                  className="w-full h-12 rounded-xl text-zinc-400 hover:text-white"
+                >
+                  Cancel & Review
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     );
   }
@@ -838,39 +898,5 @@ export default function TakeExamPage() {
     );
   }
 
-  return (
-    <>
-      {showSubmitDialog && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <Card className="w-full max-w-md border-white/10 bg-zinc-950/90 backdrop-blur-xl rounded-3xl p-6 shadow-2xl">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl font-black text-white">Confirm Submission</CardTitle>
-              <CardDescription className="text-zinc-400">
-                {unansweredCount > 0
-                  ? `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? 's' : ''}. Are you sure you want to submit?`
-                  : 'Are you sure you want to submit your exam? This action cannot be undone.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              <Button
-                onClick={confirmSubmit}
-                disabled={submitting}
-                className="w-full h-12 bg-primary hover:bg-primary/90 rounded-xl text-white font-bold"
-              >
-                {submitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Yes, Submit Exam'}
-              </Button>
-              <Button
-                onClick={() => setShowSubmitDialog(false)}
-                variant="ghost"
-                className="w-full h-12 rounded-xl text-zinc-400 hover:text-white"
-              >
-                Cancel
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      return null;
-    </>
-  );
+  return null;
 }
