@@ -139,7 +139,9 @@ export default async function AdminDashboard({ params }: { params: { subdomain: 
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Institution Overview</span>
             <span className="size-1 rounded-full bg-border" />
-            <span className="text-xs font-medium text-muted-foreground">{subdomain}.klaxtrix.site</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'klaxtrix.com'}
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground">
             Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">{tenantKeys.name}</span>
