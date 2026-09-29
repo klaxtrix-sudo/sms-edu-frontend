@@ -30,6 +30,16 @@ export async function signOutAction(subdomain: string) {
   const supabaseUrl = tenantKeys?.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = tenantKeys?.supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+  const cookieDomain = rootDomain.split(':')[0];
+  const isLocal = cookieDomain === 'localhost';
+  const domainOpts = {
+    domain: isLocal ? '.localhost' : `.${cookieDomain}`,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+  };
+
   // 2. Create a Supabase client for the TENANT's project
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -37,11 +47,11 @@ export async function signOutAction(subdomain: string) {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        try { cookieStore.set({ name, value, ...options }); } catch {}
+        try { cookieStore.set({ name, value, ...domainOpts, ...options }); } catch {}
       },
       remove(name: string, options: CookieOptions) {
         // maxAge: 0 immediately expires the cookie in the browser
-        try { cookieStore.set({ name, value: "", ...options, maxAge: 0 }); } catch {}
+        try { cookieStore.set({ name, value: "", ...domainOpts, ...options, maxAge: 0 }); } catch {}
       },
     },
   });
