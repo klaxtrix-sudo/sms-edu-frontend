@@ -51,7 +51,8 @@ const nextConfig = {
       bodySizeLimit: '10mb',
       allowedOrigins: [
         '*.localhost:3000', 'localhost:3000', '*.localhost',  // dev
-        'klaxtrix.site', '*.klaxtrix.site',                  // production
+        'klaxtrix.site', '*.klaxtrix.site',                  // staging / test
+        'klaxtrix.com', '*.klaxtrix.com',                    // production
       ],
     },
   },
