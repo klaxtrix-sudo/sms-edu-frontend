@@ -1,7 +1,7 @@
 import { getBackendUrl } from "@/lib/utils";
 
 interface CachedTenantKeys {
-  keys: { name: string; supabaseUrl: string; supabaseAnonKey: string; id: string };
+  keys: { name: string; supabaseUrl: string; supabaseAnonKey: string; id: string; logoUrl?: string | null };
   expiresAt: number;
 }
 
@@ -22,7 +22,7 @@ export function clearTenantKeysCache(subdomain?: string): void {
  */
 export async function resolveTenantKeys(
   subdomain: string
-): Promise<{ name: string; supabaseUrl: string; supabaseAnonKey: string; id: string } | null> {
+): Promise<{ name: string; supabaseUrl: string; supabaseAnonKey: string; id: string; logoUrl?: string | null } | null> {
   if (!subdomain) return null;
 
   const normalized = subdomain.toLowerCase().trim();
@@ -46,6 +46,7 @@ export async function resolveTenantKeys(
     const result = {
       id: data.data.id,
       name: data.data.name,
+      logoUrl: data.data.logoUrl || null,
       supabaseUrl: data.data.supabaseUrl,
       supabaseAnonKey: data.data.supabaseAnonKey,
     };
