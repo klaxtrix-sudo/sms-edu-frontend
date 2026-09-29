@@ -385,7 +385,7 @@ export async function createTeacher(data: CreateUserData) {
       // Fallback to process.env config if tenant config is missing or inactive
       if (!resendApiKey) {
         resendApiKey = process.env.RESEND_API_KEY || null;
-        resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.site';
+        resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.com';
         resendFromName = 'Klaxtrix Portal';
       }
 
@@ -537,7 +537,7 @@ export async function resendTeacherCredentials(
 
     if (!resendApiKey) {
       resendApiKey = process.env.RESEND_API_KEY || null;
-      resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.site';
+      resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.com';
       resendFromName = 'Klaxtrix Portal';
     }
 

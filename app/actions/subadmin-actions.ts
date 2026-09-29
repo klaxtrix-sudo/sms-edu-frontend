@@ -177,7 +177,7 @@ export async function createSubAdmin(data: CreateSubAdminData) {
 
       if (!resendApiKey) {
         resendApiKey = process.env.RESEND_API_KEY || null;
-        resendFromEmail = process.env.RESEND_FROM_EMAIL || "noreply@klaxtrix.site";
+        resendFromEmail = process.env.RESEND_FROM_EMAIL || "noreply@klaxtrix.com";
         resendFromName = "Klaxtrix Portal";
       }
 
@@ -471,7 +471,7 @@ export async function resendAdminCredentials(userId: string, schoolId: string, s
 
     if (!resendApiKey) {
       resendApiKey = process.env.RESEND_API_KEY || null;
-      resendFromEmail = process.env.RESEND_FROM_EMAIL || "noreply@klaxtrix.site";
+      resendFromEmail = process.env.RESEND_FROM_EMAIL || "noreply@klaxtrix.com";
       resendFromName = "Klaxtrix Portal";
     }
 

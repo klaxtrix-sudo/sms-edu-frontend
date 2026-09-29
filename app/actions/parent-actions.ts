@@ -261,7 +261,7 @@ export async function createParent(data: CreateUserData) {
 
       if (!resendApiKey) {
         resendApiKey = process.env.RESEND_API_KEY || null;
-        resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.site';
+        resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.com';
         resendFromName = 'Klaxtrix Portal';
       }
 
@@ -397,7 +397,7 @@ export async function resendParentCredentials(userId: string, schoolId: string, 
 
     if (!resendApiKey) {
       resendApiKey = process.env.RESEND_API_KEY || null;
-      resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.site';
+      resendFromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@klaxtrix.com';
       resendFromName = 'Klaxtrix Portal';
     }
 
