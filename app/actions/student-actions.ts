@@ -2,6 +2,7 @@
 
 import { requireActionAuth } from "@/lib/supabase/action-auth";
 import { revalidatePath } from "next/cache";
+import { getBackendUrl } from "@/lib/utils";
 
 export async function createStudent(data: any) {
   const { 
@@ -257,7 +258,7 @@ export async function uploadStudentPassport(
   base64DataUri: string
 ): Promise<{ success: boolean; publicUrl?: string; error?: string }> {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000/api';
+    const backendUrl = getBackendUrl();
     const res = await fetch(`${backendUrl}/tenant/upload-passport`, {
       method: "POST",
       headers: {
